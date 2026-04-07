@@ -11,7 +11,7 @@ try:
 except ImportError:
     _BS = None
 
-PORT = 8080
+PORT = int(os.environ.get('PORT', 8080))
 DIR = os.path.dirname(os.path.abspath(__file__))
 
 _cepea_cache = {}
