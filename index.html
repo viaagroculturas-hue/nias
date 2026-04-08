@@ -2033,6 +2033,11 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <option value="cebola">Cebola</option><option value="manga">Manga</option><option value="uva">Uva</option>
           <option value="batata">Batata</option><option value="mamao">Mamao</option><option value="melancia">Melancia</option>
           <option value="abacaxi">Abacaxi</option><option value="alho">Alho</option><option value="melao">Melao</option>
+          <option value="cenoura">Cenoura</option><option value="morango">Morango</option><option value="pimentao">Pimentao</option>
+          <option value="folhosas">Folhosas</option><option value="maracuja">Maracuja</option><option value="goiaba">Goiaba</option>
+          <option value="abacate">Abacate</option><option value="limao">Limao</option><option value="tangerina">Tangerina</option>
+          <option value="coco">Coco</option><option value="acai">Acai</option><option value="pessego">Pessego</option>
+          <option value="maca">Maca</option>
         </select>
         <div style="width:1px;height:20px;background:#222;"></div>
         <span style="font-size:9px;color:#888;letter-spacing:1px;">HORIZONTE:</span>
@@ -8061,9 +8066,73 @@ const Predictix = {
       { buy:'Curitibanos (SC)',       buyLat:-27.28, buyLon:-50.58, buyPrice:20.0, sell:'CEASA-PR',      sellLat:-25.43, sellLon:-49.27, sellPrice:34.0, frete:2.0 },
     ],
     melao: [
-      { buy:'Mossoró (RN)',           buyLat:-5.19,  buyLon:-37.34, buyPrice:1.80, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:4.50, frete:1.10 },
-      { buy:'Icapuí (CE)',            buyLat:-4.86,  buyLon:-37.36, buyPrice:1.70, sell:'CEASA-RJ',      sellLat:-22.91, sellLon:-43.17, sellPrice:4.20, frete:1.00 },
-      { buy:'Petrolina (PE) / VSF',   buyLat:-9.39,  buyLon:-40.50, buyPrice:2.00, sell:'CEASA-MG',     sellLat:-19.92, sellLon:-43.94, sellPrice:4.80, frete:0.85 },
+      { buy:'Mossoró (RN)',           buyLat:-5.19,  buyLon:-37.34, buyPrice:1.80, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:4.99, frete:1.10 },
+      { buy:'Icapuí (CE)',            buyLat:-4.86,  buyLon:-37.36, buyPrice:1.70, sell:'CEASA-RJ',      sellLat:-22.91, sellLon:-43.17, sellPrice:4.60, frete:1.00 },
+      { buy:'Petrolina (PE) / VSF',   buyLat:-9.39,  buyLon:-40.50, buyPrice:2.00, sell:'CEASA-MG',     sellLat:-19.92, sellLon:-43.94, sellPrice:5.20, frete:0.85 },
+    ],
+    cenoura: [
+      { buy:'São Gotardo (MG)',       buyLat:-19.31, buyLon:-46.05, buyPrice:2.80, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:5.21, frete:0.65 },
+      { buy:'Carandaí (MG)',          buyLat:-20.96, buyLon:-43.74, buyPrice:2.60, sell:'CEASA-RJ',      sellLat:-22.91, sellLon:-43.17, sellPrice:4.90, frete:0.55 },
+      { buy:'Marilândia do Sul (PR)', buyLat:-23.74, buyLon:-51.31, buyPrice:2.70, sell:'CEASA-PR',      sellLat:-25.43, sellLon:-49.27, sellPrice:4.80, frete:0.40 },
+      { buy:'Irecê (BA)',             buyLat:-11.30, buyLon:-41.86, buyPrice:2.20, sell:'CEASA-BA',      sellLat:-12.97, sellLon:-38.51, sellPrice:4.50, frete:0.50 },
+    ],
+    morango: [
+      { buy:'Atibaia (SP)',           buyLat:-23.12, buyLon:-46.55, buyPrice:16.0, sell:'CEAGESP (SP)',   sellLat:-23.55, sellLon:-46.63, sellPrice:29.48, frete:1.50 },
+      { buy:'Pouso Alegre (MG)',      buyLat:-22.23, buyLon:-45.94, buyPrice:14.5, sell:'CEASA-RJ',      sellLat:-22.91, sellLon:-43.17, sellPrice:28.0, frete:2.80 },
+      { buy:'Bom Princípio (RS)',     buyLat:-29.49, buyLon:-51.35, buyPrice:15.0, sell:'CEASA-PR',      sellLat:-25.43, sellLon:-49.27, sellPrice:27.5, frete:2.20 },
+    ],
+    pimentao: [
+      { buy:'Leme (SP)',              buyLat:-22.19, buyLon:-47.39, buyPrice:5.50, sell:'CEAGESP (SP)',   sellLat:-23.55, sellLon:-46.63, sellPrice:12.32, frete:1.20 },
+      { buy:'Cristalina (GO)',        buyLat:-16.77, buyLon:-47.62, buyPrice:4.80, sell:'CEASA-DF',      sellLat:-15.78, sellLon:-47.93, sellPrice:10.50, frete:0.60 },
+      { buy:'Camocim de São Félix (PE)', buyLat:-8.36, buyLon:-35.76, buyPrice:4.20, sell:'CEASA-PE',   sellLat:-8.05,  sellLon:-34.87, sellPrice:9.80, frete:0.35 },
+    ],
+    folhosas: [
+      { buy:'Ibiúna (SP)',            buyLat:-23.66, buyLon:-47.22, buyPrice:18.0, sell:'CEAGESP (SP)',   sellLat:-23.55, sellLon:-46.63, sellPrice:37.01, frete:2.50 },
+      { buy:'Mogi das Cruzes (SP)',   buyLat:-23.52, buyLon:-46.19, buyPrice:19.0, sell:'CEAGESP (SP)',   sellLat:-23.55, sellLon:-46.63, sellPrice:37.01, frete:1.80 },
+      { buy:'Teresópolis (RJ)',       buyLat:-22.41, buyLon:-42.97, buyPrice:17.0, sell:'CEASA-RJ',      sellLat:-22.91, sellLon:-43.17, sellPrice:34.0, frete:1.50 },
+      { buy:'Colombo (PR)',           buyLat:-25.29, buyLon:-49.22, buyPrice:16.0, sell:'CEASA-PR',      sellLat:-25.43, sellLon:-49.27, sellPrice:32.0, frete:0.80 },
+    ],
+    maracuja: [
+      { buy:'Livramento de N.S. (BA)',buyLat:-13.64, buyLon:-41.84, buyPrice:2.50, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:4.96, frete:0.90 },
+      { buy:'Araguari (MG)',          buyLat:-18.65, buyLon:-48.19, buyPrice:2.80, sell:'CEASA-MG',      sellLat:-19.92, sellLon:-43.94, sellPrice:4.60, frete:0.55 },
+      { buy:'Benevides (PA)',         buyLat:-1.36,  buyLon:-48.24, buyPrice:2.20, sell:'CEASA-PA',      sellLat:-1.36,  sellLon:-48.48, sellPrice:4.20, frete:0.25 },
+    ],
+    goiaba: [
+      { buy:'Valinhos (SP)',          buyLat:-22.97, buyLon:-46.99, buyPrice:3.00, sell:'CEAGESP (SP)',   sellLat:-23.55, sellLon:-46.63, sellPrice:5.64, frete:0.50 },
+      { buy:'Pedro Canário (ES)',     buyLat:-18.30, buyLon:-39.96, buyPrice:2.50, sell:'CEASA-RJ',      sellLat:-22.91, sellLon:-43.17, sellPrice:5.20, frete:0.80 },
+      { buy:'Petrolina (PE) / VSF',   buyLat:-9.39,  buyLon:-40.50, buyPrice:2.20, sell:'CEASA-PE',     sellLat:-8.05,  sellLon:-34.87, sellPrice:4.80, frete:0.40 },
+    ],
+    abacate: [
+      { buy:'Carmo da Cachoeira (MG)',buyLat:-21.46, buyLon:-45.22, buyPrice:1.50, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:2.33, frete:0.30 },
+      { buy:'Ribeirão Preto (SP)',    buyLat:-21.18, buyLon:-47.81, buyPrice:1.60, sell:'CEASA-RJ',      sellLat:-22.91, sellLon:-43.17, sellPrice:2.50, frete:0.45 },
+    ],
+    limao: [
+      { buy:'Itajobi (SP)',           buyLat:-21.32, buyLon:-49.06, buyPrice:1.80, sell:'CEAGESP (SP)',   sellLat:-23.55, sellLon:-46.63, sellPrice:3.85, frete:0.40 },
+      { buy:'Colina (SP)',            buyLat:-20.71, buyLon:-48.54, buyPrice:1.70, sell:'CEASA-MG',      sellLat:-19.92, sellLon:-43.94, sellPrice:3.60, frete:0.55 },
+      { buy:'Sergipe (SE)',           buyLat:-10.91, buyLon:-37.07, buyPrice:1.40, sell:'CEASA-PE',      sellLat:-8.05,  sellLon:-34.87, sellPrice:3.20, frete:0.35 },
+    ],
+    tangerina: [
+      { buy:'Capão Bonito (SP)',      buyLat:-24.01, buyLon:-48.35, buyPrice:1.60, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:3.50, frete:0.35 },
+      { buy:'Monte Belo (MG)',        buyLat:-21.33, buyLon:-46.37, buyPrice:1.50, sell:'CEASA-MG',      sellLat:-19.92, sellLon:-43.94, sellPrice:3.30, frete:0.40 },
+    ],
+    coco: [
+      { buy:'Conde (PB)',             buyLat:-7.26,  buyLon:-34.91, buyPrice:1.50, sell:'CEASA-PE',      sellLat:-8.05,  sellLon:-34.87, sellPrice:3.22, frete:0.25 },
+      { buy:'Inhambupe (BA)',         buyLat:-11.78, buyLon:-38.35, buyPrice:1.40, sell:'CEASA-BA',      sellLat:-12.97, sellLon:-38.51, sellPrice:3.00, frete:0.20 },
+      { buy:'Paraipaba (CE)',         buyLat:-3.44,  buyLon:-39.15, buyPrice:1.30, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:3.22, frete:0.65 },
+    ],
+    acai: [
+      { buy:'Igarapé-Miri (PA)',      buyLat:-1.98,  buyLon:-48.96, buyPrice:5.00, sell:'CEASA-PA',     sellLat:-1.36,  sellLon:-48.48, sellPrice:12.0, frete:0.50 },
+      { buy:'Abaetetuba (PA)',        buyLat:-1.72,  buyLon:-48.88, buyPrice:4.80, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:18.0, frete:3.50 },
+      { buy:'Cametá (PA)',            buyLat:-2.24,  buyLon:-49.50, buyPrice:4.50, sell:'CEASA-AM',      sellLat:-3.12,  sellLon:-60.02, sellPrice:14.0, frete:2.00 },
+    ],
+    pessego: [
+      { buy:'Pelotas (RS)',           buyLat:-31.77, buyLon:-52.34, buyPrice:4.50, sell:'CEAGESP (SP)',   sellLat:-23.55, sellLon:-46.63, sellPrice:9.80, frete:2.20 },
+      { buy:'Videira (SC)',           buyLat:-27.01, buyLon:-51.15, buyPrice:4.80, sell:'CEASA-PR',      sellLat:-25.43, sellLon:-49.27, sellPrice:9.50, frete:1.10 },
+    ],
+    maca: [
+      { buy:'Vacaria (RS)',           buyLat:-28.50, buyLon:-50.78, buyPrice:3.80, sell:'CEAGESP (SP)',   sellLat:-23.55, sellLon:-46.63, sellPrice:6.71, frete:1.40 },
+      { buy:'São Joaquim (SC)',       buyLat:-28.29, buyLon:-49.93, buyPrice:3.60, sell:'CEASA-RJ',      sellLat:-22.91, sellLon:-43.17, sellPrice:7.20, frete:1.60 },
+      { buy:'Fraiburgo (SC)',         buyLat:-27.02, buyLon:-50.92, buyPrice:3.50, sell:'CEASA-PR',      sellLat:-25.43, sellLon:-49.27, sellPrice:6.50, frete:0.90 },
     ],
   },
 
