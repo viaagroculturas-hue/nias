@@ -26,6 +26,8 @@ def _fetch_cepea():
         'boi':    {'url': 'https://cepea.org.br/br/indicador/boi-gordo.aspx',   'unit': 'R$/@'},
         'cafe':   {'url': 'https://cepea.org.br/br/indicador/cafe.aspx',        'unit': 'R$/sc 60kg'},
         'laranja':{'url': 'https://cepea.org.br/br/indicador/citros.aspx',      'unit': 'R$/cx 40.8kg'},
+        'tomate': {'url': 'https://cepea.org.br/br/indicador/tomate.aspx',      'unit': 'R$/cx 25kg'},
+        'batata': {'url': 'https://cepea.org.br/br/indicador/batata.aspx',      'unit': 'R$/sc 50kg'},
     }
     result = {}
     hdrs = {
@@ -205,6 +207,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             from flv.api.routes import handle_flv
             handle_flv(self, self.path)
             return
+        if self.path == '/api/ceagesp':
+            self._serve_ceagesp()
+            return
         if self.path.startswith('/proxy/'):
             self._proxy('GET')
         elif self.path == '/api/cepea':
@@ -224,6 +229,15 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
 
     def _serve_conab(self):
         data = _fetch_conab()
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False).encode())
+
+    def _serve_ceagesp(self):
+        from flv.collectors.ceagesp_live import fetch_ceagesp
+        data = fetch_ceagesp()
         self.send_response(200)
         self._cors()
         self.send_header('Content-Type', 'application/json')

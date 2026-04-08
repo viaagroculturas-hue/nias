@@ -8498,25 +8498,33 @@ async function niasLoadRealData() {
   }
 
   // ── HORTIFRUTI — Atualizar preços com dados reais ──────────────
-  _updateHortiPrices(prices, conab);
+  // Fetch CEAGESP live prices (priority source)
+  let ceagespData = {};
+  try {
+    const cr = await fetch('/api/ceagesp').then(r => r.ok ? r.json() : {}).catch(() => ({}));
+    ceagespData = cr;
+  } catch(e) {}
+  _updateHortiPrices(prices, conab, ceagespData);
 
   // ── Schedule refresh every 15 minutes ───────────────────────────
   setTimeout(niasLoadRealData, 900000);
 }
 
 // Atualiza cards de hortifruti na Visao Geral com dados reais
-function _updateHortiPrices(cepeaPrices, conabData) {
+function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
   const flvRef = typeof FLVModule !== 'undefined' ? FLVModule._REF : {};
+  const ceagespProds = ceagespData && ceagespData.products ? ceagespData.products : {};
+  const ceagespDate = ceagespData && ceagespData.meta ? ceagespData.meta.date : '';
 
   const hortiMap = {
-    'tomate-mesa': { slug:'tomate', unit:'kg', conab:'TOMATE', cepea:null, elPrice:'hp-tomate-mesa', elDelta:'hd-tomate-mesa', elSrc:'hsrc-tomate-mesa', elStatus:'hst-tomate-mesa' },
-    'tomate-ind':  { slug:'tomate', unit:'t',  conab:'TOMATE', cepea:null, elPrice:'hp-tomate-ind', elDelta:'hd-tomate-ind', elSrc:'hsrc-tomate-ind', elStatus:'hst-tomate-ind' },
+    'tomate-mesa': { slug:'tomate', unit:'kg', conab:'TOMATE', cepea:'tomate', elPrice:'hp-tomate-mesa', elDelta:'hd-tomate-mesa', elSrc:'hsrc-tomate-mesa', elStatus:'hst-tomate-mesa' },
+    'tomate-ind':  { slug:'tomate', unit:'t',  conab:'EXTRATO DE TOMATE', cepea:null, elPrice:'hp-tomate-ind', elDelta:'hd-tomate-ind', elSrc:'hsrc-tomate-ind', elStatus:'hst-tomate-ind' },
     'pimentao':    { slug:'pimentao', unit:'kg', conab:'PIMENTAO', cepea:null, elPrice:'hp-pimentao', elDelta:'hd-pimentao', elSrc:'hsrc-pimentao', elStatus:'hst-pimentao' },
     'alface':      { slug:'folhosas', unit:'kg', conab:'ALFACE', cepea:null, elPrice:'hp-alface', elDelta:'hd-alface', elSrc:'hsrc-alface', elStatus:'hst-alface' },
     'laranja':     { slug:'laranja', unit:'cx', conab:'LARANJA', cepea:'laranja', elPrice:'hp-laranja', elDelta:'hd-laranja', elSrc:'hsrc-laranja', elStatus:'hst-laranja' },
-    'batata':      { slug:'batata', unit:'sc', conab:'BATATA INGLESA', cepea:null, elPrice:'hp-batata', elDelta:'hd-batata', elSrc:'hsrc-batata', elStatus:'hst-batata' },
-    'cebola':      { slug:'cebola', unit:'sc', conab:'CEBOLA', cepea:null, elPrice:'hp-cebola', elDelta:'hd-cebola', elSrc:'hsrc-cebola', elStatus:'hst-cebola' },
-    'manga':       { slug:'manga', unit:'cx', conab:'MANGA', cepea:null, elPrice:'hp-manga', elDelta:'hd-manga', elSrc:'hsrc-manga', elStatus:'hst-manga' },
+    'batata':      { slug:'batata', unit:'sc', conab:'BATATA INGLESA', cepea:'batata', elPrice:'hp-batata', elDelta:'hd-batata', elSrc:'hsrc-batata', elStatus:'hst-batata' },
+    'cebola':      { slug:'cebola', unit:'kg', conab:'CEBOLA', cepea:null, elPrice:'hp-cebola', elDelta:'hd-cebola', elSrc:'hsrc-cebola', elStatus:'hst-cebola' },
+    'manga':       { slug:'manga', unit:'kg', conab:'MANGA', cepea:null, elPrice:'hp-manga', elDelta:'hd-manga', elSrc:'hsrc-manga', elStatus:'hst-manga' },
     'uva':         { slug:'uva', unit:'kg', conab:'UVA', cepea:null, elPrice:'hp-uva', elDelta:'hd-uva', elSrc:'hsrc-uva', elStatus:'hst-uva' },
   };
 
@@ -8527,17 +8535,26 @@ function _updateHortiPrices(cepeaPrices, conabData) {
     const statusEl = document.getElementById(cfg.elStatus);
     if (!priceEl) continue;
 
-    // Resolve price from best source
+    // Resolve price from best source (CEAGESP > CEPEA > CONAB > FLV ref)
     let price = null, source = '', change = null;
 
+    // 0. CEAGESP LIVE (best source — daily hortifruti)
+    if (ceagespProds[cfg.slug]) {
+      const cp = ceagespProds[cfg.slug];
+      price = cp.price_avg;
+      source = `CEAGESP · ${ceagespDate || cp.date || ''} · ${cp.name || ''}`;
+    }
     // 1. CEPEA
-    if (cfg.cepea && cepeaPrices && cepeaPrices[cfg.cepea]) {
+    if (!price && cfg.cepea && cepeaPrices && cepeaPrices[cfg.cepea]) {
       const cp = cepeaPrices[cfg.cepea];
       price = cp.price; change = cp.change; source = `CEPEA/ESALQ · ${cp.date || ''}`;
     }
-    // 2. CONAB
+    // 2. CONAB (exact match at start of product name)
     if (!price && conabData && conabData.agro) {
-      const match = Object.entries(conabData.agro).find(([k]) => k.toUpperCase().includes(cfg.conab));
+      const match = Object.entries(conabData.agro).find(([k]) => {
+        const ku = k.toUpperCase().trim();
+        return ku === cfg.conab || ku.startsWith(cfg.conab + ' ') || ku.startsWith(cfg.conab + '/');
+      });
       if (match) { price = match[1].avg_price; source = `CONAB Semanal · ${match[1].date || ''}`; }
     }
     // 3. FLV ref
