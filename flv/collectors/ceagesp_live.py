@@ -10,9 +10,9 @@ _ceagesp_ttl = 1800  # 30 min cache
 
 # Product name mapping: CEAGESP name fragment -> FLV slug
 CEAGESP_MAP = {
-    'TOMATE': 'tomate', 'TOMATE CARMEM': 'tomate', 'TOMATE LONGA VIDA': 'tomate', 'TOMATE ITALIANO': 'tomate',
-    'CEBOLA NACIONAL': 'cebola', 'CEBOLA ROXA': 'cebola', 'CEBOLA BRANCA': 'cebola',
-    'BATATA AGATA': 'batata', 'BATATA ASTERIX': 'batata', 'BATATA INGLESA': 'batata',
+    'TOMATE LONGA VIDA': 'tomate', 'TOMATE CARMEM': 'tomate', 'TOMATE ITALIANO': 'tomate', 'TOMATE': 'tomate',
+    'CEBOLA NACIONAL': 'cebola', 'CEBOLA ROXA': 'cebola', 'CEBOLA BRANCA': 'cebola', 'CEBOLA': 'cebola',
+    'BATATA-DOCE': 'batata-doce', 'BATATA AGATA': 'batata', 'BATATA ASTERIX': 'batata', 'BATATA INGLESA': 'batata', 'BATATA': 'batata',
     'PIMENTÃO VERDE': 'pimentao', 'PIMENTÃO VERMELHO': 'pimentao', 'PIMENTÃO AMARELO': 'pimentao',
     'CENOURA': 'cenoura',
     'ALFACE CRESPA': 'folhosas', 'ALFACE AMERICANA': 'folhosas', 'ALFACE LISA': 'folhosas',
@@ -26,13 +26,31 @@ CEAGESP_MAP = {
     'ABACAXI PÉROLA': 'abacaxi', 'ABACAXI HAVAÍ': 'abacaxi',
     'MARACUJÁ': 'maracuja',
     'GOIABA VERMELHA': 'goiaba', 'GOIABA BRANCA': 'goiaba',
-    'ABACATE': 'abacate',
-    'LIMÃO TAHITI': 'limao', 'LIMÃO GALEGO': 'limao', 'LIMÃO SICILIANO': 'limao',
+    'ABACATE FORTUNA': 'abacate', 'ABACATE MARGARIDA': 'abacate', 'ABACATE QUINTAL': 'abacate',
+    'LIMÃO TAHITI': 'limao', 'LIMÃO GALEGO': 'limao',
     'TANGERINA PONKAN': 'tangerina', 'TANGERINA MURCOTT': 'tangerina',
     'COCO VERDE': 'coco', 'COCO SECO': 'coco',
     'MORANGO': 'morango',
     'MAÇÃ FUJI': 'maca', 'MAÇÃ GALA': 'maca',
-    'ALHO': 'alho',
+    'ALHO NACIONAL': 'alho',
+}
+
+# Products to prefer when multiple match same slug (reference products)
+CEAGESP_PREFER = {
+    'tomate': 'CARMEM',
+    'banana': 'NANICA',
+    'laranja': 'PERA',
+    'manga': 'PALMER',
+    'uva': 'NIÁGARA',
+    'batata': 'AGATA',
+    'cebola': 'NACIONAL',
+    'mamao': 'FORMOSA',
+    'abacate': 'FORTUNA',
+    'limao': 'TAHITI',
+    'pimentao': 'VERDE',
+    'folhosas': 'CRESPA',
+    'maca': 'FUJI',
+    'alho': 'NACIONAL',
 }
 
 def fetch_ceagesp():
@@ -112,8 +130,11 @@ def fetch_ceagesp():
                 if not slug:
                     continue
 
-                # Keep best (most common classification) per slug
-                if slug not in result['products'] or classification in ('PRIMEIRA', '1A', '2A', 'A', '-'):
+                # Keep preferred product per slug
+                prefer = CEAGESP_PREFER.get(slug, '')
+                is_preferred = prefer and prefer in product_name
+                existing = result['products'].get(slug)
+                if not existing or is_preferred or (not existing.get('_preferred') and classification in ('PRIMEIRA', '1A', '2A', 'A', '-')):
                     result['products'][slug] = {
                         'name': product_name,
                         'classification': classification,
@@ -124,6 +145,7 @@ def fetch_ceagesp():
                         'group': group,
                         'date': latest,
                         'source': 'CEAGESP',
+                        '_preferred': is_preferred,
                     }
 
             time.sleep(0.5)
