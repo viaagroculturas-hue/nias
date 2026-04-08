@@ -680,14 +680,14 @@ tr:hover td{background:rgba(0,212,255,.04);}
 <!-- PRICE TICKER -->
 <div id="price-ticker">
   <div class="ticker-inner" id="ticker-inner">
-    <span class="tick-item"><span class="tick-name">SOJA (CBOT)</span><span class="tick-val tick-dn" id="tp-soja">US$ 10.42/bu ▼</span></span>
-    <span class="tick-item"><span class="tick-name">MILHO (CBOT)</span><span class="tick-val tick-up" id="tp-milho">US$ 4.68/bu ▲</span></span>
-    <span class="tick-item"><span class="tick-name">BOI GORDO (B3)</span><span class="tick-val tick-up" id="tp-boi">R$ 312.40/@  ▲</span></span>
+    <span class="tick-item"><span class="tick-name">SOJA (CBOT)</span><span class="tick-val tick-dn" id="tp-soja">R$ 128.31</span></span>
+    <span class="tick-item"><span class="tick-name">MILHO (CBOT)</span><span class="tick-val tick-up" id="tp-milho">R$ 69.58</span></span>
+    <span class="tick-item"><span class="tick-name">BOI GORDO (B3)</span><span class="tick-val tick-up" id="tp-boi">R$ 364.25</span></span>
     <span class="tick-item"><span class="tick-name">AÇÚCAR (ICE)</span><span class="tick-val tick-dn" id="tp-acucar">US$ 19.85/lb ▼</span></span>
-    <span class="tick-item"><span class="tick-name">CAFÉ ARÁBICA</span><span class="tick-val tick-up" id="tp-cafe">US$ 218.60/sc ▲</span></span>
+    <span class="tick-item"><span class="tick-name">CAFÉ ARÁBICA</span><span class="tick-val tick-up" id="tp-cafe">R$ 1821.69</span></span>
     <span class="tick-item"><span class="tick-name">ALGODÃO (ICE)</span><span class="tick-val tick-dn" id="tp-algodao">US$ 72.30/lb ▼</span></span>
     <span class="tick-item"><span class="tick-name">USD/BRL</span><span class="tick-val tick-up" id="tp-usd">R$ 5.124 ▲</span></span>
-    <span class="tick-item"><span class="tick-name">TOMATE SP CEASA</span><span class="tick-val tick-up" id="tp-tomate">R$ 68.20/cx ▲</span></span>
+    <span class="tick-item"><span class="tick-name">TOMATE SP CEASA</span><span class="tick-val tick-up" id="tp-tomate">R$ 6.29/kg</span></span>
   </div>
 </div>
 
@@ -7660,7 +7660,7 @@ const FLVModule = {
   },
 
   // Reference base prices per kg for synthetic data
-  _REF: {tomate:5.5,cebola:4.2,batata:3.8,pimentao:6.5,folhosas:4.8,cenoura:3.5,manga:4.5,uva:8.2,banana:2.1,laranja:1.8,morango:18,maca:7.5,melao:3.8,mamao:3.2,abacaxi:3.5,alho:22,melancia:1.2,maracuja:5.5,goiaba:4.2,abacate:5.8,limao:3.2,tangerina:3.0,coco:2.5,acai:12,pessego:8.5},
+  _REF: {tomate:6.3,cebola:4.2,batata:3.8,pimentao:12.3,folhosas:4.8,cenoura:5.2,manga:9.2,uva:18.8,banana:4.5,laranja:4.5,morango:29.5,maca:6.7,melao:5.0,mamao:5.0,abacaxi:7.4,alho:22,melancia:4.2,maracuja:5.0,goiaba:5.6,abacate:5.8,limao:3.2,tangerina:3.0,coco:2.5,acai:12,pessego:8.5},
 
   _syntheticPrices(culture) {
     const base = this._REF[culture] || 5.0;
