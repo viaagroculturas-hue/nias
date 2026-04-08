@@ -8508,69 +8508,43 @@ async function niasLoadRealData() {
 function _updateHortiPrices(cepeaPrices, conabData) {
   const flvRef = typeof FLVModule !== 'undefined' ? FLVModule._REF : {};
 
-  // Map: card_price_id -> { slug, unit, conabKey }
   const hortiMap = {
-    'hp-tomate-mesa': { slug:'tomate', unit:'R$/kg', conab:'TOMATE', cepea:null },
-    'hp-tomate-ind':  { slug:'tomate', unit:'R$/t',  conab:'TOMATE', cepea:null },
-    'hp-pimentao':    { slug:'pimentao', unit:'R$/kg', conab:'PIMENTAO', cepea:null },
-    'hp-alface':      { slug:'folhosas', unit:'R$/kg', conab:'ALFACE', cepea:null },
-    'hp-laranja':     { slug:'laranja', unit:'R$/cx', conab:'LARANJA', cepea:'laranja' },
-    'hp-batata':      { slug:'batata', unit:'R$/sc', conab:'BATATA INGLESA', cepea:null },
-    'hp-cebola':      { slug:'cebola', unit:'R$/sc', conab:'CEBOLA', cepea:null },
-    'hp-manga':       { slug:'manga', unit:'R$/cx', conab:'MANGA', cepea:null },
-    'hp-uva':         { slug:'uva', unit:'R$/kg', conab:'UVA', cepea:null },
+    'tomate-mesa': { slug:'tomate', unit:'kg', conab:'TOMATE', cepea:null, elPrice:'hp-tomate-mesa', elDelta:'hd-tomate-mesa', elSrc:'hsrc-tomate-mesa', elStatus:'hst-tomate-mesa' },
+    'tomate-ind':  { slug:'tomate', unit:'t',  conab:'TOMATE', cepea:null, elPrice:'hp-tomate-ind', elDelta:'hd-tomate-ind', elSrc:'hsrc-tomate-ind', elStatus:'hst-tomate-ind' },
+    'pimentao':    { slug:'pimentao', unit:'kg', conab:'PIMENTAO', cepea:null, elPrice:'hp-pimentao', elDelta:'hd-pimentao', elSrc:'hsrc-pimentao', elStatus:'hst-pimentao' },
+    'alface':      { slug:'folhosas', unit:'kg', conab:'ALFACE', cepea:null, elPrice:'hp-alface', elDelta:'hd-alface', elSrc:'hsrc-alface', elStatus:'hst-alface' },
+    'laranja':     { slug:'laranja', unit:'cx', conab:'LARANJA', cepea:'laranja', elPrice:'hp-laranja', elDelta:'hd-laranja', elSrc:'hsrc-laranja', elStatus:'hst-laranja' },
+    'batata':      { slug:'batata', unit:'sc', conab:'BATATA INGLESA', cepea:null, elPrice:'hp-batata', elDelta:'hd-batata', elSrc:'hsrc-batata', elStatus:'hst-batata' },
+    'cebola':      { slug:'cebola', unit:'sc', conab:'CEBOLA', cepea:null, elPrice:'hp-cebola', elDelta:'hd-cebola', elSrc:'hsrc-cebola', elStatus:'hst-cebola' },
+    'manga':       { slug:'manga', unit:'cx', conab:'MANGA', cepea:null, elPrice:'hp-manga', elDelta:'hd-manga', elSrc:'hsrc-manga', elStatus:'hst-manga' },
+    'uva':         { slug:'uva', unit:'kg', conab:'UVA', cepea:null, elPrice:'hp-uva', elDelta:'hd-uva', elSrc:'hsrc-uva', elStatus:'hst-uva' },
   };
 
-  for (const [elId, cfg] of Object.entries(hortiMap)) {
-    const priceEl = document.getElementById(elId);
-    const srcEl = document.getElementById(elId.replace('hp-','hsrc-'));
+  for (const [key, cfg] of Object.entries(hortiMap)) {
+    const priceEl = document.getElementById(cfg.elPrice);
+    const deltaEl = document.getElementById(cfg.elDelta);
+    const srcEl = document.getElementById(cfg.elSrc);
+    const statusEl = document.getElementById(cfg.elStatus);
     if (!priceEl) continue;
 
-    let price = null, source = '', date = '';
+    // Resolve price from best source
+    let price = null, source = '', change = null;
 
-    // 1. Try CEPEA (most reliable for key commodities)
+    // 1. CEPEA
     if (cfg.cepea && cepeaPrices && cepeaPrices[cfg.cepea]) {
       const cp = cepeaPrices[cfg.cepea];
-      price = cp.price;
-      source = `CEPEA/ESALQ ${cp.date || ''}`;
-      date = cp.date || '';
+      price = cp.price; change = cp.change; source = `CEPEA/ESALQ · ${cp.date || ''}`;
     }
-
-    // 2. Try CONAB Semanal
+    // 2. CONAB
     if (!price && conabData && conabData.agro) {
-      const conabMatch = Object.entries(conabData.agro).find(([k]) => k.toUpperCase().includes(cfg.conab));
-      if (conabMatch) {
-        price = conabMatch[1].avg_price;
-        source = `CONAB Semanal ${conabMatch[1].date || ''}`;
-        date = conabMatch[1].date || '';
-      }
+      const match = Object.entries(conabData.agro).find(([k]) => k.toUpperCase().includes(cfg.conab));
+      if (match) { price = match[1].avg_price; source = `CONAB Semanal · ${match[1].date || ''}`; }
     }
+    // 3. FLV ref
+    if (!price && flvRef[cfg.slug]) { price = flvRef[cfg.slug]; source = 'CEAGESP ref.'; }
 
-    // 3. Try FLV API
-    if (!price) {
-      fetch(`/api/flv/prices?culture=${cfg.slug}&days=1`).then(r => {
-        if (!r.ok) throw 0;
-        return r.json();
-      }).then(d => {
-        if (d.series && d.series.length) {
-          const last = d.series[d.series.length - 1];
-          priceEl.textContent = `R$ ${last.price.toFixed(2)}/${cfg.unit.split('/')[1]||'kg'}`;
-          if (srcEl) srcEl.textContent = `Fonte: FLV/CONAB · ${last.date || ''} · ${last.source || ''}`;
-        }
-      }).catch(() => {
-        // 4. Fallback: synthetic reference
-        const ref = flvRef[cfg.slug];
-        if (ref && srcEl) {
-          priceEl.textContent = `R$ ${ref.toFixed(2)}/${cfg.unit.split('/')[1]||'kg'}`;
-          srcEl.textContent = 'Fonte: CEAGESP ref. (estimativa)';
-        }
-      });
-      continue;
-    }
-
-    // Update DOM
     if (price) {
-      priceEl.textContent = `R$ ${price.toFixed(2)}/${cfg.unit.split('/')[1]||'kg'}`;
+      priceEl.textContent = `R$ ${price.toFixed(2)}/${cfg.unit}`;
       priceEl.classList.add('val-flash');
       setTimeout(() => priceEl.classList.remove('val-flash'), 500);
     }
@@ -8578,6 +8552,35 @@ function _updateHortiPrices(cepeaPrices, conabData) {
       srcEl.textContent = `Fonte: ${source}`;
       srcEl.style.color = source.includes('CEPEA') ? 'var(--accent2)' : source.includes('CONAB') ? 'var(--accent)' : 'var(--text2)';
     }
+
+    // Fetch prediction for trend
+    (async (cfg, deltaEl, statusEl, change) => {
+      try {
+        let pred = null;
+        try {
+          const r = await fetch(`/api/flv/predictions/${cfg.slug}?horizon=15`);
+          if (r.ok) pred = await r.json();
+        } catch(e) {}
+        if (!pred || !pred.forecast || !pred.forecast.length) {
+          // Synthetic trend
+          pred = typeof FLVModule !== 'undefined' ? FLVModule._syntheticPrediction(cfg.slug, {series:[{price: flvRef[cfg.slug]||5}]}) : null;
+        }
+        if (pred && deltaEl) {
+          const trendPct = pred.trend_pct || (change || 0);
+          const trend = pred.trend || 'estavel';
+          const arrow = trendPct > 0 ? '▲' : trendPct < 0 ? '▼' : '—';
+          const sign = trendPct > 0 ? '+' : '';
+          const trendLabel = trend === 'alta' ? 'PREVISÃO ALTA 15d' : trend === 'baixa' ? 'PREVISÃO BAIXA 15d' : 'ESTÁVEL 15d';
+          deltaEl.textContent = `${arrow} ${sign}${trendPct.toFixed(1)}% — ${trendLabel}`;
+          deltaEl.className = 'horti-delta ' + (trendPct > 2 ? 'danger' : trendPct < -2 ? 'ok' : '');
+          if (statusEl) {
+            if (trend === 'alta') { statusEl.textContent = '↑ ALTA PREVISTA'; statusEl.className = 'horti-status danger'; }
+            else if (trend === 'baixa') { statusEl.textContent = '↓ BAIXA PREVISTA'; statusEl.className = 'horti-status ok'; }
+            else { statusEl.textContent = '→ ESTÁVEL'; statusEl.className = 'horti-status ok'; }
+          }
+        }
+      } catch(e) {}
+    })(cfg, deltaEl, statusEl, change);
   }
 }
 
