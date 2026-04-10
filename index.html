@@ -1461,7 +1461,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
         <!-- RIGHT: CHART + SPREAD OPPORTUNITIES -->
         <div style="width:300px;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;">
           <div style="flex:1;display:flex;flex-direction:column;border-bottom:1px solid var(--border);overflow:hidden;">
-            <div style="padding:5px 10px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:9px;color:var(--accent);letter-spacing:1px;flex-shrink:0;">SOJA BR — PROD. vs DEMANDA</div>
+            <div id="oferta-chart-title" style="padding:5px 10px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:9px;color:var(--accent);letter-spacing:1px;flex-shrink:0;">SOJA BR — PROD. vs DEMANDA</div>
             <div class="chart-wrap" style="flex:1;"><canvas id="chartOferta"></canvas></div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
@@ -3011,35 +3011,105 @@ function logMapToggleWaze() {
 
 // ═══════════════════════════════════════════════════════════════════
 
-// OFERTA CHART
+// OFERTA CHART — Dynamic per product
 // ═══════════════════════════════════════════════════════════════════
+const OFERTA_DATA = {
+  soja:      { label:'SOJA BR',      unit:'Mt', prod:[10.2,18.5,32.4,38.1,28.6,10.3,4.1,2.8,3.5,6.2,8.4,9.8], dem:[14.0,14.2,14.4,14.6,14.8,14.5,14.2,14.0,14.3,14.5,14.4,14.3], color:'#00d4ff' },
+  milho:     { label:'MILHO BR',     unit:'Mt', prod:[5.1,8.2,12.8,18.5,22.4,28.1,32.6,18.3,8.1,4.2,3.8,4.5], dem:[8.0,8.1,8.2,8.4,8.5,8.6,8.4,8.2,8.0,8.1,8.2,8.3], color:'#c8a000' },
+  tomate:    { label:'TOMATE',       unit:'kt', prod:[380,350,310,290,340,420,480,510,450,380,320,350], dem:[360,360,370,370,380,380,370,360,360,370,370,360], color:'#cc2200' },
+  banana:    { label:'BANANA',       unit:'kt', prod:[580,560,520,490,510,540,570,600,620,610,590,580], dem:[520,520,530,530,540,540,530,520,520,530,530,520], color:'#c8a000' },
+  laranja:   { label:'LARANJA',      unit:'kt', prod:[800,650,480,320,280,350,520,780,1100,1300,1200,950], dem:[600,600,610,620,630,620,610,600,600,610,620,610], color:'#cc5500' },
+  manga:     { label:'MANGA',        unit:'kt', prod:[40,35,28,22,18,15,12,18,45,85,120,80], dem:[35,35,36,36,37,37,36,35,35,36,37,36], color:'#e07800' },
+  uva:       { label:'UVA',          unit:'kt', prod:[60,55,42,35,30,28,25,32,48,65,82,70], dem:[40,40,42,42,44,44,42,40,40,42,44,42], color:'#6b0080' },
+  cebola:    { label:'CEBOLA',       unit:'kt', prod:[80,75,65,55,50,60,85,120,150,140,110,90], dem:[80,80,82,82,84,84,82,80,80,82,84,82], color:'#c06000' },
+  batata:    { label:'BATATA',       unit:'kt', prod:[280,260,220,180,200,250,320,380,400,350,300,280], dem:[280,280,290,290,300,300,290,280,280,290,300,290], color:'#b89050' },
+  mamao:     { label:'MAMÃO',        unit:'kt', prod:[85,90,95,100,98,88,75,70,72,78,82,85], dem:[75,75,76,76,78,78,76,75,75,76,78,76], color:'#e08030' },
+  melancia:  { label:'MELANCIA',     unit:'kt', prod:[60,50,35,25,20,30,55,80,120,150,130,90], dem:[65,65,68,68,70,70,68,65,65,68,70,68], color:'#409030' },
+  melao:     { label:'MELÃO',        unit:'kt', prod:[20,18,15,12,10,12,18,28,45,65,55,30], dem:[25,25,26,26,28,28,26,25,25,26,28,26], color:'#80aa00' },
+  abacaxi:   { label:'ABACAXI',      unit:'kt', prod:[110,105,95,85,80,88,100,115,125,130,120,112], dem:[95,95,98,98,100,100,98,95,95,98,100,98], color:'#c8b000' },
+  cenoura:   { label:'CENOURA',      unit:'kt', prod:[45,42,38,35,32,36,42,48,52,50,46,44], dem:[38,38,39,39,40,40,39,38,38,39,40,39], color:'#e07820' },
+  morango:   { label:'MORANGO',      unit:'kt', prod:[5,4,3,2,1.5,2,4,8,14,18,12,7], dem:[6,6,6.2,6.2,6.5,6.5,6.2,6,6,6.2,6.5,6.2], color:'#ff4080' },
+  pimentao:  { label:'PIMENTÃO',     unit:'kt', prod:[28,25,22,20,24,30,35,38,36,32,28,26], dem:[26,26,27,27,28,28,27,26,26,27,28,27], color:'#aa0000' },
+  folhosas:  { label:'FOLHOSAS',     unit:'kt', prod:[38,35,30,25,28,35,42,48,45,40,36,37], dem:[34,34,35,35,36,36,35,34,34,35,36,35], color:'#50a050' },
+  alho:      { label:'ALHO',         unit:'kt', prod:[8,7,6,5,4.5,5.5,8,12,16,14,10,9], dem:[8,8,8.2,8.2,8.5,8.5,8.2,8,8,8.2,8.5,8.2], color:'#d0c0a0' },
+  maracuja:  { label:'MARACUJÁ',     unit:'kt', prod:[22,20,18,15,14,16,20,28,35,38,30,24], dem:[22,22,23,23,24,24,23,22,22,23,24,23], color:'#c8c000' },
+  goiaba:    { label:'GOIABA',       unit:'kt', prod:[18,16,14,12,15,20,25,28,26,22,18,17], dem:[18,18,19,19,20,20,19,18,18,19,20,19], color:'#50a050' },
+  abacate:   { label:'ABACATE',      unit:'kt', prod:[12,10,8,6,5,8,14,22,28,25,18,14], dem:[12,12,12.5,12.5,13,13,12.5,12,12,12.5,13,12.5], color:'#507030' },
+  limao:     { label:'LIMÃO',        unit:'kt', prod:[50,45,38,30,28,35,48,62,75,70,58,52], dem:[45,45,46,46,48,48,46,45,45,46,48,46], color:'#a0c000' },
+  tangerina: { label:'TANGERINA',    unit:'kt', prod:[15,12,8,5,4,6,12,22,35,42,30,18], dem:[15,15,16,16,17,17,16,15,15,16,17,16], color:'#e07020' },
+  coco:      { label:'COCO',         unit:'kt', prod:[55,52,48,45,48,52,58,62,60,56,54,55], dem:[50,50,51,51,52,52,51,50,50,51,52,51], color:'#806040' },
+  acai:      { label:'AÇAÍ',         unit:'kt', prod:[8,5,3,2,1.5,2,3,6,12,18,15,10], dem:[8,8,8.5,8.5,9,9,8.5,8,8,8.5,9,8.5], color:'#4a0070' },
+  pessego:   { label:'PÊSSEGO',      unit:'kt', prod:[3,2,1.5,1,0.8,1,2,5,10,15,10,5], dem:[4,4,4.2,4.2,4.5,4.5,4.2,4,4,4.2,4.5,4.2], color:'#e06080' },
+  maca:      { label:'MAÇÃ',         unit:'kt', prod:[15,12,8,55,80,60,35,18,10,8,12,14], dem:[25,25,26,26,28,28,26,25,25,26,28,26], color:'#cc0044' },
+};
+
+let _ofertaCurrentProduct = 'soja';
+
 function initOferta() {
   window._ofertaInit = true;
-  const months = ['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26','Jun/26','Jul/26','Ago/26','Set/26','Out/26'];
-  const prod = [10.2,18.5,32.4,38.1,28.6,10.3,4.1,2.8,3.5,6.2];
-  const dem  = [14.0,14.2,14.4,14.6,14.8,14.5,14.2,14.0,14.3,14.5];
+  updateOfertaChart('soja');
+  // Make oferta table rows clickable
+  const tbody = document.getElementById('oferta-tbody');
+  if (tbody) {
+    tbody.querySelectorAll('tr').forEach(tr => {
+      const td = tr.querySelector('td');
+      if (!td) return;
+      const name = td.textContent.trim().toLowerCase()
+        .replace('tom.mesa','tomate').replace('tom.ind.','tomate')
+        .replace('folhosas','folhosas').replace('cítricos','laranja')
+        .replace('boi gordo','boi').replace('uva br','uva').replace('uva ar','uva')
+        .replace('maçã ar','maca').replace('maçã','maca')
+        .replace('pimentão','pimentao').replace('mamão','mamao')
+        .replace('melão','melao').replace('melancia','melancia')
+        .replace('cenoura','cenoura').replace('morango','morango')
+        .replace('abacaxi','abacaxi').replace('banana','banana')
+        .replace('alho','alho').replace('cebola','cebola')
+        .replace('batata','batata').replace('manga','manga')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const slug = Object.keys(OFERTA_DATA).find(k => name.includes(k));
+      if (slug) {
+        tr.style.cursor = 'pointer';
+        tr.onclick = () => {
+          updateOfertaChart(slug);
+          tbody.querySelectorAll('tr').forEach(r => r.style.background = '');
+          tr.style.background = 'rgba(0,212,255,.08)';
+        };
+      }
+    });
+  }
+}
+
+function updateOfertaChart(product) {
+  _ofertaCurrentProduct = product;
+  const d = OFERTA_DATA[product] || OFERTA_DATA.soja;
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const titleEl = document.getElementById('oferta-chart-title');
+  if (titleEl) titleEl.textContent = `${d.label} — PRODUÇÃO vs DEMANDA (${d.unit}/mês)`;
+
+  if (window._ofertaChart) window._ofertaChart.destroy();
+
   const ctx = document.getElementById('chartOferta').getContext('2d');
   window._ofertaChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: months,
       datasets: [
-        { label:'IC Superior', data: prod.map(v=>+(v*1.032).toFixed(2)), borderColor:'transparent', backgroundColor:'rgba(0,212,255,0.1)', fill:'+1', pointRadius:0, tension:0.4 },
-        { label:'Produção Estimada (Mt/mês)', data:[...prod], borderColor:'#00d4ff', borderWidth:2, backgroundColor:'transparent', pointRadius:3, pointBackgroundColor:'#00d4ff', tension:0.4, fill:false },
-        { label:'IC Inferior', data: prod.map(v=>+(v*0.968).toFixed(2)), borderColor:'transparent', backgroundColor:'rgba(0,212,255,0.1)', fill:false, pointRadius:0, tension:0.4 },
-        { label:'Demanda de Mercado', data:[...dem], borderColor:'#ff6b35', borderWidth:2, borderDash:[5,5], backgroundColor:'transparent', pointRadius:0, tension:0.3, fill:false },
+        { label:'IC Superior', data: d.prod.map(v=>+(v*1.05).toFixed(2)), borderColor:'transparent', backgroundColor:d.color+'18', fill:'+1', pointRadius:0, tension:0.4 },
+        { label:`Produção Estimada (${d.unit}/mês)`, data:[...d.prod], borderColor:d.color, borderWidth:2, backgroundColor:'transparent', pointRadius:3, pointBackgroundColor:d.color, tension:0.4, fill:false },
+        { label:'IC Inferior', data: d.prod.map(v=>+(v*0.95).toFixed(2)), borderColor:'transparent', backgroundColor:d.color+'18', fill:false, pointRadius:0, tension:0.4 },
+        { label:'Demanda de Mercado', data:[...d.dem], borderColor:'#ff6b35', borderWidth:2, borderDash:[5,5], backgroundColor:'transparent', pointRadius:0, tension:0.3, fill:false },
       ]
     },
     options: {
-      responsive:true, maintainAspectRatio:false, animation:false,
+      responsive:true, maintainAspectRatio:false, animation:{duration:600},
       interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{labels:{color:'#6a92b0',font:{family:'Courier New',size:10},boxWidth:16,filter:i=>i.datasetIndex!==2}},
+        legend:{labels:{color:'#6a92b0',font:{family:'Courier New',size:10},boxWidth:16,filter:i=>i.datasetIndex!==0&&i.datasetIndex!==2}},
         tooltip:{backgroundColor:'#0d1f33',borderColor:'#0e2d4a',borderWidth:1,titleColor:'#00d4ff',bodyColor:'#c8dff0',titleFont:{family:'Courier New'},bodyFont:{family:'Courier New',size:11},filter:i=>i.datasetIndex!==0&&i.datasetIndex!==2}
       },
       scales:{
-        x:{ticks:{color:'#6a92b0',font:{family:'Courier New',size:10}},grid:{color:'#0e2d4a'}},
-        y:{ticks:{color:'#6a92b0',font:{family:'Courier New',size:10},callback:v=>v+'Mt'},grid:{color:'#0e2d4a'}}
+        x:{ticks:{color:'#6a92b0',font:{family:'Courier New',size:9}},grid:{color:'#0e2d4a'}},
+        y:{ticks:{color:'#6a92b0',font:{family:'Courier New',size:9},callback:v=>v+d.unit},grid:{color:'#0e2d4a'}}
       }
     }
   });
