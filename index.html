@@ -8783,7 +8783,8 @@ window.Predictix = {
         return;
       }
       
-      const res = await fetch('/api/produtores?state=RJ');
+      // Buscar todos os produtores (todos os países)
+      const res = await fetch('/api/produtores');
       if (!res.ok) throw new Error('Erro ao carregar produtores');
       const data = await res.json();
       
@@ -8793,15 +8794,42 @@ window.Predictix = {
       const produtores = data.data || [];
       console.log(`[Predictix Produtores] ${produtores.length} produtores carregados`);
       
+      // Cores por país
+      const countryColors = {
+        'BR': '#00d4ff',
+        'AR': '#87CEEB',
+        'PY': '#FFD700',
+        'UY': '#98FB98',
+        'CL': '#FF6B6B',
+        'CO': '#FF8C00',
+        'PE': '#DA70D6',
+        'EC': '#00FA9A',
+        'BO': '#F0E68C'
+      };
+      
+      const countryNames = {
+        'BR': 'Brasil',
+        'AR': 'Argentina',
+        'PY': 'Paraguai',
+        'UY': 'Uruguai',
+        'CL': 'Chile',
+        'CO': 'Colômbia',
+        'PE': 'Peru',
+        'EC': 'Equador',
+        'BO': 'Bolívia'
+      };
+      
       produtores.forEach(prod => {
+        const color = countryColors[prod.state_uf] || '#00d4ff';
+        
         const icon = L.divIcon({
           className: 'producer-marker',
           html: `<div style="
             width:24px;height:24px;
-            background:linear-gradient(135deg, #00d4ff, #00ff88);
+            background:linear-gradient(135deg, ${color}, #00ff88);
             border:2px solid #fff;
             border-radius:50%;
-            box-shadow:0 0 8px rgba(0,212,255,0.6);
+            box-shadow:0 0 8px ${color}80;
             display:flex;align-items:center;justify-content:center;
             font-size:12px;
           ">👨‍🌾</div>`,
@@ -8813,20 +8841,20 @@ window.Predictix = {
         
         const popupContent = `
           <div style="font-family:monospace;font-size:10px;min-width:180px;">
-            <div style="font-weight:bold;color:#00d4ff;font-size:11px;margin-bottom:3px;">${prod.name}</div>
-            <div style="color:#888;margin-bottom:2px;font-size:9px;">📍 ${prod.city} - ${prod.state_uf}</div>
+            <div style="font-weight:bold;color:${color};font-size:11px;margin-bottom:3px;">${prod.name}</div>
+            <div style="color:#888;margin-bottom:2px;font-size:9px;">📍 ${prod.city} · ${countryNames[prod.state_uf] || prod.state_uf}</div>
             <div style="color:#888;margin-bottom:4px;font-size:9px;">🏪 ${prod.market_channel || 'CEASA'}</div>
             <div style="border-top:1px solid #333;padding-top:4px;margin-top:4px;">
-              <div style="font-size:8px;color:#00d4ff;margin-bottom:2px;">PRODUTOS:</div>
+              <div style="font-size:8px;color:${color};margin-bottom:2px;">PRODUTOS:</div>
               <div style="display:flex;flex-wrap:wrap;gap:2px;">
-                ${(prod.products || []).map(p => `<span style="background:rgba(0,212,255,0.2);color:#00d4ff;padding:1px 4px;border-radius:2px;font-size:8px;">${p}</span>`).join('')}
+                ${(prod.products || []).map(p => `<span style="background:${color}30;color:${color};padding:1px 4px;border-radius:2px;font-size:8px;">${p}</span>`).join('')}
               </div>
             </div>
           </div>
         `;
         
         marker.bindPopup(popupContent);
-        marker.bindTooltip(prod.name, { direction: 'top', offset: [0, -8] });
+        marker.bindTooltip(prod.name + ' (' + (countryNames[prod.state_uf] || prod.state_uf) + ')', { direction: 'top', offset: [0, -8] });
         
         this._produtoresLayer.addLayer(marker);
       });
