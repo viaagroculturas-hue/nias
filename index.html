@@ -5068,6 +5068,77 @@ const MUNICIPAL_DB_EXTRA = [
   { id:'BR-PE-PET2',name:'Petrolina (Horti)',   state:'PE', country:'BR', culture:'tomate',     areaMha:0.09, area_ha:9200,  ndvi:0.57, coef:0.88, temp_max:34, chuva_7d:0, phenology:'irrigado constante — tomate/cebola/pimentão',
     poly:[[-9.5,-40.6],[-9.3,-40.6],[-9.3,-40.3],[-9.5,-40.3]], argus:'vale-sf', ceasa_ref:'CEASA-PE' },
 
+  // ════════════════════════════════════════════════════════════════
+  // AMÉRICA DO SUL — PRODUTORES ADICIONAIS
+  // ════════════════════════════════════════════════════════════════
+
+  // ── ARGENTINA — POLOS SOJA/GRÃOS ──
+  { id:'AR-BUE-ROS', name:'Rosário',            state:'Santa Fe', country:'AR', culture:'soja',     areaMha:0.85, ndvi:0.64, coef:0.92, temp_max:28, chuva_7d:12, phenology:'soja safra plena — colheita Abr-Mai',
+    poly:[[-33.0,-60.8],[-32.4,-60.8],[-32.4,-60.0],[-33.0,-60.0]], argus:'pampas-argentina', ceasa_ref:'Rosário' },
+  { id:'AR-BUE-BAH', name:'Bahía Blanca',       state:'Buenos Aires', country:'AR', culture:'trigo',    areaMha:0.62, ndvi:0.61, coef:0.89, temp_max:24, chuva_7d:8, phenology:'trigo/cevada — safra primavera',
+    poly:[[-38.8,-62.4],[-38.2,-62.4],[-38.2,-61.6],[-38.8,-61.6]], argus:'pampas-argentina', ceasa_ref:'Bahía Blanca' },
+  { id:'AR-COR-COR', name:'Córdoba Capital',    state:'Córdoba', country:'AR', culture:'soja',     areaMha:0.48, ndvi:0.62, coef:0.90, temp_max:29, chuva_7d:15, phenology:'soja/milho — rotação intensiva',
+    poly:[[-31.6,-64.4],[-31.0,-64.4],[-31.0,-63.6],[-31.6,-63.6]], argus:'pampas-argentina', ceasa_ref:'Córdoba' },
+  { id:'AR-MEN-LUJ', name:'Luján de Cuyo',      state:'Mendoza', country:'AR', culture:'uva',      areaMha:0.35, ndvi:0.68, coef:0.93, temp_max:32, chuva_7d:0, phenology:'vinhedos altitude — irrigados',
+    poly:[[-33.2,-69.0],[-32.6,-69.0],[-32.6,-68.2],[-33.2,-68.2]], argus:'andes-argentina', ceasa_ref:'Mendoza' },
+  { id:'AR-TUC-TUC', name:'San Miguel de Tucumán', state:'Tucumán', country:'AR', culture:'cana',     areaMha:0.28, ndvi:0.70, coef:0.91, temp_max:33, chuva_7d:18, phenology:'cana-de-açúcar — irrigada',
+    poly:[[-27.0,-65.4],[-26.4,-65.4],[-26.4,-64.6],[-27.0,-64.6]], argus:'norte-argentina', ceasa_ref:'Tucumán' },
+
+  // ── PARAGUAI — POLOS SOJA/GRÃOS ──
+  { id:'PY-CDE-CDE', name:'Ciudad del Este',    state:'Alto Paraná', country:'PY', culture:'soja',     areaMha:0.55, ndvi:0.65, coef:0.88, temp_max:31, chuva_7d:22, phenology:'soja 2ª safra — colheita Fev-Abr',
+    poly:[[-25.6,-54.8],[-25.0,-54.8],[-25.0,-54.0],[-25.6,-54.0]], argus:'leste-paraguai', ceasa_ref:'CDE' },
+  { id:'PY-ASU-ASU', name:'Asunción',           state:'Central', country:'PY', culture:'horti',    areaMha:0.12, ndvi:0.58, coef:0.82, temp_max:33, chuva_7d:25, phenology:'hortaliças periurbanas',
+    poly:[[-25.4,-57.6],[-25.0,-57.6],[-25.0,-57.2],[-25.4,-57.2]], argus:'central-paraguai', ceasa_ref:'Asunción' },
+  { id:'PY-BOQ-BOQ', name:'Boaquerón',          state:'Boaquerón', country:'PY', culture:'soja',     areaMha:0.42, ndvi:0.60, coef:0.85, temp_max:30, chuva_7d:10, phenology:'soja/milho — Chaco seco',
+    poly:[[-23.6,-60.8],[-23.0,-60.8],[-23.0,-60.0],[-23.6,-60.0]], argus:'chaco-paraguai', ceasa_ref:'Boaquerón' },
+
+  // ── URUGUAI — POLOS SOJA/CARNE ──
+  { id:'UY-MVD-MVD', name:'Montevidéu',         state:'Montevideo', country:'UY', culture:'horti',    areaMha:0.08, ndvi:0.59, coef:0.83, temp_max:26, chuva_7d:18, phenology:'hortaliças periurbanas',
+    poly:[[-34.9,-56.4],[-34.5,-56.4],[-34.5,-56.0],[-34.9,-56.0]], argus:'sul-uruguai', ceasa_ref:'Montevidéu' },
+  { id:'UY-SAL-SAL', name:'Salto',              state:'Salto', country:'UY', culture:'citrus',   areaMha:0.32, ndvi:0.63, coef:0.86, temp_max:28, chuva_7d:12, phenology:'citrus/laranja — irrigado',
+    poly:[[-31.6,-57.8],[-31.0,-57.8],[-31.0,-57.0],[-31.6,-57.0]], argus:'norte-uruguai', ceasa_ref:'Salto' },
+  { id:'UY-RIN-RIN', name:'Rio Negro',          state:'Rio Negro', country:'UY', culture:'soja',     areaMha:0.38, ndvi:0.61, coef:0.87, temp_max:27, chuva_7d:15, phenology:'soja/trigo — rotação',
+    poly:[[-32.9,-58.2],[-32.3,-58.2],[-32.3,-57.4],[-32.9,-57.4]], argus:'oeste-uruguai', ceasa_ref:'Rio Negro' },
+
+  // ── CHILE — POLOS FRUTAS/VINHO ──
+  { id:'CL-SAN-SAN', name:'Santiago',           state:'Metropolitana', country:'CL', culture:'horti',    areaMha:0.15, ndvi:0.62, coef:0.85, temp_max:30, chuva_7d:5, phenology:'hortaliças periurbanas',
+    poly:[[-33.6,-70.8],[-33.0,-70.8],[-33.0,-70.0],[-33.6,-70.0]], argus:'central-chile', ceasa_ref:'Santiago' },
+  { id:'CL-VAL-VAL', name:'Valparaíso',         state:'Valparaíso', country:'CL', culture:'uva',      areaMha:0.28, ndvi:0.67, coef:0.90, temp_max:25, chuva_7d:8, phenology:'vinhedos costeiros',
+    poly:[[-33.2,-71.8],[-32.6,-71.8],[-32.6,-71.0],[-33.2,-71.0]], argus:'costa-chile', ceasa_ref:'Valparaíso' },
+  { id:'CL-CON-CON', name:'Concepción',         state:'Bío Bío', country:'CL', culture:'trigo',    areaMha:0.35, ndvi:0.60, coef:0.86, temp_max:22, chuva_7d:35, phenology:'trigo/cereais — zona úmida',
+    poly:[[-37.0,-73.2],[-36.4,-73.2],[-36.4,-72.4],[-37.0,-72.4]], argus:'sul-chile', ceasa_ref:'Concepción' },
+  { id:'CL-ANT-ANT', name:'Antofagasta',        state:'Antofagasta', country:'CL', culture:'horti',    areaMha:0.08, ndvi:0.55, coef:0.80, temp_max:28, chuva_7d:0, phenology:'hortaliças deserticas — irrigadas',
+    poly:[[-24.4,-70.6],[-23.8,-70.6],[-23.8,-69.8],[-24.4,-69.8]], argus:'norte-chile', ceasa_ref:'Antofagasta' },
+
+  // ── COLÔMBIA — POLOS CAFÉ/FLORES ──
+  { id:'CO-BOG-BOG', name:'Bogotá',             state:'Cundinamarca', country:'CO', culture:'flores',   areaMha:0.18, ndvi:0.65, coef:0.88, temp_max:20, chuva_7d:28, phenology:'flores/corte — altitude 2600m',
+    poly:[[-4.2,-74.4],[-3.8,-74.4],[-3.8,-74.0],[-4.2,-74.0]], argus:'altiplano-colombia', ceasa_ref:'Bogotá' },
+  { id:'CO-MED-MED', name:'Medellín',           state:'Antioquia', country:'CO', culture:'cafe',     areaMha:0.42, ndvi:0.72, coef:0.91, temp_max:26, chuva_7d:32, phenology:'café arábica — eixo cafeeiro',
+    poly:[[-6.6,-75.8],[-6.0,-75.8],[-6.0,-75.2],[-6.6,-75.2]], argus:'eje-cafetero', ceasa_ref:'Medellín' },
+  { id:'CO-CAL-CAL', name:'Cali',               state:'Valle del Cauca', country:'CO', culture:'cana',     areaMha:0.55, ndvi:0.68, coef:0.89, temp_max:31, chuva_7d:25, phenology:'cana-de-açúcar — vale do Cauca',
+    poly:[[-3.6,-76.8],[-3.0,-76.8],[-3.0,-76.2],[-3.6,-76.2]], argus:'pacifico-colombia', ceasa_ref:'Cali' },
+
+  // ── PERU — POLOS ASPARGOS/QUINOA ──
+  { id:'PE-LIM-LIM', name:'Lima',               state:'Lima', country:'PE', culture:'horti',    areaMha:0.12, ndvi:0.58, coef:0.82, temp_max:24, chuva_7d:0, phenology:'hortaliças costeiras — irrigadas',
+    poly:[[-12.2,-77.2],[-11.6,-77.2],[-11.6,-76.6],[-12.2,-76.6]], argus:'costa-peru', ceasa_ref:'Lima' },
+  { id:'PE-ICA-ICA', name:'Ica',                state:'Ica', country:'PE', culture:'aspargos', areaMha:0.25, ndvi:0.62, coef:0.85, temp_max:29, chuva_7d:0, phenology:'aspargos/exportação — irrigados',
+    poly:[[-14.2,-76.0],[-13.6,-76.0],[-13.6,-75.4],[-14.2,-75.4]], argus:'ica-peru', ceasa_ref:'Ica' },
+  { id:'PE-CUS-CUS', name:'Cusco',              state:'Cusco', country:'PE', culture:'quinua',   areaMha:0.35, ndvi:0.55, coef:0.83, temp_max:22, chuva_7d:15, phenology:'quinua/macaco — andes',
+    poly:[[-13.6,-72.2],[-13.0,-72.2],[-13.0,-71.6],[-13.6,-71.6]], argus:'sierra-peru', ceasa_ref:'Cusco' },
+
+  // ── EQUADOR — POLOS BANANA/CACAU ──
+  { id:'EC-GUA-GUA', name:'Guayaquil',          state:'Guayas', country:'EC', culture:'banana',   areaMha:0.48, ndvi:0.70, coef:0.88, temp_max:32, chuva_7d:18, phenology:'banana/cacau — costa pacífica',
+    poly:[[-2.4,-80.0],[-1.8,-80.0],[-1.8,-79.4],[-2.4,-79.4]], argus:'costa-ecuador', ceasa_ref:'Guayaquil' },
+  { id:'EC-QUI-QUI', name:'Quito',              state:'Pichincha', country:'EC', culture:'flores',   areaMha:0.15, ndvi:0.63, coef:0.85, temp_max:20, chuva_7d:22, phenology:'rosas/corte — altitude 2800m',
+    poly:[[-0.4,-78.8],[-0.1,-78.8],[-0.1,-78.4],[-0.4,-78.4]], argus:'sierra-ecuador', ceasa_ref:'Quito' },
+
+  // ── BOLÍVIA — POLOS SOJA/QUINOA ──
+  { id:'BO-SAN-SAN', name:'Santa Cruz de la Sierra', state:'Santa Cruz', country:'BO', culture:'soja',     areaMha:0.52, ndvi:0.60, coef:0.84, temp_max:31, chuva_7d:20, phenology:'soja/milho — planície oriental',
+    poly:[[-18.0,-63.4],[-17.4,-63.4],[-17.4,-62.8],[-18.0,-62.8]], argus:'llanos-bolivia', ceasa_ref:'Santa Cruz' },
+  { id:'BO-LPA-LPA', name:'La Paz',             state:'La Paz', country:'BO', culture:'quinua',   areaMha:0.28, ndvi:0.52, coef:0.80, temp_max:18, chuva_7d:12, phenology:'quinua/papa — altiplano andino',
+    poly:[[-16.8,-68.4],[-16.2,-68.4],[-16.2,-67.8],[-16.8,-67.8]], argus:'altiplano-bolivia', ceasa_ref:'La Paz' },
+];
+
   // ── CHAPADA DIAMANTINA ──
   { id:'BR-BA-IBI', name:'Ibicoara',            state:'BA', country:'BR', culture:'batata',     areaMha:0.04, area_ha:4100,  ndvi:0.52, coef:0.80, temp_max:28, chuva_7d:6, phenology:'batata/tomate/cenoura altitude — equilibra MG',
     poly:[[-13.4,-41.4],[-13.2,-41.4],[-13.2,-41.1],[-13.4,-41.1]], argus:'chapada-ba', ceasa_ref:'CEASA-BA' },
