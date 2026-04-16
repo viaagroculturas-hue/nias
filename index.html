@@ -8742,9 +8742,8 @@ window.Predictix = {
     if (!this._layers.arb) return;
     const opps = this.ARBITRAGE_DB[this._culture] || [];
     const arbList = document.getElementById('px-arb-list');
+    if (!arbList) return;
     arbList.innerHTML = '';
-    const insightBox = document.getElementById('px-arb-insight');
-    insightBox.style.display = 'none';
 
     if (!opps.length) {
       arbList.innerHTML = '<div style="color:#555;font-size:10px;text-align:center;padding:20px;">Sem oportunidades para esta cultura</div>';
