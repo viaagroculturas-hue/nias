@@ -210,6 +210,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/api/ceagesp':
             self._serve_ceagesp()
             return
+        if self.path == '/api/rodovias':
+            self._serve_rodovias()
+            return
         if self.path.startswith('/proxy/'):
             self._proxy('GET')
         elif self.path == '/api/cepea':
@@ -238,6 +241,15 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def _serve_ceagesp(self):
         from flv.collectors.ceagesp_live import fetch_ceagesp
         data = fetch_ceagesp()
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False).encode())
+
+    def _serve_rodovias(self):
+        from flv.collectors.rodovias import fetch_rodovias_status
+        data = fetch_rodovias_status()
         self.send_response(200)
         self._cors()
         self.send_header('Content-Type', 'application/json')

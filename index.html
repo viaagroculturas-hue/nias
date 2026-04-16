@@ -2046,6 +2046,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
         <div style="width:1px;height:20px;background:#222;"></div>
         <span style="font-size:9px;color:#888;">CAMADAS:</span>
         <button id="px-layer-flow" onclick="Predictix.toggleLayer('flow')" style="background:rgba(80,200,120,.15);border:1px solid #50C878;color:#50C878;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">FLUXO</button>
+        <button id="px-layer-rodovias" onclick="Predictix.toggleLayer('rodovias')" style="background:rgba(59,130,246,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">RODOVIAS</button>
         <button id="px-layer-clima" onclick="Predictix.toggleLayer('clima')" style="background:rgba(239,68,68,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">CLIMA</button>
         <button id="px-layer-arb" onclick="Predictix.toggleLayer('arb')" style="background:rgba(255,215,0,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">ARBITRAGEM</button>
       </div>
@@ -8019,10 +8020,11 @@ const FLVModule = {
 // PREDICTIX — Arbitrage Terminal Module
 // ═══════════════════════════════════════════════════════════════════
 const Predictix = {
-  _map: null, _flowLayer: null, _climaLayer: null, _arbLayer: null, _portMarkers: null,
+  _map: null, _flowLayer: null, _climaLayer: null, _arbLayer: null, _portMarkers: null, _rodoviasLayer: null,
   _culture: 'tomate', _horizon: 0, _initialized: false,
   _climaTimer: null, _climaActive: false,
-  _layers: { flow: true, clima: false, arb: true },
+  _layers: { flow: true, rodovias: false, clima: false, arb: true },
+  _rodoviasData: null,
 
   PORTS: [
     { id:'santos',    name:'SANTOS (SP)',    lat:-23.96, lon:-46.30, cap:12000, region:'SE', type:'porto' },
@@ -8215,11 +8217,26 @@ const Predictix = {
       this._climaLayer = L.layerGroup();
       this._arbLayer = L.layerGroup().addTo(this._map);
       this._portMarkers = L.layerGroup().addTo(this._map);
+      this._rodoviasLayer = L.layerGroup();
       this._initialized = true;
+      // Load rodovias data
+      this._loadRodovias();
     }
     setTimeout(() => this._map.invalidateSize(), 200);
     this._render();
     this._startClimaCountdown();
+  },
+
+  async _loadRodovias() {
+    try {
+      const res = await fetch('/api/rodovias');
+      if (res.ok) {
+        this._rodoviasData = await res.json();
+        this._renderRodovias();
+      }
+    } catch(e) {
+      console.log('[Predictix] Rodovias API error:', e);
+    }
   },
 
   setCulture(c) { this._culture = c; this._render(); },
@@ -8237,14 +8254,16 @@ const Predictix = {
     this._layers[name] = !this._layers[name];
     const btn = document.getElementById('px-layer-' + name);
     if (btn) {
-      btn.style.borderColor = this._layers[name] ? (name==='flow'?'#50C878':name==='clima'?'#EF4444':'#FFD700') : '#444';
-      btn.style.color = this._layers[name] ? btn.style.borderColor : '#888';
+      const colors = {flow:'#50C878', rodovias:'#3B82F6', clima:'#EF4444', arb:'#FFD700'};
+      btn.style.borderColor = this._layers[name] ? colors[name] : '#444';
+      btn.style.color = this._layers[name] ? colors[name] : '#888';
     }
     this._render();
   },
 
   _render() {
     this._renderFlowLines();
+    this._renderRodovias();
     this._renderPorts();
     this._renderArbitrage();
     this._renderKPIs();
@@ -8269,6 +8288,69 @@ const Predictix = {
       // Arrow marker at midpoint
       L.circleMarker(mid, {radius:3, color, fillColor:color, fillOpacity:0.8, weight:0}).addTo(this._flowLayer);
     });
+  },
+
+  _renderRodovias() {
+    this._rodoviasLayer.clearLayers();
+    if (!this._layers.rodovias) {
+      this._map.removeLayer(this._rodoviasLayer);
+      return;
+    }
+    this._rodoviasLayer.addTo(this._map);
+    
+    const data = this._rodoviasData;
+    if (!data || !data.roads) return;
+    
+    Object.entries(data.roads).forEach(([brCode, road]) => {
+      if (!road.coords || road.coords.length < 2) return;
+      
+      const color = road.status_color || '#10B981';
+      const weight = road.status === 'CRITICAL' ? 4 : road.status === 'WARNING' ? 3 : 2;
+      const dash = road.status === 'CRITICAL' ? '6,4' : '';
+      
+      // Draw the BR line
+      const line = L.polyline(road.coords, {
+        color, weight, opacity:0.85, dashArray:dash, smoothFactor:2
+      });
+      
+      const incidentList = road.incidents && road.incidents.length > 0 
+        ? road.incidents.map(i => `• ${i.type} (${i.severity}) - ${i.location}`).join('<br>')
+        : 'Sem incidentes ativos';
+      
+      line.bindTooltip(`<div style="font-family:monospace;font-size:11px;">
+        <b style="color:${color};font-size:13px;">${brCode}</b><br>
+        ${road.name}<br>
+        Status: <b style="color:${color}">${road.status}</b><br>
+        Tráfego: ${road.traffic_current?.toLocaleString() || 0}/${road.traffic_avg?.toLocaleString() || 0} veíc/dia<br>
+        Atraso médio: ${road.avg_delay_minutes || 0} min<br>
+        Incidentes: ${road.incidents_count || 0}<hr style="border-color:#333;margin:6px 0;">
+        ${incidentList}
+      </div>`, {sticky:true, direction:'top'});
+      
+      this._rodoviasLayer.addLayer(line);
+      
+      // Add status dots at critical points
+      road.coords.forEach((coord, idx) => {
+        if (idx % 3 === 0) { // Every 3rd point
+          const dot = L.circleMarker(coord, {
+            radius: road.status === 'CRITICAL' ? 5 : 3,
+            color, fillColor:color, fillOpacity:0.6, weight:1
+          });
+          this._rodoviasLayer.addLayer(dot);
+        }
+      });
+    });
+    
+    // Update KPI with rodovias data
+    const summary = data.summary;
+    if (summary) {
+      const kpiEl = document.getElementById('px-kpi-eta');
+      if (kpiEl && summary.critical_br) {
+        const criticalCount = summary.critical_br.length;
+        kpiEl.textContent = criticalCount > 0 ? `${criticalCount} BRs` : 'NORMAL';
+        kpiEl.style.color = criticalCount >= 3 ? '#EF4444' : criticalCount > 0 ? '#F59E0B' : '#50C878';
+      }
+    }
   },
 
   _renderPorts() {
