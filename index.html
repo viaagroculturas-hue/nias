@@ -1615,8 +1615,6 @@ tr:hover td{background:rgba(0,212,255,.04);}
               <!-- LAYERS TOGGLE (top-right of map) -->
               <div style="position:absolute;top:8px;right:8px;z-index:1001;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
                 <button id="btn-prod-shadow" onclick="toggleProdShadow()" class="lyr-btn" title="Sombra de Produção: OFF — clique para ligar" style="background:rgba(5,14,26,.88);border:1px solid var(--border);font-size:9px;padding:3px 8px;">🌑 Sombra</button>
-                <button id="btn-produtores" onclick="toggleProdutores()" class="lyr-btn" title="Mostrar produtores do RJ" style="background:rgba(5,14,26,.88);border:1px solid var(--border);font-size:9px;padding:3px 8px;">👨‍🌾 Produtores RJ</button>
-                <button id="btn-produtores-rj" onclick="toggleProdutoresRJ()" class="lyr-btn" title="Produtores em Recuperação Judicial" style="background:rgba(5,14,26,.88);border:1px solid var(--border);font-size:9px;padding:3px 8px;">⚖️ Produtores RJ</button>
                 <button id="btn-risk-radar" onclick="setRiskMode('radar')" class="lyr-btn active" style="background:rgba(5,14,26,.88);font-size:9px;padding:3px 8px;" title="Modo Radar: pontos discretos">📍 Radar</button>
                 <button id="btn-risk-impact" onclick="setRiskMode('impact')" class="lyr-btn" style="background:rgba(5,14,26,.88);font-size:9px;padding:3px 8px;" title="Modo Impacto: áreas preenchidas">🔴 Impacto</button>
                 <button id="btn-risk-off" onclick="setRiskMode('off')" class="lyr-btn" style="background:rgba(5,14,26,.88);font-size:9px;padding:3px 8px;" title="Desligar risco">✕ Risco</button>
@@ -2051,6 +2049,9 @@ tr:hover td{background:rgba(0,212,255,.04);}
         <button id="px-layer-rodovias" onclick="Predictix.toggleLayer('rodovias')" style="background:rgba(59,130,246,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">RODOVIAS</button>
         <button id="px-layer-clima" onclick="Predictix.toggleLayer('clima')" style="background:rgba(239,68,68,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">CLIMA</button>
         <button id="px-layer-arb" onclick="Predictix.toggleLayer('arb')" style="background:rgba(255,215,0,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">ARBITRAGEM</button>
+        <div style="width:1px;height:20px;background:#222;"></div>
+        <button id="px-btn-produtores" onclick="Predictix.toggleProdutores()" style="background:rgba(0,212,255,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">👨‍🌾 PRODUTORES</button>
+        <button id="px-btn-produtores-rj" onclick="Predictix.toggleProdutoresRJ()" style="background:rgba(255,107,53,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">⚖️ EM RJ</button>
       </div>
       <!-- MAIN CONTENT -->
       <div style="flex:1;display:flex;overflow:hidden;">
@@ -8271,9 +8272,11 @@ const FLVModule = {
 // ═══════════════════════════════════════════════════════════════════
 const Predictix = {
   _map: null, _flowLayer: null, _climaLayer: null, _arbLayer: null, _portMarkers: null, _rodoviasLayer: null,
+  _produtoresLayer: null, _produtoresRJLayer: null,
   _culture: 'tomate', _horizon: 0, _initialized: false,
   _climaTimer: null, _climaActive: false,
   _layers: { flow: true, rodovias: false, clima: false, arb: true },
+  _produtoresVisible: false, _produtoresRJVisible: false,
   _rodoviasData: null,
 
   PORTS: [
@@ -8727,6 +8730,196 @@ const Predictix = {
     const avgWait = Math.round(18 + h * 2.5);
     document.getElementById('px-kpi-fila').textContent = avgWait + 'h';
     document.getElementById('px-kpi-fila').style.color = avgWait > 36 ? '#EF4444' : '#F59E0B';
+  },
+
+  // ─── PRODUTORES NO PREDICTIX ──────────────────────────────────────
+  async toggleProdutores() {
+    this._produtoresVisible = !this._produtoresVisible;
+    const btn = document.getElementById('px-btn-produtores');
+    if (btn) {
+      btn.style.borderColor = this._produtoresVisible ? '#00d4ff' : '#444';
+      btn.style.color = this._produtoresVisible ? '#00d4ff' : '#888';
+    }
+    
+    if (this._produtoresVisible) {
+      await this._loadProdutores();
+    } else {
+      if (this._produtoresLayer) {
+        this._produtoresLayer.remove();
+        this._produtoresLayer = null;
+      }
+    }
+  },
+
+  async _loadProdutores() {
+    try {
+      if (!this._map) {
+        console.error('[Predictix Produtores] Mapa não inicializado');
+        return;
+      }
+      
+      const res = await fetch('/api/produtores?state=RJ');
+      if (!res.ok) throw new Error('Erro ao carregar produtores');
+      const data = await res.json();
+      
+      if (this._produtoresLayer) this._produtoresLayer.remove();
+      this._produtoresLayer = L.layerGroup().addTo(this._map);
+      
+      const produtores = data.data || [];
+      console.log(`[Predictix Produtores] ${produtores.length} produtores carregados`);
+      
+      produtores.forEach(prod => {
+        const icon = L.divIcon({
+          className: 'producer-marker',
+          html: `<div style="
+            width:24px;height:24px;
+            background:linear-gradient(135deg, #00d4ff, #00ff88);
+            border:2px solid #fff;
+            border-radius:50%;
+            box-shadow:0 0 8px rgba(0,212,255,0.6);
+            display:flex;align-items:center;justify-content:center;
+            font-size:12px;
+          ">👨‍🌾</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+        
+        const marker = L.marker([prod.lat, prod.lon], { icon });
+        
+        const popupContent = `
+          <div style="font-family:monospace;font-size:10px;min-width:180px;">
+            <div style="font-weight:bold;color:#00d4ff;font-size:11px;margin-bottom:3px;">${prod.name}</div>
+            <div style="color:#888;margin-bottom:2px;font-size:9px;">📍 ${prod.city} - ${prod.state_uf}</div>
+            <div style="color:#888;margin-bottom:4px;font-size:9px;">🏪 ${prod.market_channel || 'CEASA'}</div>
+            <div style="border-top:1px solid #333;padding-top:4px;margin-top:4px;">
+              <div style="font-size:8px;color:#00d4ff;margin-bottom:2px;">PRODUTOS:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:2px;">
+                ${(prod.products || []).map(p => `<span style="background:rgba(0,212,255,0.2);color:#00d4ff;padding:1px 4px;border-radius:2px;font-size:8px;">${p}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+        
+        marker.bindPopup(popupContent);
+        marker.bindTooltip(prod.name, { direction: 'top', offset: [0, -8] });
+        
+        this._produtoresLayer.addLayer(marker);
+      });
+      
+    } catch (e) {
+      console.error('[Predictix Produtores] Erro:', e);
+    }
+  },
+
+  async toggleProdutoresRJ() {
+    this._produtoresRJVisible = !this._produtoresRJVisible;
+    const btn = document.getElementById('px-btn-produtores-rj');
+    if (btn) {
+      btn.style.borderColor = this._produtoresRJVisible ? '#ff6b35' : '#444';
+      btn.style.color = this._produtoresRJVisible ? '#ff6b35' : '#888';
+    }
+    
+    if (this._produtoresRJVisible) {
+      await this._loadProdutoresRJ();
+    } else {
+      if (this._produtoresRJLayer) {
+        this._produtoresRJLayer.remove();
+        this._produtoresRJLayer = null;
+      }
+    }
+  },
+
+  async _loadProdutoresRJ() {
+    try {
+      if (!this._map) {
+        console.error('[Predictix Produtores RJ] Mapa não inicializado');
+        return;
+      }
+      
+      const res = await fetch('/api/produtores-rj');
+      if (!res.ok) throw new Error('Erro ao carregar produtores RJ');
+      const data = await res.json();
+      
+      if (this._produtoresRJLayer) this._produtoresRJLayer.remove();
+      this._produtoresRJLayer = L.layerGroup().addTo(this._map);
+      
+      const produtores = data.data || [];
+      console.log(`[Predictix Produtores RJ] ${produtores.length} produtores carregados`);
+      
+      const statusColors = {
+        'em_recuperacao': '#ff6b35',
+        'recuperacao_aprovada': '#ffc107',
+        'reorganizado': '#00ff88',
+        'falencia': '#ff3d3d'
+      };
+      
+      const statusLabels = {
+        'em_recuperacao': 'Em Recuperação',
+        'recuperacao_aprovada': 'Recuperação Aprovada',
+        'reorganizado': 'Reorganizado',
+        'falencia': 'Falência'
+      };
+      
+      produtores.forEach(prod => {
+        const color = statusColors[prod.judicial_status] || '#ff6b35';
+        
+        const icon = L.divIcon({
+          className: 'producer-rj-marker',
+          html: `<div style="
+            width:28px;height:28px;
+            background:linear-gradient(135deg, ${color}, #ff3d3d);
+            border:2px solid #fff;
+            border-radius:50%;
+            box-shadow:0 0 10px ${color}80;
+            display:flex;align-items:center;justify-content:center;
+            font-size:12px;
+          ">⚖️</div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+        
+        const marker = L.marker([prod.lat, prod.lon], { icon });
+        
+        const fmtMoney = v => v ? 'R$ ' + (v/1000000).toFixed(1) + 'M' : 'N/A';
+        
+        const popupContent = `
+          <div style="font-family:monospace;font-size:10px;min-width:240px;max-width:280px;">
+            <div style="font-weight:bold;color:${color};font-size:11px;margin-bottom:4px;">${prod.company_name}</div>
+            <div style="background:${color}20;border:1px solid ${color};border-radius:3px;padding:3px 6px;margin-bottom:6px;font-size:9px;color:${color};">
+              ⚖️ ${statusLabels[prod.judicial_status] || prod.judicial_status}
+            </div>
+            <div style="color:#888;margin-bottom:2px;font-size:9px;">📍 ${prod.city} - ${prod.state_uf}</div>
+            <div style="color:#888;margin-bottom:4px;font-size:8px;">📋 ${prod.process_number || 'N/A'}</div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0;font-size:9px;">
+              <div style="background:rgba(0,212,255,0.1);padding:4px;border-radius:3px;">
+                <div style="color:#666;font-size:7px;">FATURAMENTO</div>
+                <div style="color:#00d4ff;font-weight:bold;">${fmtMoney(prod.annual_revenue)}</div>
+              </div>
+              <div style="background:rgba(255,61,61,0.1);padding:4px;border-radius:3px;">
+                <div style="color:#666;font-size:7px;">DÍVIDA</div>
+                <div style="color:#ff3d3d;font-weight:bold;">${fmtMoney(prod.debts_total)}</div>
+              </div>
+            </div>
+            
+            <div style="border-top:1px solid #333;padding-top:6px;margin-top:6px;">
+              <div style="font-size:8px;color:#00d4ff;margin-bottom:3px;">PRODUTOS:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:2px;">
+                ${(prod.products || []).map(p => `<span style="background:${color}30;color:${color};padding:2px 6px;border-radius:2px;font-size:8px;border:1px solid ${color}50;">${p}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+        
+        marker.bindPopup(popupContent);
+        marker.bindTooltip(prod.company_name + ' (' + (statusLabels[prod.judicial_status] || '') + ')', { direction: 'top', offset: [0, -12] });
+        
+        this._produtoresRJLayer.addLayer(marker);
+      });
+      
+    } catch (e) {
+      console.error('[Predictix Produtores RJ] Erro:', e);
+    }
   },
 
   _startClimaCountdown() {
