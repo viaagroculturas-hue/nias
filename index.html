@@ -1616,6 +1616,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
               <div style="position:absolute;top:8px;right:8px;z-index:1001;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
                 <button id="btn-prod-shadow" onclick="toggleProdShadow()" class="lyr-btn" title="Sombra de Produção: OFF — clique para ligar" style="background:rgba(5,14,26,.88);border:1px solid var(--border);font-size:9px;padding:3px 8px;">🌑 Sombra</button>
                 <button id="btn-produtores" onclick="toggleProdutores()" class="lyr-btn" title="Mostrar produtores do RJ" style="background:rgba(5,14,26,.88);border:1px solid var(--border);font-size:9px;padding:3px 8px;">👨‍🌾 Produtores RJ</button>
+                <button id="btn-produtores-rj" onclick="toggleProdutoresRJ()" class="lyr-btn" title="Produtores em Recuperação Judicial" style="background:rgba(5,14,26,.88);border:1px solid var(--border);font-size:9px;padding:3px 8px;">⚖️ Produtores RJ</button>
                 <button id="btn-risk-radar" onclick="setRiskMode('radar')" class="lyr-btn active" style="background:rgba(5,14,26,.88);font-size:9px;padding:3px 8px;" title="Modo Radar: pontos discretos">📍 Radar</button>
                 <button id="btn-risk-impact" onclick="setRiskMode('impact')" class="lyr-btn" style="background:rgba(5,14,26,.88);font-size:9px;padding:3px 8px;" title="Modo Impacto: áreas preenchidas">🔴 Impacto</button>
                 <button id="btn-risk-off" onclick="setRiskMode('off')" class="lyr-btn" style="background:rgba(5,14,26,.88);font-size:9px;padding:3px 8px;" title="Desligar risco">✕ Risco</button>
@@ -3779,6 +3780,146 @@ async function loadProdutores() {
   } catch (e) {
     console.error('[Produtores] Erro:', e);
     alert('Erro ao carregar produtores: ' + e.message);
+  }
+}
+
+// ─── PRODUTORES EM RECUPERAÇÃO JUDICIAL RJ ─────────────────────────
+let _produtoresRJLayer = null;
+let _produtoresRJVisible = false;
+
+async function toggleProdutoresRJ() {
+  _produtoresRJVisible = !_produtoresRJVisible;
+  const btn = document.getElementById('btn-produtores-rj');
+  if (btn) {
+    btn.classList.toggle('active', _produtoresRJVisible);
+    btn.style.borderColor = _produtoresRJVisible ? '#ff6b35' : 'var(--border)';
+    btn.style.color = _produtoresRJVisible ? '#ff6b35' : 'var(--text2)';
+  }
+  
+  if (_produtoresRJVisible) {
+    await loadProdutoresRJ();
+  } else {
+    if (_produtoresRJLayer) {
+      _produtoresRJLayer.remove();
+      _produtoresRJLayer = null;
+    }
+  }
+}
+
+async function loadProdutoresRJ() {
+  try {
+    const res = await fetch('/api/produtores-rj');
+    if (!res.ok) throw new Error('Erro ao carregar produtores RJ');
+    const data = await res.json();
+    
+    if (_produtoresRJLayer) _produtoresRJLayer.remove();
+    _produtoresRJLayer = L.layerGroup().addTo(leafletMap);
+    
+    const produtores = data.data || [];
+    console.log(`[Produtores RJ] ${produtores.length} produtores carregados`);
+    
+    // Cores por status judicial
+    const statusColors = {
+      'em_recuperacao': '#ff6b35',
+      'recuperacao_aprovada': '#ffc107',
+      'reorganizado': '#00ff88',
+      'falencia': '#ff3d3d'
+    };
+    
+    const statusLabels = {
+      'em_recuperacao': 'Em Recuperação',
+      'recuperacao_aprovada': 'Recuperação Aprovada',
+      'reorganizado': 'Reorganizado',
+      'falencia': 'Falência'
+    };
+    
+    produtores.forEach(prod => {
+      const lat = prod.lat;
+      const lon = prod.lon;
+      const nome = prod.company_name;
+      const cidade = prod.city;
+      const produtos = prod.products || [];
+      const status = prod.judicial_status;
+      const processo = prod.process_number;
+      const faturamento = prod.annual_revenue;
+      const divida = prod.debts_total;
+      const funcionarios = prod.employees;
+      const color = statusColors[status] || '#ff6b35';
+      
+      // Ícone customizado para produtor em RJ
+      const icon = L.divIcon({
+        className: 'producer-rj-marker',
+        html: `<div style="
+          width:32px;height:32px;
+          background:linear-gradient(135deg, ${color}, #ff3d3d);
+          border:2px solid #fff;
+          border-radius:50%;
+          box-shadow:0 0 12px ${color}80;
+          display:flex;align-items:center;justify-content:center;
+          font-size:14px;
+        ">⚖️</div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+      
+      const marker = L.marker([lat, lon], { icon });
+      
+      // Formatar valores
+      const fmtMoney = v => v ? 'R$ ' + (v/1000000).toFixed(1) + 'M' : 'N/A';
+      
+      // Popup com informações detalhadas
+      const popupContent = `
+        <div style="font-family:var(--font);font-size:11px;min-width:280px;max-width:320px;">
+          <div style="font-weight:bold;color:${color};font-size:13px;margin-bottom:5px;">${nome}</div>
+          <div style="background:${color}20;border:1px solid ${color};border-radius:4px;padding:4px 8px;margin-bottom:8px;font-size:10px;color:${color};">
+            ⚖️ ${statusLabels[status] || status}
+          </div>
+          <div style="color:var(--text2);margin-bottom:3px;font-size:10px;">📍 ${cidade} - RJ</div>
+          <div style="color:var(--text2);margin-bottom:5px;font-size:9px;">📋 Processo: ${processo || 'N/A'}</div>
+          
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;font-size:10px;">
+            <div style="background:rgba(0,212,255,0.1);padding:6px;border-radius:4px;">
+              <div style="color:var(--text2);font-size:8px;">FATURAMENTO</div>
+              <div style="color:#00d4ff;font-weight:bold;">${fmtMoney(faturamento)}</div>
+            </div>
+            <div style="background:rgba(255,61,61,0.1);padding:6px;border-radius:4px;">
+              <div style="color:var(--text2);font-size:8px;">DÍVIDA TOTAL</div>
+              <div style="color:#ff3d3d;font-weight:bold;">${fmtMoney(divida)}</div>
+            </div>
+            <div style="background:rgba(0,255,136,0.1);padding:6px;border-radius:4px;">
+              <div style="color:var(--text2);font-size:8px;">FUNCIONÁRIOS</div>
+              <div style="color:#00ff88;font-weight:bold;">${funcionarios || 'N/A'}</div>
+            </div>
+            <div style="background:rgba(255,193,7,0.1);padding:6px;border-radius:4px;">
+              <div style="color:var(--text2);font-size:8px;">INDICADOR</div>
+              <div style="color:#ffc107;font-weight:bold;">${divida && faturamento ? (divida/faturamento).toFixed(1) + 'x' : 'N/A'}</div>
+            </div>
+          </div>
+          
+          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;">
+            <div style="font-size:9px;color:var(--accent);margin-bottom:5px;">PRODUTOS COMERCIALIZADOS:</div>
+            <div style="display:flex;flex-wrap:wrap;gap:3px;">
+              ${produtos.map(p => `<span style="background:${color}30;color:${color};padding:3px 8px;border-radius:3px;font-size:9px;border:1px solid ${color}50;">${p}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      marker.bindPopup(popupContent);
+      marker.bindTooltip(nome + ' (' + statusLabels[status] + ')', { direction: 'top', offset: [0, -16] });
+      
+      _produtoresRJLayer.addLayer(marker);
+    });
+    
+    // Centralizar no RJ se houver produtores
+    if (produtores.length > 0) {
+      const group = new L.featureGroup(_produtoresRJLayer.getLayers());
+      leafletMap.fitBounds(group.getBounds().pad(0.2));
+    }
+    
+  } catch (e) {
+    console.error('[Produtores RJ] Erro:', e);
+    alert('Erro ao carregar produtores RJ: ' + e.message);
   }
 }
 

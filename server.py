@@ -219,6 +219,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/api/produtores':
             self._serve_produtores()
             return
+        if self.path == '/api/produtores-rj':
+            self._serve_produtores_rj()
+            return
         if self.path.startswith('/proxy/'):
             self._proxy('GET')
         elif self.path == '/api/cepea':
@@ -364,6 +367,76 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 # Get unique states
                 cursor.execute('SELECT DISTINCT state_uf FROM flv_producers WHERE status = "ativo"')
                 result['meta']['states'] = [row[0] for row in cursor.fetchall()]
+                
+                conn.close()
+        except Exception as e:
+            result['error'] = str(e)
+        
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(result, ensure_ascii=False).encode())
+
+    def _serve_produtores_rj(self):
+        """Serve producers in judicial recovery from RJ"""
+        import sqlite3
+        import os
+        
+        db_path = os.path.join(os.path.dirname(__file__), 'nia_flv.db')
+        result = {'data': [], 'meta': {'total': 0, 'cities': [], 'statuses': []}}
+        
+        try:
+            if os.path.exists(db_path):
+                conn = sqlite3.connect(db_path)
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                
+                # Get query parameters
+                from urllib.parse import urlparse, parse_qs
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                
+                city = params.get('city', [''])[0]
+                status = params.get('status', [''])[0]
+                
+                # Build query
+                query = "SELECT * FROM flv_producers_rj WHERE 1=1"
+                args = []
+                
+                if city:
+                    query += " AND city LIKE ?"
+                    args.append(f"%{city}%")
+                if status:
+                    query += " AND judicial_status = ?"
+                    args.append(status)
+                
+                query += " ORDER BY company_name"
+                
+                cursor.execute(query, args)
+                rows = cursor.fetchall()
+                
+                # Convert to dict and parse JSON fields
+                for row in rows:
+                    row_dict = dict(row)
+                    try:
+                        import json
+                        row_dict['products'] = json.loads(row_dict.get('products', '[]'))
+                        row_dict['production_volume'] = json.loads(row_dict.get('production_volume', '{}'))
+                    except:
+                        row_dict['products'] = []
+                        row_dict['production_volume'] = {}
+                    result['data'].append(row_dict)
+                
+                result['meta']['total'] = len(rows)
+                
+                # Get unique cities
+                cursor.execute('SELECT DISTINCT city FROM flv_producers_rj WHERE status = "ativo"')
+                result['meta']['cities'] = [row[0] for row in cursor.fetchall()]
+                
+                # Get unique statuses
+                cursor.execute('SELECT DISTINCT judicial_status FROM flv_producers_rj')
+                result['meta']['statuses'] = [row[0] for row in cursor.fetchall()]
                 
                 conn.close()
         except Exception as e:

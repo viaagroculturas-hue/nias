@@ -161,3 +161,33 @@ CREATE TABLE IF NOT EXISTS flv_producers (
 CREATE INDEX IF NOT EXISTS idx_producers_state ON flv_producers(state_uf);
 CREATE INDEX IF NOT EXISTS idx_producers_city ON flv_producers(city);
 CREATE INDEX IF NOT EXISTS idx_producers_status ON flv_producers(status);
+
+-- Tabela de Produtores em Recuperação Judicial
+CREATE TABLE IF NOT EXISTS flv_producers_rj (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_name TEXT NOT NULL,
+    cnpj        TEXT UNIQUE,
+    process_number TEXT,
+    court       TEXT,
+    judicial_status TEXT DEFAULT 'em_recuperacao' CHECK(judicial_status IN ('em_recuperacao', 'recuperacao_aprovada', 'falencia', 'reorganizado')),
+    phone       TEXT,
+    email       TEXT,
+    address     TEXT,
+    city        TEXT NOT NULL,
+    state_uf    TEXT NOT NULL DEFAULT 'RJ',
+    lat         REAL NOT NULL,
+    lon         REAL NOT NULL,
+    products    TEXT NOT NULL,
+    production_volume TEXT,
+    annual_revenue REAL,
+    employees   INTEGER,
+    debts_total REAL,
+    recovery_plan TEXT,
+    entry_date  TEXT,
+    status      TEXT DEFAULT 'ativo',
+    created_at  TEXT DEFAULT (datetime('now')),
+    updated_at  TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_producers_rj_city ON flv_producers_rj(city);
+CREATE INDEX IF NOT EXISTS idx_producers_rj_status ON flv_producers_rj(judicial_status);
