@@ -213,6 +213,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/api/rodovias':
             self._serve_rodovias()
             return
+        if self.path == '/api/ceasas':
+            self._serve_ceasas()
+            return
         if self.path.startswith('/proxy/'):
             self._proxy('GET')
         elif self.path == '/api/cepea':
@@ -255,6 +258,49 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode())
+
+    def _serve_ceasas(self):
+        """Serve consolidated CEASA data from all states"""
+        import sqlite3
+        import os
+        
+        db_path = os.path.join(os.path.dirname(__file__), 'data', 'ceasa', 'ceasa.db')
+        result = {'data': [], 'meta': {'total': 0, 'origens': [], 'date': ''}}
+        
+        try:
+            if os.path.exists(db_path):
+                conn = sqlite3.connect(db_path)
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                
+                # Get latest data
+                cursor.execute('''
+                    SELECT * FROM cotacoes 
+                    WHERE data_coleta = (SELECT MAX(data_coleta) FROM cotacoes)
+                    ORDER BY origem, produto
+                ''')
+                
+                rows = cursor.fetchall()
+                result['data'] = [dict(row) for row in rows]
+                result['meta']['total'] = len(rows)
+                
+                # Get unique origens
+                cursor.execute('SELECT DISTINCT origem FROM cotacoes WHERE data_coleta = (SELECT MAX(data_coleta) FROM cotacoes)')
+                result['meta']['origens'] = [row[0] for row in cursor.fetchall()]
+                
+                # Get date
+                cursor.execute('SELECT MAX(data_coleta) FROM cotacoes')
+                result['meta']['date'] = cursor.fetchone()[0] or ''
+                
+                conn.close()
+        except Exception as e:
+            result['error'] = str(e)
+        
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(result, ensure_ascii=False).encode())
 
     def _cors(self):
         self.send_header('Access-Control-Allow-Origin', '*')
