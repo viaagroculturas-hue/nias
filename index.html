@@ -1653,22 +1653,22 @@ tr:hover td{background:rgba(0,212,255,.04);}
         </div>
 
         <!-- RIGHT: YIELD TABLE + ANOMALY RADAR -->
-        <div style="width:420px;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;">
+        <div style="width:480px;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;">
 
           <!-- Rm TABLE -->
-          <div style="height:50%;border-bottom:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;">
+          <div style="height:55%;border-bottom:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;">
             <div style="padding:6px 12px;color:var(--accent);font-size:10px;letter-spacing:2px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;justify-content:space-between;">
               <span>R_m POR MUNICÍPIO</span>
               <span style="color:var(--text2);font-size:9px;">Rm = Área × NDVI × Coef. Manejo</span>
             </div>
             <div style="flex:1;overflow-y:auto;">
-              <table style="width:100%;border-collapse:collapse;">
+              <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
                 <thead><tr>
-                  <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 8px;text-align:left;position:sticky;top:0;letter-spacing:1px;">MUNICÍPIO</th>
-                  <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 8px;text-align:left;position:sticky;top:0;">CULTURA</th>
-                  <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 8px;text-align:right;position:sticky;top:0;">NDVI</th>
-                  <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 8px;text-align:right;position:sticky;top:0;">Rm (t/ha)</th>
-                  <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 8px;text-align:center;position:sticky;top:0;">STATUS</th>
+                  <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 6px;text-align:left;position:sticky;top:0;letter-spacing:1px;width:35%;">MUNICÍPIO</th>
+                  <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 6px;text-align:left;position:sticky;top:0;width:20%;">CULTURA</th>
+                  <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 6px;text-align:right;position:sticky;top:0;width:15%;">NDVI</th>
+                  <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 6px;text-align:right;position:sticky;top:0;width:18%;">Rm (t/ha)</th>
+                  <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 6px;text-align:center;position:sticky;top:0;width:12%;">STATUS</th>
                 </tr></thead>
                 <tbody id="mun-table-body"></tbody>
               </table>
@@ -4959,11 +4959,11 @@ function buildMunTable(cultureFilter) {
                  : '<span style="color:var(--accent2);font-size:9px;">NORMAL</span>';
     const flag = { BR:'🇧🇷', AR:'🇦🇷', PY:'🇵🇾', UY:'🇺🇾' }[m.country] || '';
     return `<tr style="cursor:pointer;" onclick="highlightMunicipal('${m.id}')">
-      <td style="padding:5px 8px;border-bottom:1px solid var(--border);font-size:10px;">${flag} ${m.name}<span style="color:var(--text2);font-size:9px;"> · ${m.state}</span></td>
-      <td style="padding:5px 8px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text2);">${m.culture}</td>
-      <td style="padding:5px 8px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;color:${ndviColor};" id="mun-ndvi-${m.id}">${m.ndvi.toFixed(3)}</td>
-      <td style="padding:5px 8px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;color:var(--accent);font-weight:bold;" id="mun-rm-${m.id}">${rm}</td>
-      <td style="padding:5px 8px;border-bottom:1px solid var(--border);text-align:center;">${status}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid var(--border);font-size:10px;width:35%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${flag} ${m.name}<span style="color:var(--text2);font-size:9px;"> · ${m.state}</span></td>
+      <td style="padding:5px 6px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text2);width:20%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.culture}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;color:${ndviColor};width:15%;" id="mun-ndvi-${m.id}">${m.ndvi.toFixed(3)}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;color:var(--accent);font-weight:bold;width:18%;" id="mun-rm-${m.id}">${rm}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid var(--border);text-align:center;width:12%;" id="mun-status-${m.id}">${status}</td>
     </tr>`;
   }).join('');
 }
