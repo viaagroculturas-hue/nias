@@ -8798,10 +8798,31 @@ window.Predictix = {
   _showInsight(o, margin) {
     const detailPanel = document.getElementById('px-arb-detail');
     const detailContent = document.getElementById('px-arb-detail-content');
+    
+    // Verificar se elementos existem
+    if (!detailPanel || !detailContent) {
+      console.warn('[Predictix] Elementos de detalhe não encontrados');
+      return;
+    }
+    
     const profitable = margin > 5;
     
-    // Calcular volumes e projeções
-    const volumeDiario = Math.round(500 + Math.random() * 1500); // toneladas/dia estimado
+    // Gerar valor determinístico baseado no ID da oportunidade
+    const hashCode = (str) => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return Math.abs(hash);
+    };
+    
+    const opportunityId = o.buy + '-' + o.sell + '-' + (o.product || this._culture || 'default');
+    const hash = hashCode(opportunityId);
+    
+    // Calcular volumes e projeções (determinísticos)
+    const volumeDiario = 500 + (hash % 1500); // 500-2000 toneladas/dia
     const volumeMensal = volumeDiario * 30;
     const volumeAnual = volumeMensal * 12;
     const lucroPorUnidade = (o.sellPrice - o.buyPrice - o.frete);
@@ -8831,100 +8852,144 @@ window.Predictix = {
     const culturaKey = this._culture || 'default';
     const justificativa = justificativas[culturaKey] || justificativas['default'];
     
+    // Função para sanitizar texto
+    const sanitize = (text) => {
+      if (typeof text !== 'string') return String(text);
+      return text.replace(/[<>"']/g, (match) => ({
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;'
+      })[match]);
+    };
+    
     // Projeção do que vai acontecer
-    const projecao = `
-      <div style="margin-top:10px;padding:8px;background:rgba(80,200,120,0.1);border-left:3px solid #50C878;border-radius:3px;">
-        <div style="font-size:9px;color:#50C878;margin-bottom:4px;">📈 PROJEÇÃO DE MERCADO</div>
-        <div style="font-size:10px;color:#ccc;line-height:1.5;">
-          • Preço na origem tende a subir ${(margin * 0.3).toFixed(1)}% nos próximos 15 dias<br>
-          • Volume de negociação deve aumentar ${Math.round(margin * 0.8)}%<br>
-          • Concorrência por frete pode reduzir margem em 2-5%<br>
-          • Janela de oportunidade: ${margin > 30 ? '7-10 dias' : margin > 15 ? '15-20 dias' : '30+ dias'}
-        </div>
-      </div>
-    `;
+    const projecaoSubida = ((margin * 0.3) % 15).toFixed(1);
+    const projecaoAumento = Math.round((margin * 0.8) % 50);
+    const janelaDias = margin > 30 ? '7-10 dias' : margin > 15 ? '15-20 dias' : '30+ dias';
     
     detailPanel.style.display = 'block';
-    detailContent.innerHTML = `
-      <div style="font-size:11px;color:#fff;margin-bottom:6px;font-weight:bold;">
-        ${o.product || this._culture?.toUpperCase() || 'PRODUTO'} — OPORTUNIDADE ${profitable ? 'VIÁVEL' : 'DE RISCO'}
-      </div>
-      
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-        <div style="background:#1a1a1a;padding:6px;border-radius:4px;">
-          <div style="font-size:8px;color:#888;">ORIGEM</div>
-          <div style="font-size:10px;color:#3B82F6;font-weight:bold;">${o.buy}</div>
-          <div style="font-size:9px;color:#666;">R$ ${o.buyPrice}/un</div>
-        </div>
-        <div style="background:#1a1a1a;padding:6px;border-radius:4px;">
-          <div style="font-size:8px;color:#888;">DESTINO</div>
-          <div style="font-size:10px;color:#EF4444;font-weight:bold;">${o.sell}</div>
-          <div style="font-size:9px;color:#666;">R$ ${o.sellPrice}/un</div>
-        </div>
-      </div>
-      
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
-        <div style="text-align:center;padding:6px;background:rgba(255,215,0,0.1);border-radius:4px;">
-          <div style="font-size:16px;font-weight:bold;color:${profitable?'#50C878':'#EF4444'};">${margin>0?'+':''}${margin.toFixed(1)}%</div>
-          <div style="font-size:8px;color:#888;">MARGEM</div>
-        </div>
-        <div style="text-align:center;padding:6px;background:rgba(0,212,255,0.1);border-radius:4px;">
-          <div style="font-size:16px;font-weight:bold;color:#00d4ff;">R$${lucroPorUnidade.toFixed(2)}</div>
-          <div style="font-size:8px;color:#888;">LUCRO/UN</div>
-        </div>
-        <div style="text-align:center;padding:6px;background:rgba(255,107,53,0.1);border-radius:4px;">
-          <div style="font-size:16px;font-weight:bold;color:#ff6b35;">R$${o.frete}</div>
-          <div style="font-size:8px;color:#888;">FRETE</div>
-        </div>
-      </div>
-      
-      <div style="background:#1a1a1a;padding:8px;border-radius:4px;margin-bottom:10px;">
-        <div style="font-size:9px;color:#FFD700;margin-bottom:6px;">📦 VOLUMETRIA ESTIMADA</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:9px;color:#ccc;">
-          <div>
-            <div style="color:#888;font-size:8px;">DIÁRIO</div>
-            <div style="color:#fff;font-weight:bold;">${volumeDiario.toLocaleString()} t</div>
-            <div style="color:#50C878;">R$ ${(lucroDiario/1000).toFixed(1)}k</div>
-          </div>
-          <div>
-            <div style="color:#888;font-size:8px;">MENSAL</div>
-            <div style="color:#fff;font-weight:bold;">${volumeMensal.toLocaleString()} t</div>
-            <div style="color:#50C878;">R$ ${(lucroMensal/1000000).toFixed(2)}M</div>
-          </div>
-          <div>
-            <div style="color:#888;font-size:8px;">ANUAL</div>
-            <div style="color:#fff;font-weight:bold;">${volumeAnual.toLocaleString()} t</div>
-            <div style="color:#50C878;">R$ ${(lucroAnual/1000000).toFixed(2)}M</div>
-          </div>
-        </div>
-      </div>
-      
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;font-size:9px;">
-        <div style="background:rgba(59,130,246,0.1);padding:6px;border-radius:4px;text-align:center;">
-          <div style="color:#888;font-size:8px;">TENDÊNCIA</div>
-          <div style="color:#3B82F6;font-weight:bold;">${tendenciaPreco}</div>
-        </div>
-        <div style="background:rgba(245,158,11,0.1);padding:6px;border-radius:4px;text-align:center;">
-          <div style="color:#888;font-size:8px;">RISCO</div>
-          <div style="color:${riscoMercado==='BAIXO'?'#50C878':riscoMercado==='MÉDIO'?'#F59E0B':'#EF4444'};font-weight:bold;">${riscoMercado}</div>
-        </div>
-        <div style="background:rgba(0,255,136,0.1);padding:6px;border-radius:4px;text-align:center;">
-          <div style="color:#888;font-size:8px;">PAYBACK</div>
-          <div style="color:#00ff88;font-weight:bold;">${prazoRetorno}</div>
-        </div>
-      </div>
-      
-      <div style="background:rgba(255,215,0,0.05);padding:8px;border-radius:4px;margin-bottom:10px;border:1px solid rgba(255,215,0,0.2);">
-        <div style="font-size:9px;color:#FFD700;margin-bottom:4px;">💡 JUSTIFICATIVA DA OPORTUNIDADE</div>
-        <div style="font-size:10px;color:#ccc;line-height:1.5;">${justificativa}</div>
-      </div>
-      
-      ${projecao}
-      
-      <div style="margin-top:10px;padding:6px;background:rgba(239,68,68,0.1);border-radius:4px;font-size:9px;color:#ff6b35;text-align:center;">
-        ⚠️ Riscos: Variação cambial, condições climáticas, gargalos logísticos
-      </div>
-    `;
+    
+    // Criar elementos de forma segura
+    const container = document.createElement('div');
+    
+    // Título do produto
+    const titulo = document.createElement('div');
+    titulo.style.cssText = 'font-size:11px;color:#fff;margin-bottom:6px;font-weight:bold;';
+    titulo.textContent = (o.product || this._culture?.toUpperCase() || 'PRODUTO') + ' — OPORTUNIDADE ' + (profitable ? 'VIÁVEL' : 'DE RISCO');
+    container.appendChild(titulo);
+    
+    // Grid de origem/destino
+    const gridOrigemDestino = document.createElement('div');
+    gridOrigemDestino.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;';
+    
+    const origem = document.createElement('div');
+    origem.style.cssText = 'background:#1a1a1a;padding:6px;border-radius:4px;';
+    origem.innerHTML = '<div style="font-size:8px;color:#888;">ORIGEM</div>' +
+      '<div style="font-size:10px;color:#3B82F6;font-weight:bold;">' + sanitize(o.buy) + '</div>' +
+      '<div style="font-size:9px;color:#666;">R$ ' + o.buyPrice + '/un</div>';
+    gridOrigemDestino.appendChild(origem);
+    
+    const destino = document.createElement('div');
+    destino.style.cssText = 'background:#1a1a1a;padding:6px;border-radius:4px;';
+    destino.innerHTML = '<div style="font-size:8px;color:#888;">DESTINO</div>' +
+      '<div style="font-size:10px;color:#EF4444;font-weight:bold;">' + sanitize(o.sell) + '</div>' +
+      '<div style="font-size:9px;color:#666;">R$ ' + o.sellPrice + '/un</div>';
+    gridOrigemDestino.appendChild(destino);
+    
+    container.appendChild(gridOrigemDestino);
+    
+    // Grid de métricas principais
+    const gridMetricas = document.createElement('div');
+    gridMetricas.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;';
+    gridMetricas.innerHTML = 
+      '<div style="text-align:center;padding:6px;background:rgba(255,215,0,0.1);border-radius:4px;">' +
+        '<div style="font-size:16px;font-weight:bold;color:' + (profitable ? '#50C878' : '#EF4444') + ';">' + (margin > 0 ? '+' : '') + margin.toFixed(1) + '%</div>' +
+        '<div style="font-size:8px;color:#888;">MARGEM</div>' +
+      '</div>' +
+      '<div style="text-align:center;padding:6px;background:rgba(0,212,255,0.1);border-radius:4px;">' +
+        '<div style="font-size:16px;font-weight:bold;color:#00d4ff;">R$' + lucroPorUnidade.toFixed(2) + '</div>' +
+        '<div style="font-size:8px;color:#888;">LUCRO/UN</div>' +
+      '</div>' +
+      '<div style="text-align:center;padding:6px;background:rgba(255,107,53,0.1);border-radius:4px;">' +
+        '<div style="font-size:16px;font-weight:bold;color:#ff6b35;">R$' + o.frete + '</div>' +
+        '<div style="font-size:8px;color:#888;">FRETE</div>' +
+      '</div>';
+    container.appendChild(gridMetricas);
+    
+    // Volumetria
+    const volumetria = document.createElement('div');
+    volumetria.style.cssText = 'background:#1a1a1a;padding:8px;border-radius:4px;margin-bottom:10px;';
+    volumetria.innerHTML = 
+      '<div style="font-size:9px;color:#FFD700;margin-bottom:6px;">📦 VOLUMETRIA ESTIMADA</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:9px;color:#ccc;">' +
+        '<div>' +
+          '<div style="color:#888;font-size:8px;">DIÁRIO</div>' +
+          '<div style="color:#fff;font-weight:bold;">' + volumeDiario.toLocaleString() + ' t</div>' +
+          '<div style="color:#50C878;">R$ ' + (lucroDiario / 1000).toFixed(1) + 'k</div>' +
+        '</div>' +
+        '<div>' +
+          '<div style="color:#888;font-size:8px;">MENSAL</div>' +
+          '<div style="color:#fff;font-weight:bold;">' + volumeMensal.toLocaleString() + ' t</div>' +
+          '<div style="color:#50C878;">R$ ' + (lucroMensal / 1000000).toFixed(2) + 'M</div>' +
+        '</div>' +
+        '<div>' +
+          '<div style="color:#888;font-size:8px;">ANUAL</div>' +
+          '<div style="color:#fff;font-weight:bold;">' + volumeAnual.toLocaleString() + ' t</div>' +
+          '<div style="color:#50C878;">R$ ' + (lucroAnual / 1000000).toFixed(2) + 'M</div>' +
+        '</div>' +
+      '</div>';
+    container.appendChild(volumetria);
+    
+    // Indicadores
+    const indicadores = document.createElement('div');
+    indicadores.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;font-size:9px;';
+    const riscoColor = riscoMercado === 'BAIXO' ? '#50C878' : riscoMercado === 'MÉDIO' ? '#F59E0B' : '#EF4444';
+    indicadores.innerHTML = 
+      '<div style="background:rgba(59,130,246,0.1);padding:6px;border-radius:4px;text-align:center;">' +
+        '<div style="color:#888;font-size:8px;">TENDÊNCIA</div>' +
+        '<div style="color:#3B82F6;font-weight:bold;">' + tendenciaPreco + '</div>' +
+      '</div>' +
+      '<div style="background:rgba(245,158,11,0.1);padding:6px;border-radius:4px;text-align:center;">' +
+        '<div style="color:#888;font-size:8px;">RISCO</div>' +
+        '<div style="color:' + riscoColor + ';font-weight:bold;">' + riscoMercado + '</div>' +
+      '</div>' +
+      '<div style="background:rgba(0,255,136,0.1);padding:6px;border-radius:4px;text-align:center;">' +
+        '<div style="color:#888;font-size:8px;">PAYBACK</div>' +
+        '<div style="color:#00ff88;font-weight:bold;">' + prazoRetorno + '</div>' +
+      '</div>';
+    container.appendChild(indicadores);
+    
+    // Justificativa
+    const justificativaDiv = document.createElement('div');
+    justificativaDiv.style.cssText = 'background:rgba(255,215,0,0.05);padding:8px;border-radius:4px;margin-bottom:10px;border:1px solid rgba(255,215,0,0.2);';
+    justificativaDiv.innerHTML = 
+      '<div style="font-size:9px;color:#FFD700;margin-bottom:4px;">💡 JUSTIFICATIVA DA OPORTUNIDADE</div>' +
+      '<div style="font-size:10px;color:#ccc;line-height:1.5;">' + sanitize(justificativa) + '</div>';
+    container.appendChild(justificativaDiv);
+    
+    // Projeção
+    const projecao = document.createElement('div');
+    projecao.style.cssText = 'margin-top:10px;padding:8px;background:rgba(80,200,120,0.1);border-left:3px solid #50C878;border-radius:3px;';
+    projecao.innerHTML = 
+      '<div style="font-size:9px;color:#50C878;margin-bottom:4px;">📈 PROJEÇÃO DE MERCADO</div>' +
+      '<div style="font-size:10px;color:#ccc;line-height:1.5;">' +
+        '• Preço na origem tende a subir ' + projecaoSubida + '% nos próximos 15 dias<br>' +
+        '• Volume de negociação deve aumentar ' + projecaoAumento + '%<br>' +
+        '• Concorrência por frete pode reduzir margem em 2-5%<br>' +
+        '• Janela de oportunidade: ' + janelaDias +
+      '</div>';
+    container.appendChild(projecao);
+    
+    // Riscos
+    const riscos = document.createElement('div');
+    riscos.style.cssText = 'margin-top:10px;padding:6px;background:rgba(239,68,68,0.1);border-radius:4px;font-size:9px;color:#ff6b35;text-align:center;';
+    riscos.textContent = '⚠️ Riscos: Variação cambial, condições climáticas, gargalos logísticos';
+    container.appendChild(riscos);
+    
+    // Limpar e adicionar novo conteúdo
+    detailContent.innerHTML = '';
+    detailContent.appendChild(container);
     
     // Scroll para o painel de detalhes
     detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
