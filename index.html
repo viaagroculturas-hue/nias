@@ -8148,16 +8148,41 @@ const FLVModule = {
 
       let html = '<div class="flv-card">';
       html += '<div style="font-size:9px;color:var(--flv-green);letter-spacing:1px;margin-bottom:6px;">CONDICOES METEOROLOGICAS · TEMPO REAL</div>';
-      if (climate.climate && climate.climate.length) {
-        const last = climate.climate[climate.climate.length - 1];
+      
+      // Se não há dados da API, buscar do Open-Meteo diretamente
+      let climateData = climate.climate || [];
+      let dataSource = 'API NIA$';
+      
+      if (!climateData.length && ibge) {
+        try {
+          // Buscar coordenadas do município do banco local
+          const mun = MUNICIPAL_DB.find(m => m.id === ibge);
+          if (mun && mun.lat && mun.lon) {
+            const omData = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${mun.lat}&longitude=${mun.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Sao_Paulo&forecast_days=7`).then(r => r.json()).catch(() => null);
+            if (omData && omData.daily) {
+              climateData = omData.daily.time.map((t, i) => ({
+                date: t,
+                temp_max_c: omData.daily.temperature_2m_max[i],
+                temp_min_c: omData.daily.temperature_2m_min[i],
+                precip_mm: omData.daily.precipitation_sum[i],
+                source: 'Open-Meteo'
+              }));
+              dataSource = 'Open-Meteo';
+            }
+          }
+        } catch(e) { console.warn('Fallback Open-Meteo error:', e); }
+      }
+      
+      if (climateData && climateData.length) {
+        const last = climateData[climateData.length - 1];
         html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">`;
         html += `<div style="text-align:center;"><div style="font-size:14px;font-weight:bold;color:var(--flv-ice);">${last.temp_max_c?.toFixed(1)||'—'}°C</div><div style="font-size:8px;color:var(--text2);">TEMP MAX</div></div>`;
         html += `<div style="text-align:center;"><div style="font-size:14px;font-weight:bold;color:#4FC3F7;">${last.temp_min_c?.toFixed(1)||'—'}°C</div><div style="font-size:8px;color:var(--text2);">TEMP MIN</div></div>`;
         html += `<div style="text-align:center;"><div style="font-size:14px;font-weight:bold;color:#29B6F6;">${last.precip_mm?.toFixed(1)||'0'}mm</div><div style="font-size:8px;color:var(--text2);">PRECIP</div></div>`;
         html += '</div>';
         // 7-day precip sum
-        const precip7d = climate.climate.reduce((s,d) => s + (d.precip_mm||0), 0);
-        html += `<div style="margin-top:8px;font-size:10px;color:var(--text2);">Precip. 7d: <strong style="color:${precip7d > 50 ? 'var(--flv-amber)' : 'var(--flv-green)'}">${precip7d.toFixed(1)}mm</strong> · Fonte: ${last.source||'Open-Meteo'}</div>`;
+        const precip7d = climateData.reduce((s,d) => s + (d.precip_mm||0), 0);
+        html += `<div style="margin-top:8px;font-size:10px;color:var(--text2);">Precip. 7d: <strong style="color:${precip7d > 50 ? 'var(--flv-amber)' : 'var(--flv-green)'}">${precip7d.toFixed(1)}mm</strong> · Fonte: ${dataSource}</div>`;
       } else {
         html += '<div style="color:var(--text2);font-size:10px;">Sem dados climaticos disponiveis</div>';
       }
