@@ -136,3 +136,28 @@ CREATE INDEX IF NOT EXISTS idx_climate_mun_date ON flv_climate(mun_id, obs_date)
 CREATE INDEX IF NOT EXISTS idx_ndvi_mun_date    ON flv_ndvi(mun_id, obs_date);
 CREATE INDEX IF NOT EXISTS idx_pred_cult_target  ON flv_predictions(culture_id, target_date);
 CREATE INDEX IF NOT EXISTS idx_alerts_sev_date   ON flv_alerts(severity, created_at);
+
+-- Tabela de Produtores (RJ e outros estados)
+CREATE TABLE IF NOT EXISTS flv_producers (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    document    TEXT UNIQUE,
+    phone       TEXT,
+    email       TEXT,
+    address     TEXT,
+    city        TEXT NOT NULL,
+    state_uf    TEXT NOT NULL DEFAULT 'RJ',
+    lat         REAL NOT NULL,
+    lon         REAL NOT NULL,
+    products    TEXT NOT NULL, -- JSON array de produtos
+    production_volume TEXT, -- JSON com volumes por produto
+    certifications TEXT, -- Orgânico, Fair Trade, etc
+    market_channel TEXT CHECK(market_channel IN ('CEASA','Mercado Local','Exportação','Direto','Misto')),
+    status      TEXT DEFAULT 'ativo' CHECK(status IN ('ativo','inativo','pendente')),
+    created_at  TEXT DEFAULT (datetime('now')),
+    updated_at  TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_producers_state ON flv_producers(state_uf);
+CREATE INDEX IF NOT EXISTS idx_producers_city ON flv_producers(city);
+CREATE INDEX IF NOT EXISTS idx_producers_status ON flv_producers(status);
