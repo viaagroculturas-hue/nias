@@ -3714,6 +3714,13 @@ async function toggleProdutores() {
 
 async function loadProdutores() {
   try {
+    // Verificar se o mapa está inicializado
+    if (!leafletMap) {
+      console.error('[Produtores] Mapa não inicializado');
+      alert('Erro: Mapa não está pronto. Tente novamente em alguns segundos.');
+      return;
+    }
+    
     const res = await fetch('/api/produtores?state=RJ');
     if (!res.ok) throw new Error('Erro ao carregar produtores');
     const data = await res.json();
@@ -3808,6 +3815,13 @@ async function toggleProdutoresRJ() {
 
 async function loadProdutoresRJ() {
   try {
+    // Verificar se o mapa está inicializado
+    if (!leafletMap) {
+      console.error('[Produtores RJ] Mapa não inicializado');
+      alert('Erro: Mapa não está pronto. Tente novamente em alguns segundos.');
+      return;
+    }
+    
     const res = await fetch('/api/produtores-rj');
     if (!res.ok) throw new Error('Erro ao carregar produtores RJ');
     const data = await res.json();
