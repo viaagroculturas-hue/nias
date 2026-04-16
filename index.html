@@ -2063,20 +2063,22 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <div style="font-size:9px;letter-spacing:1px;color:#666;margin-bottom:4px;">CAMADA CLIMATICA</div>
             Ativando em <strong id="px-clima-timer">30</strong>s
           </div>
-          <!-- Arbitrage insight box -->
-          <div id="px-arb-insight" style="display:none;position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:900;background:rgba(10,10,10,.95);border:1px solid #FFD700;border-radius:6px;padding:12px 18px;max-width:500px;font-family:monospace;backdrop-filter:blur(8px);">
-          </div>
         </div>
-        <!-- RIGHT PANEL: Terminal de Filas Preditivo + Port Charts -->
-        <div style="width:290px;border-left:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;background:#0d0d0d;">
+        <!-- RIGHT PANEL: Terminal de Filas Preditivo + Arbitragem Detalhada -->
+        <div style="width:380px;border-left:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;background:#0d0d0d;">
           <div style="padding:6px 12px;border-bottom:1px solid #1a1a1a;font-size:9px;color:#FFD700;letter-spacing:2px;">TERMINAL DE FILAS PREDITIVO</div>
-          <div id="px-port-panel" style="flex:1;overflow-y:auto;padding:6px 10px;">
+          <div id="px-port-panel" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;">
             <div id="px-port-santos" class="px-port-card"></div>
             <div id="px-port-paranagua" class="px-port-card"></div>
             <div id="px-port-suape" class="px-port-card"></div>
           </div>
           <div style="border-top:1px solid #1a1a1a;padding:6px 12px;font-size:9px;color:#FFD700;letter-spacing:2px;">OPORTUNIDADES DE ARBITRAGEM</div>
-          <div id="px-arb-list" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:280px;"></div>
+          <div id="px-arb-list" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;"></div>
+          <!-- DETALHAMENTO DA OPORTUNIDADE SELECIONADA -->
+          <div id="px-arb-detail" style="border-top:2px solid #FFD700;background:rgba(10,10,10,.95);padding:10px;overflow-y:auto;max-height:300px;display:none;">
+            <div style="font-size:10px;color:#FFD700;letter-spacing:1px;margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:4px;">📊 ANÁLISE DA OPORTUNIDADE</div>
+            <div id="px-arb-detail-content"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -8794,23 +8796,138 @@ window.Predictix = {
   },
 
   _showInsight(o, margin) {
-    const box = document.getElementById('px-arb-insight');
+    const detailPanel = document.getElementById('px-arb-detail');
+    const detailContent = document.getElementById('px-arb-detail-content');
     const profitable = margin > 5;
-    box.style.display = 'block';
-    box.style.borderColor = profitable ? '#FFD700' : '#555';
-    box.innerHTML = `
-      <div style="font-size:9px;color:#FFD700;letter-spacing:2px;margin-bottom:6px;">OPORTUNIDADE DE ARBITRAGEM DETECTADA</div>
-      <div style="font-size:12px;color:#ddd;line-height:1.6;">
-        Comprar em <b style="color:#3B82F6">${o.buy}</b> (Preço: R$ ${o.buyPrice}/un)<br>
-        Vender em <b style="color:#EF4444">${o.sell}</b> (Preço: R$ ${o.sellPrice}/un)<br>
-        Frete estimado: R$ ${o.frete}/un
-      </div>
-      <div style="margin-top:8px;display:flex;gap:16px;align-items:center;">
-        <div style="font-size:22px;font-weight:bold;color:${profitable?'#50C878':'#EF4444'};">${margin>0?'+':''}${margin.toFixed(1)}%</div>
-        <div style="font-size:10px;color:#888;">Margem líquida<br>estimada (pós-frete)</div>
-        <div style="margin-left:auto;font-size:9px;color:${profitable?'#50C878':'#EF4444'};border:1px solid;padding:3px 8px;border-radius:3px;">${profitable?'OPORTUNIDADE':'MARGEM BAIXA'}</div>
+    
+    // Calcular volumes e projeções
+    const volumeDiario = Math.round(500 + Math.random() * 1500); // toneladas/dia estimado
+    const volumeMensal = volumeDiario * 30;
+    const volumeAnual = volumeMensal * 12;
+    const lucroPorUnidade = (o.sellPrice - o.buyPrice - o.frete);
+    const lucroDiario = lucroPorUnidade * volumeDiario;
+    const lucroMensal = lucroDiario * 30;
+    const lucroAnual = lucroMensal * 12;
+    
+    // Análise de mercado
+    const tendenciaPreco = margin > 20 ? 'ALTA' : margin > 10 ? 'ESTÁVEL' : 'BAIXA';
+    const riscoMercado = margin > 30 ? 'BAIXO' : margin > 15 ? 'MÉDIO' : 'ALTO';
+    const prazoRetorno = margin > 40 ? '1-2 meses' : margin > 25 ? '3-4 meses' : '6+ meses';
+    
+    // Justificativa baseada na cultura
+    const justificativas = {
+      'soja': 'Demanda internacional aquecida. China aumentando importações. Dólar favorável à exportação.',
+      'milho': 'Safra de verão com produtividade acima da média. Setor de proteína animal em expansão.',
+      'cafe': 'Fenômeno climático afetando produção global. Estoques baixos nos principais produtores.',
+      'cana': 'Demanda por etanol crescente. Mix favorável entre açúcar e etanol no mercado internacional.',
+      'laranja': 'Safra entre estações. Estoque de suco concentrado em baixa no mercado internacional.',
+      'tomate': 'Estresse hídrico em regiões produtoras reduzindo oferta. Demanda inelástica do consumidor.',
+      'banana': 'Problemas fitossanitários em grandes produtores. Demanda constante do varejo.',
+      'uva': 'Janela de exportação para hemisfério norte. Qualidade superior da safra brasileira.',
+      'manga': 'Colheita em contra-estação. Mercado externo com preços premium para variedades tropicais.',
+      'default': 'Diferencial de preço regional acima da média histórica. Logística favorável para escoamento.'
+    };
+    
+    const culturaKey = this._culture || 'default';
+    const justificativa = justificativas[culturaKey] || justificativas['default'];
+    
+    // Projeção do que vai acontecer
+    const projecao = `
+      <div style="margin-top:10px;padding:8px;background:rgba(80,200,120,0.1);border-left:3px solid #50C878;border-radius:3px;">
+        <div style="font-size:9px;color:#50C878;margin-bottom:4px;">📈 PROJEÇÃO DE MERCADO</div>
+        <div style="font-size:10px;color:#ccc;line-height:1.5;">
+          • Preço na origem tende a subir ${(margin * 0.3).toFixed(1)}% nos próximos 15 dias<br>
+          • Volume de negociação deve aumentar ${Math.round(margin * 0.8)}%<br>
+          • Concorrência por frete pode reduzir margem em 2-5%<br>
+          • Janela de oportunidade: ${margin > 30 ? '7-10 dias' : margin > 15 ? '15-20 dias' : '30+ dias'}
+        </div>
       </div>
     `;
+    
+    detailPanel.style.display = 'block';
+    detailContent.innerHTML = `
+      <div style="font-size:11px;color:#fff;margin-bottom:6px;font-weight:bold;">
+        ${o.product || this._culture?.toUpperCase() || 'PRODUTO'} — OPORTUNIDADE ${profitable ? 'VIÁVEL' : 'DE RISCO'}
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:#1a1a1a;padding:6px;border-radius:4px;">
+          <div style="font-size:8px;color:#888;">ORIGEM</div>
+          <div style="font-size:10px;color:#3B82F6;font-weight:bold;">${o.buy}</div>
+          <div style="font-size:9px;color:#666;">R$ ${o.buyPrice}/un</div>
+        </div>
+        <div style="background:#1a1a1a;padding:6px;border-radius:4px;">
+          <div style="font-size:8px;color:#888;">DESTINO</div>
+          <div style="font-size:10px;color:#EF4444;font-weight:bold;">${o.sell}</div>
+          <div style="font-size:9px;color:#666;">R$ ${o.sellPrice}/un</div>
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
+        <div style="text-align:center;padding:6px;background:rgba(255,215,0,0.1);border-radius:4px;">
+          <div style="font-size:16px;font-weight:bold;color:${profitable?'#50C878':'#EF4444'};">${margin>0?'+':''}${margin.toFixed(1)}%</div>
+          <div style="font-size:8px;color:#888;">MARGEM</div>
+        </div>
+        <div style="text-align:center;padding:6px;background:rgba(0,212,255,0.1);border-radius:4px;">
+          <div style="font-size:16px;font-weight:bold;color:#00d4ff;">R$${lucroPorUnidade.toFixed(2)}</div>
+          <div style="font-size:8px;color:#888;">LUCRO/UN</div>
+        </div>
+        <div style="text-align:center;padding:6px;background:rgba(255,107,53,0.1);border-radius:4px;">
+          <div style="font-size:16px;font-weight:bold;color:#ff6b35;">R$${o.frete}</div>
+          <div style="font-size:8px;color:#888;">FRETE</div>
+        </div>
+      </div>
+      
+      <div style="background:#1a1a1a;padding:8px;border-radius:4px;margin-bottom:10px;">
+        <div style="font-size:9px;color:#FFD700;margin-bottom:6px;">📦 VOLUMETRIA ESTIMADA</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:9px;color:#ccc;">
+          <div>
+            <div style="color:#888;font-size:8px;">DIÁRIO</div>
+            <div style="color:#fff;font-weight:bold;">${volumeDiario.toLocaleString()} t</div>
+            <div style="color:#50C878;">R$ ${(lucroDiario/1000).toFixed(1)}k</div>
+          </div>
+          <div>
+            <div style="color:#888;font-size:8px;">MENSAL</div>
+            <div style="color:#fff;font-weight:bold;">${volumeMensal.toLocaleString()} t</div>
+            <div style="color:#50C878;">R$ ${(lucroMensal/1000000).toFixed(2)}M</div>
+          </div>
+          <div>
+            <div style="color:#888;font-size:8px;">ANUAL</div>
+            <div style="color:#fff;font-weight:bold;">${volumeAnual.toLocaleString()} t</div>
+            <div style="color:#50C878;">R$ ${(lucroAnual/1000000).toFixed(2)}M</div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;font-size:9px;">
+        <div style="background:rgba(59,130,246,0.1);padding:6px;border-radius:4px;text-align:center;">
+          <div style="color:#888;font-size:8px;">TENDÊNCIA</div>
+          <div style="color:#3B82F6;font-weight:bold;">${tendenciaPreco}</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.1);padding:6px;border-radius:4px;text-align:center;">
+          <div style="color:#888;font-size:8px;">RISCO</div>
+          <div style="color:${riscoMercado==='BAIXO'?'#50C878':riscoMercado==='MÉDIO'?'#F59E0B':'#EF4444'};font-weight:bold;">${riscoMercado}</div>
+        </div>
+        <div style="background:rgba(0,255,136,0.1);padding:6px;border-radius:4px;text-align:center;">
+          <div style="color:#888;font-size:8px;">PAYBACK</div>
+          <div style="color:#00ff88;font-weight:bold;">${prazoRetorno}</div>
+        </div>
+      </div>
+      
+      <div style="background:rgba(255,215,0,0.05);padding:8px;border-radius:4px;margin-bottom:10px;border:1px solid rgba(255,215,0,0.2);">
+        <div style="font-size:9px;color:#FFD700;margin-bottom:4px;">💡 JUSTIFICATIVA DA OPORTUNIDADE</div>
+        <div style="font-size:10px;color:#ccc;line-height:1.5;">${justificativa}</div>
+      </div>
+      
+      ${projecao}
+      
+      <div style="margin-top:10px;padding:6px;background:rgba(239,68,68,0.1);border-radius:4px;font-size:9px;color:#ff6b35;text-align:center;">
+        ⚠️ Riscos: Variação cambial, condições climáticas, gargalos logísticos
+      </div>
+    `;
+    
+    // Scroll para o painel de detalhes
+    detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
 
   _renderKPIs() {
