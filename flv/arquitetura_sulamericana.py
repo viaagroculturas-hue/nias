@@ -297,6 +297,169 @@ CLUSTERS_SULAMERICANOS = {
                 'corredor': 'Rio Magdalena'
             }
         ]
+    },
+    
+    # CLUSTER COLÔMBIA - Potência do Arábica e Flores
+    'colombia': {
+        'nome': 'Cluster Colômbia',
+        'paises': ['CO'],
+        'centroid': [4.5, -74.0],
+        'polos': [
+            {
+                'id': 'CO-EJE-CAFE',
+                'nome': 'Eixo Cafeeiro - Quindío',
+                'cidade': 'Armenia',
+                'estado': 'Quindío',
+                'pais': 'CO',
+                'lat': 4.53,
+                'lon': -75.70,
+                'culturas': ['CAFE_ARABICA', 'BANANA'],
+                'area_ha': 380000,
+                'safra_principal': 'Café Arábica - Out/Dez',
+                'safra_segunda': 'Banana - Todo ano',
+                'porto_ref': 'buenaventura',
+                'corredor': 'Ferrovia del Café',
+                'destaque': 'Maior produtor mundial de café arábica lavado'
+            },
+            {
+                'id': 'CO-SAV-FLORES',
+                'nome': 'Savana de Bogotá - Flores',
+                'cidade': 'Cajicá',
+                'estado': 'Cundinamarca',
+                'pais': 'CO',
+                'lat': 4.92,
+                'lon': -74.02,
+                'culturas': ['FLORES', 'ROSAS', 'CRAVOS'],
+                'area_ha': 8500,
+                'safra_principal': 'Flores - Todo ano',
+                'safra_segunda': None,
+                'porto_ref': 'bogota',
+                'corredor': 'Aéreo/Eldorado',
+                'destaque': 'Líder global em exportação de flores'
+            },
+            {
+                'id': 'CO-ANT-ABACATE',
+                'nome': 'Antioquia - Abacate Hass',
+                'cidade': 'Medellín',
+                'estado': 'Antioquia',
+                'pais': 'CO',
+                'lat': 6.25,
+                'lon': -75.56,
+                'culturas': ['ABACATE_HASS', 'BANANA'],
+                'area_ha': 45000,
+                'safra_principal': 'Abacate Hass - Todo ano',
+                'safra_segunda': 'Banana - Todo ano',
+                'porto_ref': 'cartagena',
+                'corredor': 'Carretera al Mar',
+                'destaque': 'Competidor direto do Brasil no mercado europeu'
+            },
+            {
+                'id': 'CO-MAG-BANANA',
+                'nome': 'Magdalena - Bananas',
+                'cidade': 'Santa Marta',
+                'estado': 'Magdalena',
+                'pais': 'CO',
+                'lat': 11.24,
+                'lon': -74.21,
+                'culturas': ['BANANA', 'CACAU'],
+                'area_ha': 95000,
+                'safra_principal': 'Banana - Todo ano',
+                'safra_segunda': 'Cacau - Mai/Jul',
+                'porto_ref': 'santa_marta',
+                'corredor': 'Costa Caribe',
+                'destaque': 'Produção massiva na costa caribenha'
+            },
+            {
+                'id': 'CO-MET-PALMA',
+                'nome': 'Meta - Óleo de Palma',
+                'cidade': 'Villavicencio',
+                'estado': 'Meta',
+                'pais': 'CO',
+                'lat': 4.12,
+                'lon': -73.62,
+                'culturas': ['PALMA_OLEO', 'CACAU'],
+                'area_ha': 180000,
+                'safra_principal': 'Palma de Óleo - Todo ano',
+                'safra_segunda': 'Cacau - Mai/Jul',
+                'porto_ref': 'barrancabermeja',
+                'corredor': 'Rio Meta',
+                'destaque': 'Ditador de preços internacionais de óleo de palma'
+            }
+        ]
+    },
+    
+    # CLUSTER VENEZUELA - Retomada dos Grãos
+    'venezuela': {
+        'nome': 'Cluster Venezuela',
+        'paises': ['VE'],
+        'centroid': [7.0, -66.0],
+        'polos': [
+            {
+                'id': 'VE-POR-MILHO',
+                'nome': 'Portuguesa - Celeiro do Milho',
+                'cidade': 'Guanare',
+                'estado': 'Portuguesa',
+                'pais': 'VE',
+                'lat': 9.04,
+                'lon': -69.74,
+                'culturas': ['MILHO_BRANCO', 'MILHO_AMARELO', 'SORGO'],
+                'area_ha': 280000,
+                'safra_principal': 'Milho - Nov/Dez',
+                'safra_segunda': 'Sorgo - Jan/Fev',
+                'porto_ref': 'la_guaira',
+                'corredor': 'Carretera Central',
+                'destaque': 'Projeção 2025/26: 1.26 milhão toneladas',
+                'observacao': 'Recuperação técnica focada em soberania alimentar'
+            },
+            {
+                'id': 'VE-GUA-ARROZ',
+                'nome': 'Guárico - Arroz Irrigado',
+                'cidade': 'Calabozo',
+                'estado': 'Guárico',
+                'pais': 'VE',
+                'lat': 8.92,
+                'lon': -67.42,
+                'culturas': ['ARROZ', 'MILHO'],
+                'area_ha': 120000,
+                'safra_principal': 'Arroz - Jul/Ago',
+                'safra_segunda': 'Milho - Nov/Dez',
+                'porto_ref': 'la_guaira',
+                'corredor': 'Rio Guárico',
+                'destaque': 'Produção: ~464 mil toneladas/ano'
+            },
+            {
+                'id': 'VE-LAR-CANA',
+                'nome': 'Lara - Cana-de-Açúcar',
+                'cidade': 'Carora',
+                'estado': 'Lara',
+                'pais': 'VE',
+                'lat': 10.18,
+                'lon': -70.08,
+                'culturas': ['CANA_ACUCAR', 'SORGO'],
+                'area_ha': 85000,
+                'safra_principal': 'Cana - Mai/Out',
+                'safra_segunda': 'Sorgo - Nov/Jan',
+                'porto_ref': 'puerto_cabello',
+                'corredor': 'Carretera Lara-Zulia',
+                'destaque': 'Grandes áreas mecanizáveis'
+            },
+            {
+                'id': 'VE-ZUL-SORGO',
+                'nome': 'Zulia - Sorgo e Grãos',
+                'cidade': 'Maracaibo',
+                'estado': 'Zulia',
+                'pais': 'VE',
+                'lat': 10.65,
+                'lon': -71.63,
+                'culturas': ['SORGO', 'MILHO', 'SESA'],
+                'area_ha': 150000,
+                'safra_principal': 'Sorgo - Dez/Fev',
+                'safra_segunda': 'Milho - Abr/Jun',
+                'porto_ref': 'maracaibo',
+                'corredor': 'Lago de Maracaibo',
+                'destaque': 'Potencial de oferta para região norte'
+            }
+        ]
     }
 }
 
@@ -723,6 +886,68 @@ PORTOS_ESTRATEGICOS = {
         'tempo_espera_medio_horas': 36,
         'status': 'Operacional',
         'risco': 'Médio'
+    },
+    
+    # PORTOS DA COLÔMBIA (Caribe)
+    'cartagena': {
+        'nome': 'Puerto de Cartagena',
+        'pais': 'CO',
+        'lat': 10.4000,
+        'lon': -75.5167,
+        'capacidade_graos_ton_dia': 55000,
+        'capacidade_containers_teu_dia': 4500,
+        'tempo_espera_medio_horas': 24,
+        'status': 'Operacional',
+        'risco': 'Baixo'
+    },
+    
+    'santa_marta': {
+        'nome': 'Puerto de Santa Marta',
+        'pais': 'CO',
+        'lat': 11.2419,
+        'lon': -74.2053,
+        'capacidade_graos_ton_dia': 40000,
+        'capacidade_containers_teu_dia': 2500,
+        'tempo_espera_medio_horas': 30,
+        'status': 'Operacional',
+        'risco': 'Médio'
+    },
+    
+    # PORTOS DA VENEZUELA (Caribe)
+    'la_guaira': {
+        'nome': 'Puerto de La Guaira',
+        'pais': 'VE',
+        'lat': 10.6000,
+        'lon': -66.9333,
+        'capacidade_graos_ton_dia': 35000,
+        'capacidade_containers_teu_dia': 2800,
+        'tempo_espera_medio_horas': 48,
+        'status': 'Operacional',
+        'risco': 'Alto'
+    },
+    
+    'puerto_cabello': {
+        'nome': 'Puerto de Puerto Cabello',
+        'pais': 'VE',
+        'lat': 10.4667,
+        'lon': -68.0167,
+        'capacidade_graos_ton_dia': 45000,
+        'capacidade_containers_teu_dia': 3200,
+        'tempo_espera_medio_horas': 42,
+        'status': 'Operacional',
+        'risco': 'Alto'
+    },
+    
+    'maracaibo': {
+        'nome': 'Puerto de Maracaibo',
+        'pais': 'VE',
+        'lat': 10.6500,
+        'lon': -71.6333,
+        'capacidade_graos_ton_dia': 30000,
+        'capacidade_containers_teu_dia': 2000,
+        'tempo_espera_medio_horas': 54,
+        'status': 'Operacional',
+        'risco': 'Alto'
     }
 }
 
