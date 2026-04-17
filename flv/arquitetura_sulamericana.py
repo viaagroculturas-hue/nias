@@ -26,7 +26,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 850000,
                 'safra_principal': 'Soja - Fev/Mar',
                 'safra_segunda': 'Milho - Jun/Jul',
-                'porto_ref': 'Puerto Rosario',
+                'porto_ref': 'rosario',
                 'corredor': 'Hidrovia Paraná-Paraguai'
             },
             {
@@ -41,7 +41,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 620000,
                 'safra_principal': 'Soja - Mar/Abr',
                 'safra_segunda': 'Milho - Jul/Ago',
-                'porto_ref': 'Puerto Rosario',
+                'porto_ref': 'rosario',
                 'corredor': 'Ferrovia Belgrano'
             },
             {
@@ -56,7 +56,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 480000,
                 'safra_principal': 'Soja - Mar/Abr',
                 'safra_segunda': 'Trigo - Nov/Dez',
-                'porto_ref': 'Puerto San Martin',
+                'porto_ref': 'san_martin',
                 'corredor': 'Hidrovia Paraná'
             },
             {
@@ -71,7 +71,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 320000,
                 'safra_principal': 'Trigo - Nov/Dez',
                 'safra_segunda': 'Cevada - Out/Nov',
-                'porto_ref': 'Puerto Quequén',
+                'porto_ref': 'quequen',
                 'corredor': 'Costa Atlântica'
             },
             {
@@ -86,7 +86,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 280000,
                 'safra_principal': 'Soja - Fev/Mar',
                 'safra_segunda': 'Trigo - Nov/Dez',
-                'porto_ref': 'Puerto de Nueva Palmira',
+                'porto_ref': 'nueva_palmira',
                 'corredor': 'Rio Uruguai'
             }
         ]
@@ -209,7 +209,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 65000,
                 'safra_principal': 'Aspargos - Set/Out',
                 'safra_segunda': 'Uva - Nov/Jan',
-                'porto_ref': 'Puerto Pisco',
+                'porto_ref': 'pisco',
                 'corredor': 'Panamericana Sur'
             },
             {
@@ -224,7 +224,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 45000,
                 'safra_principal': 'Uva - Out/Dez',
                 'safra_segunda': 'Manga - Jan/Mar',
-                'porto_ref': 'Puerto Callao',
+                'porto_ref': 'callao',
                 'corredor': 'Panamericana Norte'
             },
             {
@@ -239,7 +239,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 180000,
                 'safra_principal': 'Banana - Todo ano',
                 'safra_segunda': 'Cacau - Mai/Jun',
-                'porto_ref': 'Puerto de Guayaquil',
+                'porto_ref': 'guayaquil',
                 'corredor': 'Costa Pacífica'
             }
         ]
@@ -263,7 +263,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 280000,
                 'safra_principal': 'Café - Out/Dez',
                 'safra_segunda': 'Banana - Todo ano',
-                'porto_ref': 'Puerto Buenaventura',
+                'porto_ref': 'buenaventura',
                 'corredor': 'Ferrovia del Café'
             },
             {
@@ -278,7 +278,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 85000,
                 'safra_principal': 'Batata - Mar/Mai',
                 'safra_segunda': 'Cebola - Ago/Out',
-                'porto_ref': 'Puerto Bogotá',
+                'porto_ref': 'bogota',
                 'corredor': 'Carretera Central'
             },
             {
@@ -293,7 +293,7 @@ CLUSTERS_SULAMERICANOS = {
                 'area_ha': 120000,
                 'safra_principal': 'Palma - Todo ano',
                 'safra_segunda': 'Cacau - Mai/Jul',
-                'porto_ref': 'Puerto Barrancabermeja',
+                'porto_ref': 'barrancabermeja',
                 'corredor': 'Rio Magdalena'
             }
         ]
@@ -318,7 +318,7 @@ MATRIZ_SAZONALIDADE = {
             'BO-CHACO': {'plantio': 'Out-Nov', 'colheita': 'Abr-Mai', 'pico_export': 'Mai-Jul'}
         },
         'corredores_log': ['Hidrovia Paraná-Paraguai', 'Ferrovia Norte-Sul', 'Corredor Bioceânico'],
-        'portos_saida': ['Santos', 'Paranaguá', 'Rosário', 'San Antonio'],
+        'portos_saida': ['santos', 'paranagua', 'rosario', 'san_antonio'],
         'risco_clima': ['Estiagem Jan-Fev', 'Geada Jul-Ago'],
         'arbitragem_ceasa': False
     },
@@ -334,7 +334,7 @@ MATRIZ_SAZONALIDADE = {
             'PY-CHACO': {'plantio': 'Ago-Set', 'colheita': 'Jan-Fev', 'pico_export': 'Fev-Mar'}
         },
         'corredores_log': ['Hidrovia Paraná-Paraguai', 'Ferrovia Oeste-Leste'],
-        'portos_saida': ['Santos', 'Paranaguá', 'Rosário'],
+        'portos_saida': ['santos', 'paranagua', 'rosario'],
         'risco_clima': ['Estiagem Dez-Jan'],
         'arbitragem_ceasa': False
     },
@@ -349,7 +349,7 @@ MATRIZ_SAZONALIDADE = {
             'PY-CHACO': {'plantio': 'Mai-Jun', 'colheita': 'Out-Nov', 'pico_export': 'Nov-Jan'}
         },
         'corredores_log': ['Ferrovia Belgrano', 'Hidrovia Paraná'],
-        'portos_saida': ['Quequén', 'Rosário', 'San Antonio'],
+        'portos_saida': ['quequen', 'rosario', 'san_antonio'],
         'risco_clima': ['Geadas Ago-Set', 'Chuvas excessivas Out'],
         'arbitragem_ceasa': False
     },
@@ -364,7 +364,7 @@ MATRIZ_SAZONALIDADE = {
             'BR-RS': {'plantio': 'Ago-Set', 'colheita': 'Nov-Dez', 'pico_export': 'Dez-Fev'}
         },
         'corredores_log': ['Ruta 14', 'BR-116'],
-        'portos_saida': ['Santos', 'San Antonio'],
+        'portos_saida': ['santos', 'san_antonio'],
         'risco_clima': ['Geadas', 'Excesso de chuva'],
         'arbitragem_ceasa': True,
         'ceasa_ref': 'CEAGESP'
@@ -379,7 +379,7 @@ MATRIZ_SAZONALIDADE = {
             'BR-RS': {'plantio': 'Ago-Set', 'colheita': 'Dez-Jan', 'pico_export': 'Jan-Mar'}
         },
         'corredores_log': ['BR-153', 'Ruta 14'],
-        'portos_saida': ['Santos', 'San Antonio'],
+        'portos_saida': ['santos', 'san_antonio'],
         'risco_clima': ['Estiagem', 'Doenças por umidade'],
         'arbitragem_ceasa': True,
         'ceasa_ref': 'CEAGESP'
@@ -394,7 +394,7 @@ MATRIZ_SAZONALIDADE = {
             'BR-SP': {'plantio': 'Ago-Set', 'colheita': 'Nov-Jan', 'pico_export': 'Dez-Fev'}
         },
         'corredores_log': ['BR-050', 'BR-153'],
-        'portos_saida': ['Santos'],
+        'portos_saida': ['santos'],
         'risco_clima': ['Chuvas excessivas', 'Estiagem prolongada'],
         'arbitragem_ceasa': True,
         'ceasa_ref': 'CEAGESP'
@@ -411,7 +411,7 @@ MATRIZ_SAZONALIDADE = {
             'AR-MENDOZA': {'plantio': 'Todo ano', 'colheita': 'Fev-Abr', 'pico_export': 'Mar-Mai'}
         },
         'corredores_log': ['Ruta 5', 'BR-116'],
-        'portos_saida': ['San Antonio', 'Santos', 'Callao'],
+        'portos_saida': ['san_antonio', 'santos', 'callao'],
         'risco_clima': ['Geadas', 'Granizo'],
         'arbitragem_ceasa': True,
         'ceasa_ref': 'CEAGESP'
@@ -426,8 +426,8 @@ MATRIZ_SAZONALIDADE = {
             'CO-MAG': {'plantio': 'Todo ano', 'colheita': 'Todo ano', 'pico_export': 'Todo ano'}
         },
         'corredores_log': ['Costa Pacífica', 'BR-101'],
-        'portos_saida': ['Guayaquil', 'Santos', 'Buenaventura'],
-        'risco_clima': ['Vientos fuertes', 'Excesso de lluvia'],
+        'portos_saida': ['guayaquil', 'santos', 'buenaventura'],
+        'risco_clima': ['Ventos fortes', 'Excesso de chuva'],
         'arbitragem_ceasa': True,
         'ceasa_ref': 'CEAGESP'
     },
@@ -443,7 +443,7 @@ MATRIZ_SAZONALIDADE = {
             'PE-CAJA': {'plantio': 'Fev-Mar', 'colheita': 'Jun-Ago', 'pico_export': 'Jul-Set'}
         },
         'corredores_log': ['Ferrovia del Café', 'BR-381'],
-        'portos_saida': ['Santos', 'Buenaventura', 'Callao'],
+        'portos_saida': ['santos', 'buenaventura', 'callao'],
         'risco_clima': ['Geada Jun-Ago', 'Estiagem prolongada'],
         'arbitragem_ceasa': False
     }
@@ -461,11 +461,11 @@ CAMADAS_RISCO = {
         'frequencia': '5 dias',
         'url_api': 'https://services.sentinel-hub.com/api/v1/process',
         'indicadores': [
-            {'range': [0.0, 0.2], 'classe': 'Água/Solo exposto', 'cor': '#a50026'},
-            {'range': [0.2, 0.4], 'classe': 'Vegetação esparsa/Estresse', 'cor': '#f46d43'},
-            {'range': [0.4, 0.6], 'classe': 'Vegetação moderada', 'cor': '#fee08b'},
-            {'range': [0.6, 0.8], 'classe': 'Vegetação saudável', 'cor': '#d9ef8b'},
-            {'range': [0.8, 1.0], 'classe': 'Vegetação densa', 'cor': '#1a9850'}
+            {'range': [0.0, 0.2], 'classe': 'Água/Solo exposto', 'cor': '#a50026', 'alerta': False},
+            {'range': [0.2, 0.4], 'classe': 'Vegetação esparsa/Estresse', 'cor': '#f46d43', 'alerta': False},
+            {'range': [0.4, 0.6], 'classe': 'Vegetação moderada', 'cor': '#fee08b', 'alerta': False},
+            {'range': [0.6, 0.8], 'classe': 'Vegetação saudável', 'cor': '#d9ef8b', 'alerta': False},
+            {'range': [0.8, 1.0], 'classe': 'Vegetação densa', 'cor': '#1a9850', 'alerta': False}
         ]
     },
     
@@ -476,10 +476,10 @@ CAMADAS_RISCO = {
         'frequencia': '16 dias',
         'url_api': 'https://modis.gsfc.nasa.gov/data/dataprod/mod13.php',
         'indicadores': [
-            {'range': [0.0, 0.2], 'classe': 'Baixa produtividade', 'cor': '#d73027'},
-            {'range': [0.2, 0.5], 'classe': 'Produtividade moderada', 'cor': '#fc8d59'},
-            {'range': [0.5, 0.8], 'classe': 'Alta produtividade', 'cor': '#91cf60'},
-            {'range': [0.8, 1.0], 'classe': 'Produtividade máxima', 'cor': '#1a9850'}
+            {'range': [0.0, 0.2], 'classe': 'Baixa produtividade', 'cor': '#d73027', 'alerta': False},
+            {'range': [0.2, 0.5], 'classe': 'Produtividade moderada', 'cor': '#fc8d59', 'alerta': False},
+            {'range': [0.5, 0.8], 'classe': 'Alta produtividade', 'cor': '#91cf60', 'alerta': False},
+            {'range': [0.8, 1.0], 'classe': 'Produtividade máxima', 'cor': '#1a9850', 'alerta': False}
         ]
     },
     
@@ -492,8 +492,8 @@ CAMADAS_RISCO = {
         'indicadores': [
             {'range': [0.0, 0.15], 'classe': 'Seca severa', 'cor': '#8B0000', 'alerta': True},
             {'range': [0.15, 0.30], 'classe': 'Seca moderada', 'cor': '#FF4500', 'alerta': True},
-            {'range': [0.30, 0.50], 'classe': 'Umidade adequada', 'cor': '#FFD700'},
-            {'range': [0.50, 0.70], 'classe': 'Umidade ótima', 'cor': '#32CD32'},
+            {'range': [0.30, 0.50], 'classe': 'Umidade adequada', 'cor': '#FFD700', 'alerta': False},
+            {'range': [0.50, 0.70], 'classe': 'Umidade ótima', 'cor': '#32CD32', 'alerta': False},
             {'range': [0.70, 1.0], 'classe': 'Saturação/Alagamento', 'cor': '#00008B', 'alerta': True}
         ]
     },
@@ -505,10 +505,10 @@ CAMADAS_RISCO = {
         'frequencia': 'Diária',
         'url_api': 'https://data.chc.ucsb.edu/products/CHIRPS-2.0/',
         'indicadores': [
-            {'range': [0, 10], 'classe': 'Seca', 'cor': '#8B4513'},
-            {'range': [10, 50], 'classe': 'Chuva leve', 'cor': '#87CEEB'},
-            {'range': [50, 100], 'classe': 'Chuva moderada', 'cor': '#4169E1'},
-            {'range': [100, 200], 'classe': 'Chuva forte', 'cor': '#0000CD'},
+            {'range': [0, 10], 'classe': 'Seca', 'cor': '#8B4513', 'alerta': False},
+            {'range': [10, 50], 'classe': 'Chuva leve', 'cor': '#87CEEB', 'alerta': False},
+            {'range': [50, 100], 'classe': 'Chuva moderada', 'cor': '#4169E1', 'alerta': False},
+            {'range': [100, 200], 'classe': 'Chuva forte', 'cor': '#0000CD', 'alerta': False},
             {'range': [200, 500], 'classe': 'Chuva extrema', 'cor': '#8B0000', 'alerta': True}
         ]
     }
@@ -524,9 +524,9 @@ PORTOS_ESTRATEGICOS = {
         'pais': 'BR',
         'lat': -23.9608,
         'lon': -46.3331,
-        'capacidade_graos': '150000 ton/dia',
-        'capacidade_containers': '5000 TEU/dia',
-        'tempo_espera_medio': 48,
+        'capacidade_graos_ton_dia': 150000,
+        'capacidade_containers_teu_dia': 5000,
+        'tempo_espera_medio_horas': 48,
         'status': 'Operacional',
         'risco': 'Médio'
     },
@@ -536,9 +536,9 @@ PORTOS_ESTRATEGICOS = {
         'pais': 'BR',
         'lat': -25.5026,
         'lon': -48.5090,
-        'capacidade_graos': '120000 ton/dia',
-        'capacidade_containers': '3000 TEU/dia',
-        'tempo_espera_medio': 36,
+        'capacidade_graos_ton_dia': 120000,
+        'capacidade_containers_teu_dia': 3000,
+        'tempo_espera_medio_horas': 36,
         'status': 'Operacional',
         'risco': 'Baixo'
     },
@@ -548,9 +548,9 @@ PORTOS_ESTRATEGICOS = {
         'pais': 'AR',
         'lat': -32.9468,
         'lon': -60.6393,
-        'capacidade_graos': '80000 ton/dia',
-        'capacidade_containers': '1500 TEU/dia',
-        'tempo_espera_medio': 72,
+        'capacidade_graos_ton_dia': 80000,
+        'capacidade_containers_teu_dia': 1500,
+        'tempo_espera_medio_horas': 72,
         'status': 'Operacional',
         'risco': 'Alto'
     },
@@ -560,9 +560,9 @@ PORTOS_ESTRATEGICOS = {
         'pais': 'CL',
         'lat': -33.5800,
         'lon': -71.6200,
-        'capacidade_graos': '60000 ton/dia',
-        'capacidade_containers': '4000 TEU/dia',
-        'tempo_espera_medio': 24,
+        'capacidade_graos_ton_dia': 60000,
+        'capacidade_containers_teu_dia': 4000,
+        'tempo_espera_medio_horas': 24,
         'status': 'Operacional',
         'risco': 'Baixo'
     },
@@ -572,9 +572,9 @@ PORTOS_ESTRATEGICOS = {
         'pais': 'PE',
         'lat': -12.0500,
         'lon': -77.1333,
-        'capacidade_graos': '40000 ton/dia',
-        'capacidade_containers': '3500 TEU/dia',
-        'tempo_espera_medio': 30,
+        'capacidade_graos_ton_dia': 40000,
+        'capacidade_containers_teu_dia': 3500,
+        'tempo_espera_medio_horas': 30,
         'status': 'Operacional',
         'risco': 'Médio'
     },
@@ -584,9 +584,9 @@ PORTOS_ESTRATEGICOS = {
         'pais': 'EC',
         'lat': -2.2038,
         'lon': -79.8797,
-        'capacidade_graos': '50000 ton/dia',
-        'capacidade_containers': '2800 TEU/dia',
-        'tempo_espera_medio': 42,
+        'capacidade_graos_ton_dia': 50000,
+        'capacidade_containers_teu_dia': 2800,
+        'tempo_espera_medio_horas': 42,
         'status': 'Operacional',
         'risco': 'Médio'
     },
@@ -596,11 +596,133 @@ PORTOS_ESTRATEGICOS = {
         'pais': 'CO',
         'lat': 3.8800,
         'lon': -77.0300,
-        'capacidade_graos': '45000 ton/dia',
-        'capacidade_containers': '3200 TEU/dia',
-        'tempo_espera_medio': 36,
+        'capacidade_graos_ton_dia': 45000,
+        'capacidade_containers_teu_dia': 3200,
+        'tempo_espera_medio_horas': 36,
         'status': 'Operacional',
         'risco': 'Alto'
+    },
+    
+    # Portos adicionais mencionados nos clusters
+    'quequen': {
+        'nome': 'Puerto Quequén',
+        'pais': 'AR',
+        'lat': -38.5500,
+        'lon': -58.7000,
+        'capacidade_graos_ton_dia': 60000,
+        'capacidade_containers_teu_dia': 800,
+        'tempo_espera_medio_horas': 54,
+        'status': 'Operacional',
+        'risco': 'Médio'
+    },
+    
+    'san_martin': {
+        'nome': 'Puerto San Martín',
+        'pais': 'AR',
+        'lat': -32.7167,
+        'lon': -60.7333,
+        'capacidade_graos_ton_dia': 70000,
+        'capacidade_containers_teu_dia': 1200,
+        'tempo_espera_medio_horas': 60,
+        'status': 'Operacional',
+        'risco': 'Médio'
+    },
+    
+    'nueva_palmira': {
+        'nome': 'Puerto de Nueva Palmira',
+        'pais': 'UY',
+        'lat': -33.8833,
+        'lon': -58.4167,
+        'capacidade_graos_ton_dia': 50000,
+        'capacidade_containers_teu_dia': 1000,
+        'tempo_espera_medio_horas': 30,
+        'status': 'Operacional',
+        'risco': 'Baixo'
+    },
+    
+    'bogota': {
+        'nome': 'Puerto Seco de Bogotá',
+        'pais': 'CO',
+        'lat': 4.7110,
+        'lon': -74.0721,
+        'capacidade_graos_ton_dia': 25000,
+        'capacidade_containers_teu_dia': 1500,
+        'tempo_espera_medio_horas': 12,
+        'status': 'Operacional',
+        'risco': 'Baixo',
+        'tipo': 'Porto Seco'
+    },
+    
+    'barrancabermeja': {
+        'nome': 'Puerto de Barrancabermeja',
+        'pais': 'CO',
+        'lat': 7.0667,
+        'lon': -73.8500,
+        'capacidade_graos_ton_dia': 30000,
+        'capacidade_containers_teu_dia': 500,
+        'tempo_espera_medio_horas': 24,
+        'status': 'Operacional',
+        'risco': 'Médio'
+    },
+    
+    'pisco': {
+        'nome': 'Puerto de Pisco',
+        'pais': 'PE',
+        'lat': -13.7100,
+        'lon': -76.2000,
+        'capacidade_graos_ton_dia': 25000,
+        'capacidade_containers_teu_dia': 2000,
+        'tempo_espera_medio_horas': 18,
+        'status': 'Operacional',
+        'risco': 'Baixo'
+    },
+    
+    'caacupe': {
+        'nome': 'Puerto de Caacupé',
+        'pais': 'PY',
+        'lat': -25.3867,
+        'lon': -57.1400,
+        'capacidade_graos_ton_dia': 35000,
+        'capacidade_containers_teu_dia': 600,
+        'tempo_espera_medio_horas': 36,
+        'status': 'Operacional',
+        'risco': 'Médio'
+    },
+    
+    'villeta': {
+        'nome': 'Puerto de Villeta',
+        'pais': 'PY',
+        'lat': -25.5000,
+        'lon': -57.5000,
+        'capacidade_graos_ton_dia': 40000,
+        'capacidade_containers_teu_dia': 800,
+        'tempo_espera_medio_horas': 42,
+        'status': 'Operacional',
+        'risco': 'Médio'
+    },
+    
+    'gravetal': {
+        'nome': 'Puerto Gravetal',
+        'pais': 'BO',
+        'lat': -17.7500,
+        'lon': -63.2000,
+        'capacidade_graos_ton_dia': 30000,
+        'capacidade_containers_teu_dia': 400,
+        'tempo_espera_medio_horas': 48,
+        'status': 'Operacional',
+        'risco': 'Alto'
+    },
+    
+    'guayaramerin': {
+        'nome': 'Puerto de Guayaramerín',
+        'pais': 'BO',
+        'lat': -11.7333,
+        'lon': -65.3500,
+        'capacidade_graos_ton_dia': 20000,
+        'capacidade_containers_teu_dia': 300,
+        'tempo_espera_medio_horas': 36,
+        'status': 'Operacional',
+        'risco': 'Médio'
     }
 }
 
