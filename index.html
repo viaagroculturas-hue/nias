@@ -660,14 +660,15 @@ tr:hover td{background:rgba(0,212,255,.04);}
   <span class="top-meta" id="clock"></span>
   <div style="width:1px;height:24px;background:var(--border);flex-shrink:0;"></div>
   <div class="top-stats">
-    <div class="top-stat" title="Cobertura orbital ativa"><div class="val" id="ts-cob" style="color:var(--accent2)">98.7%</div><div class="lbl">COBERTURA</div></div>
-    <div class="top-stat" title="Alertas ativos"><div class="val" id="ts-alr" style="color:var(--danger)">4</div><div class="lbl">ALERTAS</div></div>
-    <div class="top-stat" title="NDVI médio Cerrado"><div class="val" id="ts-ndvi" style="color:var(--accent)">0.610</div><div class="lbl">NDVI CER.</div></div>
-    <div class="top-stat" title="Umidade média do solo"><div class="val" id="ts-hum" style="color:var(--accent)">34.0%</div><div class="lbl">UMID. SOLO</div></div>
-    <div class="top-stat" title="Saturação BR-163"><div class="val" id="ts-br163" style="color:var(--danger)">82%</div><div class="lbl">BR-163</div></div>
+    <div class="top-stat" title="Cobertura orbital ativa"><div class="val" id="ts-cob" style="color:var(--accent2)">99.2%</div><div class="lbl">COBERTURA</div></div>
+    <div class="top-stat" title="Sensores ativos"><div class="val" id="ts-sens" style="color:var(--accent)">15,847</div><div class="lbl">SENSORES</div></div>
+    <div class="top-stat" title="Alertas ativos"><div class="val" id="ts-alr" style="color:var(--danger)">28</div><div class="lbl">ALERTAS</div></div>
+    <div class="top-stat" title="NDVI médio América do Sul"><div class="val" id="ts-ndvi" style="color:var(--accent)">0.584</div><div class="lbl">NDVI SUL-AM.</div></div>
+    <div class="top-stat" title="Umidade média do solo"><div class="val" id="ts-hum" style="color:var(--accent)">31.4%</div><div class="lbl">UMID. SOLO</div></div>
+    <div class="top-stat" title="Saturação BR-163"><div class="val" id="ts-br163" style="color:var(--danger)">78%</div><div class="lbl">BR-163</div></div>
     <div class="top-stat" title="Próximo passe orbital"><div class="val" id="ts-orbit" style="color:var(--warn)">--:--</div><div class="lbl">PASSE SAT.</div></div>
-    <div class="top-stat" title="Veículos detectados hoje"><div class="val" id="ts-trucks" style="color:var(--accent)">3.240</div><div class="lbl">VEÍC/DIA</div></div>
-    <div class="top-stat" title="Temperatura média MATOPIBA"><div class="val" id="ts-temp" style="color:var(--warn)">36.2°C</div><div class="lbl">MATOPIBA</div></div>
+    <div class="top-stat" title="Veículos detectados hoje"><div class="val" id="ts-trucks" style="color:var(--accent)">8.640</div><div class="lbl">VEÍC/DIA</div></div>
+    <div class="top-stat" title="Temperatura média MATOPIBA"><div class="val" id="ts-temp" style="color:var(--warn)">34.8°C</div><div class="lbl">MATOPIBA</div></div>
   </div>
   <div style="width:1px;height:24px;background:var(--border);flex-shrink:0;margin-left:8px;"></div>
   <div class="theme-toggle">
@@ -1129,10 +1130,10 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <div class="sat-progress"><div class="sat-fill" id="sf-ps" style="width:45%"></div></div>
         </div>
         <div class="map-stats" style="position:absolute;bottom:10px;left:10px;z-index:1100;">
-          <p>Cobertura ativa: <strong id="map-cov">98.7%</strong> do território</p>
+          <p>Cobertura ativa: <strong id="map-cov">99.2%</strong> do território</p>
           <p>Última leitura: <strong id="map-time">--</strong></p>
-          <p>Polígonos ativos: <strong id="map-poly">14.832</strong></p>
-          <p>Anomalias detectadas: <strong style="color:var(--danger)" id="map-anom">4</strong></p>
+          <p>Polígonos ativos: <strong id="map-poly">28.450</strong></p>
+          <p>Anomalias detectadas: <strong style="color:var(--danger)" id="map-anom">28</strong></p>
         </div>
     </div>
 
@@ -1156,6 +1157,9 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <button class="cult-btn" onclick="bcTrocarCultura('soja')">🟡 Soja</button>
           <button class="cult-btn" onclick="bcTrocarCultura('milho')">🟠 Milho</button>
           <button class="cult-btn" onclick="bcTrocarCultura('algodao')">⚪ Algodão</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('trigo')">🌾 Trigo</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('arroz')">🍚 Arroz</button>
+          
           <div style="font-size:9px;color:var(--text2);margin:7px 0 4px;letter-spacing:1px;">FRUTAS</div>
           <button class="cult-btn" onclick="bcTrocarCultura('banana')">🍌 Banana</button>
           <button class="cult-btn" onclick="bcTrocarCultura('laranja')">🍊 Laranja</button>
@@ -1167,11 +1171,27 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <button class="cult-btn" onclick="bcTrocarCultura('maracuja')">💛 Maracujá</button>
           <button class="cult-btn" onclick="bcTrocarCultura('limao')">🍋 Limão</button>
           <button class="cult-btn" onclick="bcTrocarCultura('acai')">🟣 Açaí</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('abacate')">🥑 Abacate/Avocado</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('maca')">🍎 Maçã</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('pera')">🍐 Pêra</button>
+          
           <div style="font-size:9px;color:var(--text2);margin:7px 0 4px;letter-spacing:1px;">LEGUMES / VERDURAS</div>
           <button class="cult-btn" onclick="bcTrocarCultura('tomate')">🔴 Tomate</button>
           <button class="cult-btn" onclick="bcTrocarCultura('batata')">🥔 Batata</button>
           <button class="cult-btn" onclick="bcTrocarCultura('cebola')">🟤 Cebola</button>
           <button class="cult-btn" onclick="bcTrocarCultura('alho')">🧄 Alho</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('alface')">🥬 Alface</button>
+          
+          <div style="font-size:9px;color:var(--text2);margin:7px 0 4px;letter-spacing:1px;">PROTEÍNAS</div>
+          <button class="cult-btn" onclick="bcTrocarCultura('pecuaria_corte')">🐄 Pecuária Corte</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('pecuaria_leite')">🥛 Pecuária Leite</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('aves')">🐔 Aves</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('suinos')">🐷 Suínos</button>
+          
+          <div style="font-size:9px;color:var(--text2);margin:7px 0 4px;letter-spacing:1px;">COMMODITIES</div>
+          <button class="cult-btn" onclick="bcTrocarCultura('cafe')">☕ Café</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('cana')">🎋 Cana-de-Açúcar</button>
+          
           <button class="cult-btn active" id="bc-cult-all" onclick="bcTrocarCultura('all')">◎ Todas</button>
           <div style="height:1px;background:var(--border);margin:8px 0;"></div>
           <div style="font-size:9px;color:var(--text2);margin-bottom:5px;letter-spacing:1px;">CAMADAS</div>
@@ -2130,7 +2150,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
           </div>
           <div class="chat-side-title" style="margin-top:8px;">MÉTRICAS LIVE</div>
           <div class="status-block">
-            <div class="status-row"><span class="status-label">Polígonos ativos</span><span class="status-val" id="cs-poly" style="color:var(--accent)">14.832</span></div>
+            <div class="status-row"><span class="status-label">Polígonos ativos</span><span class="status-val" id="cs-poly" style="color:var(--accent)">28.450</span></div>
             <div class="status-row"><span class="status-label">NDVI atual</span><span class="status-val" id="cs-ndvi" style="color:var(--accent)">0.610</span></div>
             <div class="status-row"><span class="status-label">Umidade solo</span><span class="status-val" id="cs-hum" style="color:var(--warn)">34.0%</span></div>
             <div class="status-row"><span class="status-label">Temp. MATOPIBA</span><span class="status-val" id="cs-temp" style="color:var(--danger)">36.2°C</span></div>
