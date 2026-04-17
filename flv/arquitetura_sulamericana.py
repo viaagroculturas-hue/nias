@@ -245,63 +245,9 @@ CLUSTERS_SULAMERICANOS = {
         ]
     },
     
-    # CLUSTER TROPICAL (Colômbia)
+    # CLUSTER TROPICAL (Colômbia) - Potência do Arábica e Flores
     'tropical': {
         'nome': 'Cluster Tropical',
-        'paises': ['CO'],
-        'centroid': [4.0, -74.0],
-        'polos': [
-            {
-                'id': 'CO-MED-TROP',
-                'nome': 'Eixo Cafeeiro',
-                'cidade': 'Manizales',
-                'estado': 'Caldas',
-                'pais': 'CO',
-                'lat': 5.07,
-                'lon': -75.52,
-                'culturas': ['CAFÉ', 'BANANA', 'CACAU'],
-                'area_ha': 280000,
-                'safra_principal': 'Café - Out/Dez',
-                'safra_segunda': 'Banana - Todo ano',
-                'porto_ref': 'buenaventura',
-                'corredor': 'Ferrovia del Café'
-            },
-            {
-                'id': 'CO-BOG-TROP',
-                'nome': 'Altiplano Cundiboyacense',
-                'cidade': 'Tunja',
-                'estado': 'Boyacá',
-                'pais': 'CO',
-                'lat': 5.54,
-                'lon': -73.36,
-                'culturas': ['BATATA', 'CEBOLA', 'HORTALIÇAS'],
-                'area_ha': 85000,
-                'safra_principal': 'Batata - Mar/Mai',
-                'safra_segunda': 'Cebola - Ago/Out',
-                'porto_ref': 'bogota',
-                'corredor': 'Carretera Central'
-            },
-            {
-                'id': 'CO-CAS-TROP',
-                'nome': 'Palma de Óleo',
-                'cidade': 'Barrancabermeja',
-                'estado': 'Santander',
-                'pais': 'CO',
-                'lat': 7.06,
-                'lon': -73.85,
-                'culturas': ['PALMA', 'CACAU', 'BANANA'],
-                'area_ha': 120000,
-                'safra_principal': 'Palma - Todo ano',
-                'safra_segunda': 'Cacau - Mai/Jul',
-                'porto_ref': 'barrancabermeja',
-                'corredor': 'Rio Magdalena'
-            }
-        ]
-    },
-    
-    # CLUSTER COLÔMBIA - Potência do Arábica e Flores
-    'colombia': {
-        'nome': 'Cluster Colômbia',
         'paises': ['CO'],
         'centroid': [4.5, -74.0],
         'polos': [
@@ -313,13 +259,12 @@ CLUSTERS_SULAMERICANOS = {
                 'pais': 'CO',
                 'lat': 4.53,
                 'lon': -75.70,
-                'culturas': ['CAFE_ARABICA', 'BANANA'],
+                'culturas': ['CAFE', 'BANANA'],
                 'area_ha': 380000,
-                'safra_principal': 'Café Arábica - Out/Dez',
+                'safra_principal': 'Café - Out/Dez',
                 'safra_segunda': 'Banana - Todo ano',
                 'porto_ref': 'buenaventura',
-                'corredor': 'Ferrovia del Café',
-                'destaque': 'Maior produtor mundial de café arábica lavado'
+                'corredor': 'Ferrovia del Café'
             },
             {
                 'id': 'CO-SAV-FLORES',
@@ -329,29 +274,27 @@ CLUSTERS_SULAMERICANOS = {
                 'pais': 'CO',
                 'lat': 4.92,
                 'lon': -74.02,
-                'culturas': ['FLORES', 'ROSAS', 'CRAVOS'],
+                'culturas': ['FLORES', 'ROSAS'],
                 'area_ha': 8500,
                 'safra_principal': 'Flores - Todo ano',
-                'safra_segunda': None,
+                'safra_segunda': '',
                 'porto_ref': 'bogota',
-                'corredor': 'Aéreo/Eldorado',
-                'destaque': 'Líder global em exportação de flores'
+                'corredor': 'Aéreo/Eldorado'
             },
             {
                 'id': 'CO-ANT-ABACATE',
-                'nome': 'Antioquia - Abacate Hass',
+                'nome': 'Antioquia - Abacate',
                 'cidade': 'Medellín',
                 'estado': 'Antioquia',
                 'pais': 'CO',
                 'lat': 6.25,
                 'lon': -75.56,
-                'culturas': ['ABACATE_HASS', 'BANANA'],
+                'culturas': ['ABACATE', 'BANANA'],
                 'area_ha': 45000,
-                'safra_principal': 'Abacate Hass - Todo ano',
+                'safra_principal': 'Abacate - Todo ano',
                 'safra_segunda': 'Banana - Todo ano',
                 'porto_ref': 'cartagena',
-                'corredor': 'Carretera al Mar',
-                'destaque': 'Competidor direto do Brasil no mercado europeu'
+                'corredor': 'Carretera al Mar'
             },
             {
                 'id': 'CO-MAG-BANANA',
@@ -366,24 +309,37 @@ CLUSTERS_SULAMERICANOS = {
                 'safra_principal': 'Banana - Todo ano',
                 'safra_segunda': 'Cacau - Mai/Jul',
                 'porto_ref': 'santa_marta',
-                'corredor': 'Costa Caribe',
-                'destaque': 'Produção massiva na costa caribenha'
+                'corredor': 'Costa Caribe'
             },
             {
                 'id': 'CO-MET-PALMA',
-                'nome': 'Meta - Óleo de Palma',
+                'nome': 'Meta - Palma de Óleo',
                 'cidade': 'Villavicencio',
                 'estado': 'Meta',
                 'pais': 'CO',
                 'lat': 4.12,
                 'lon': -73.62,
-                'culturas': ['PALMA_OLEO', 'CACAU'],
+                'culturas': ['PALMA', 'CACAU'],
                 'area_ha': 180000,
-                'safra_principal': 'Palma de Óleo - Todo ano',
+                'safra_principal': 'Palma - Todo ano',
                 'safra_segunda': 'Cacau - Mai/Jul',
                 'porto_ref': 'barrancabermeja',
-                'corredor': 'Rio Meta',
-                'destaque': 'Ditador de preços internacionais de óleo de palma'
+                'corredor': 'Rio Meta'
+            },
+            {
+                'id': 'CO-BOG-HORT',
+                'nome': 'Altiplano Cundiboyacense',
+                'cidade': 'Tunja',
+                'estado': 'Boyacá',
+                'pais': 'CO',
+                'lat': 5.54,
+                'lon': -73.36,
+                'culturas': ['BATATA', 'CEBOLA', 'HORTALICAS'],
+                'area_ha': 85000,
+                'safra_principal': 'Batata - Mar/Mai',
+                'safra_segunda': 'Cebola - Ago/Out',
+                'porto_ref': 'bogota',
+                'corredor': 'Carretera Central'
             }
         ]
     },
@@ -402,14 +358,12 @@ CLUSTERS_SULAMERICANOS = {
                 'pais': 'VE',
                 'lat': 9.04,
                 'lon': -69.74,
-                'culturas': ['MILHO_BRANCO', 'MILHO_AMARELO', 'SORGO'],
+                'culturas': ['MILHO', 'SORGO'],
                 'area_ha': 280000,
                 'safra_principal': 'Milho - Nov/Dez',
                 'safra_segunda': 'Sorgo - Jan/Fev',
                 'porto_ref': 'la_guaira',
-                'corredor': 'Carretera Central',
-                'destaque': 'Projeção 2025/26: 1.26 milhão toneladas',
-                'observacao': 'Recuperação técnica focada em soberania alimentar'
+                'corredor': 'Carretera Central'
             },
             {
                 'id': 'VE-GUA-ARROZ',
@@ -424,8 +378,7 @@ CLUSTERS_SULAMERICANOS = {
                 'safra_principal': 'Arroz - Jul/Ago',
                 'safra_segunda': 'Milho - Nov/Dez',
                 'porto_ref': 'la_guaira',
-                'corredor': 'Rio Guárico',
-                'destaque': 'Produção: ~464 mil toneladas/ano'
+                'corredor': 'Rio Guárico'
             },
             {
                 'id': 'VE-LAR-CANA',
@@ -435,13 +388,12 @@ CLUSTERS_SULAMERICANOS = {
                 'pais': 'VE',
                 'lat': 10.18,
                 'lon': -70.08,
-                'culturas': ['CANA_ACUCAR', 'SORGO'],
+                'culturas': ['CANA', 'SORGO'],
                 'area_ha': 85000,
                 'safra_principal': 'Cana - Mai/Out',
                 'safra_segunda': 'Sorgo - Nov/Jan',
                 'porto_ref': 'puerto_cabello',
-                'corredor': 'Carretera Lara-Zulia',
-                'destaque': 'Grandes áreas mecanizáveis'
+                'corredor': 'Carretera Lara-Zulia'
             },
             {
                 'id': 'VE-ZUL-SORGO',
@@ -451,13 +403,12 @@ CLUSTERS_SULAMERICANOS = {
                 'pais': 'VE',
                 'lat': 10.65,
                 'lon': -71.63,
-                'culturas': ['SORGO', 'MILHO', 'SESA'],
+                'culturas': ['SORGO', 'MILHO', 'GERGELIM'],
                 'area_ha': 150000,
                 'safra_principal': 'Sorgo - Dez/Fev',
                 'safra_segunda': 'Milho - Abr/Jun',
                 'porto_ref': 'maracaibo',
-                'corredor': 'Lago de Maracaibo',
-                'destaque': 'Potencial de oferta para região norte'
+                'corredor': 'Lago de Maracaibo'
             }
         ]
     }
