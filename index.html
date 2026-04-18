@@ -681,14 +681,14 @@ tr:hover td{background:rgba(0,212,255,.04);}
 <!-- PRICE TICKER -->
 <div id="price-ticker">
   <div class="ticker-inner" id="ticker-inner">
-    <span class="tick-item"><span class="tick-name">SOJA (CBOT)</span><span class="tick-val tick-dn" id="tp-soja">R$ 128.31</span></span>
-    <span class="tick-item"><span class="tick-name">MILHO (CBOT)</span><span class="tick-val tick-up" id="tp-milho">R$ 69.58</span></span>
-    <span class="tick-item"><span class="tick-name">BOI GORDO (B3)</span><span class="tick-val tick-up" id="tp-boi">R$ 364.25</span></span>
-    <span class="tick-item"><span class="tick-name">AÇÚCAR (ICE)</span><span class="tick-val tick-dn" id="tp-acucar">US$ 19.85/lb ▼</span></span>
-    <span class="tick-item"><span class="tick-name">CAFÉ ARÁBICA</span><span class="tick-val tick-up" id="tp-cafe">R$ 1821.69</span></span>
-    <span class="tick-item"><span class="tick-name">ALGODÃO (ICE)</span><span class="tick-val tick-dn" id="tp-algodao">US$ 72.30/lb ▼</span></span>
-    <span class="tick-item"><span class="tick-name">USD/BRL</span><span class="tick-val tick-up" id="tp-usd">R$ 5.124 ▲</span></span>
-    <span class="tick-item"><span class="tick-name">TOMATE SP CEASA</span><span class="tick-val tick-up" id="tp-tomate">R$ 6.29/kg</span></span>
+    <span class="tick-item"><span class="tick-name">SOJA (CBOT)</span><span class="tick-val tick-up" id="tp-soja">US$/bu 11.25 ▲</span></span>
+    <span class="tick-item"><span class="tick-name">MILHO (CBOT)</span><span class="tick-val tick-up" id="tp-milho">US$/bu 4.95 ▲</span></span>
+    <span class="tick-item"><span class="tick-name">BOI GORDO (B3)</span><span class="tick-val tick-up" id="tp-boi">R$/@ 328.5 ▲</span></span>
+    <span class="tick-item"><span class="tick-name">AÇÚCAR (ICE)</span><span class="tick-val tick-up" id="tp-acucar">US$/lb 21.40 ▲</span></span>
+    <span class="tick-item"><span class="tick-name">CAFÉ ARÁBICA</span><span class="tick-val tick-up" id="tp-cafe">US$/sc 245.8 ▲</span></span>
+    <span class="tick-item"><span class="tick-name">ALGODÃO (ICE)</span><span class="tick-val tick-up" id="tp-algodao">US$/lb 78.5 ▲</span></span>
+    <span class="tick-item"><span class="tick-name">USD/BRL</span><span class="tick-val tick-up" id="tp-usd">R$ 5.85 ▲</span></span>
+    <span class="tick-item"><span class="tick-name">TOMATE SP CEASA</span><span class="tick-val tick-up" id="tp-tomate">R$/cx 72.5 ▲</span></span>
   </div>
 </div>
 
@@ -702,7 +702,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
   <span class="fs-item"><span class="fs-dot" style="background:var(--accent2)"></span>VECTOR TILES: <span id="fs-tiles" style="color:var(--accent2);margin-left:3px;">ATIVO</span></span>
   <span class="fs-item"><span class="fs-dot" style="background:var(--accent2)"></span>FALLBACK PREÇO: <span id="fs-fallback" style="color:var(--accent2);margin-left:3px;">NÃO ATIVADO</span></span>
   <span class="fs-item" id="api-status-strip" style="font-size:8px;color:var(--text2);overflow:hidden;max-width:400px;white-space:nowrap;">APIs: aguardando...</span>
-  <span class="fs-item" style="margin-left:auto;"><span id="fs-engine-cycles" style="color:var(--text2);">Ciclos processados: <strong id="fs-cycles" style="color:var(--accent)">0</strong></span></span>
+  <span class="fs-item" style="margin-left:auto;"><span id="fs-engine-cycles" style="color:var(--text2);">NIA$ v2.1 · 17/04/2026 · Ciclos: <strong id="fs-cycles" style="color:var(--accent)">0</strong></span></span>
 </div>
 
 <!-- APP -->
@@ -2622,14 +2622,14 @@ function applyReroute() {
 // PRICE TICKER LIVE
 // ═══════════════════════════════════════════════════════════════════
 const prices = {
-  soja:    { val: 10.42, unit: 'US$/bu', dir: -1 },
-  milho:   { val: 4.68,  unit: 'US$/bu', dir: 1  },
-  boi:     { val: 312.4, unit: 'R$/@',   dir: 1  },
-  acucar:  { val: 19.85, unit: 'US$/lb', dir: -1 },
-  cafe:    { val: 218.6, unit: 'US$/sc', dir: 1  },
-  algodao: { val: 72.3,  unit: 'US$/lb', dir: -1 },
-  usd:     { val: 5.124, unit: 'R$',     dir: 1  },
-  tomate:  { val: 68.2,  unit: 'R$/cx',  dir: 1  },
+  soja:    { val: 11.25, unit: 'US$/bu', dir: 1 },
+  milho:   { val: 4.95,  unit: 'US$/bu', dir: 1  },
+  boi:     { val: 328.5, unit: 'R$/@',   dir: 1  },
+  acucar:  { val: 21.40, unit: 'US$/lb', dir: 1 },
+  cafe:    { val: 245.8, unit: 'US$/sc', dir: 1  },
+  algodao: { val: 78.5,  unit: 'US$/lb', dir: 1 },
+  usd:     { val: 5.85,  unit: 'R$',     dir: 1  },
+  tomate:  { val: 72.5,  unit: 'R$/cx',  dir: 1  },
 };
 const tickerIds = { soja:'tp-soja', milho:'tp-milho', boi:'tp-boi', acucar:'tp-acucar', cafe:'tp-cafe', algodao:'tp-algodao', usd:'tp-usd', tomate:'tp-tomate' };
 function updatePrices() {
