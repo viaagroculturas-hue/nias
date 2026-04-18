@@ -1112,6 +1112,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <div class="layer-toggle"><input type="checkbox" id="l8" checked onchange="toggleLayer('tomate-mesa',this)"><label for="l8" style="color:var(--accent)">🍅 Tomate Mesa</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l9" checked onchange="toggleLayer('tomate-ind',this)"><label for="l9" style="color:var(--accent3)">🍅 Tomate Indústria</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l10" onchange="toggleLayer('planet',this)"><label for="l10" style="color:#7ec850">🛰 Planet (3m)</label></div>
+          <div class="layer-toggle"><input type="checkbox" id="l11" checked onchange="toggleLayer('country-borders',this)"><label for="l11" style="color:#00d4ff">🌎 Contornos Países</label></div>
           <div style="margin-top:6px;">
             <div class="map-ctrl-title">LEGENDA NDVI</div>
             <div class="legend-item"><div class="legend-dot" style="background:#00a550"></div><span class="legend-label">&gt; 0.70 — Saúde plena</span></div>
@@ -2767,8 +2768,37 @@ const mapLayerObjs = {};
 let leafletMap;
 function initMap() {
   window._mapInit = true;
-  leafletMap = L.map('map', { center: [-15, -55], zoom: 4, zoomControl: true });
+  leafletMap = L.map('map', { center: [-10, -60], zoom: 3, zoomControl: true });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB', maxZoom: 18 }).addTo(leafletMap);
+
+  // ── CONTORNOS DOS PAÍSES DA AMÉRICA DO SUL ──
+  const southAmericaCountries = [
+    { name: 'Brasil', color: '#00d4ff', coords: [[-4.0,-70.0],[5.0,-60.0],[5.0,-50.0],[0.0,-45.0],[-5.0,-35.0],[-10.0,-35.0],[-15.0,-38.0],[-20.0,-40.0],[-25.0,-42.0],[-30.0,-50.0],[-33.0,-53.0],[-33.0,-58.0],[-28.0,-58.0],[-22.0,-58.0],[-15.0,-60.0],[-10.0,-65.0],[-5.0,-70.0]] },
+    { name: 'Argentina', color: '#3b82f6', coords: [[-22.0,-65.0],[-24.0,-60.0],[-28.0,-58.0],[-33.0,-58.0],[-38.0,-58.0],[-42.0,-65.0],[-46.0,-67.0],[-52.0,-69.0],[-55.0,-68.0],[-52.0,-72.0],[-46.0,-75.0],[-40.0,-62.0],[-35.0,-63.0],[-30.0,-64.0],[-25.0,-65.0]] },
+    { name: 'Chile', color: '#ef4444', coords: [[-18.0,-70.0],[-20.0,-70.0],[-23.0,-70.0],[-26.0,-70.0],[-29.0,-71.0],[-33.0,-71.0],[-37.0,-73.0],[-41.0,-73.0],[-46.0,-75.0],[-52.0,-69.0],[-55.0,-68.0],[-52.0,-72.0],[-46.0,-75.0],[-42.0,-75.0],[-38.0,-73.0],[-33.0,-71.0],[-30.0,-70.0],[-25.0,-70.0],[-20.0,-70.0]] },
+    { name: 'Uruguai', color: '#eab308', coords: [[-30.0,-58.0],[-31.0,-56.0],[-32.0,-54.0],[-33.0,-54.0],[-34.0,-54.0],[-35.0,-55.0],[-35.0,-58.0],[-34.0,-58.0],[-32.0,-58.0],[-30.0,-58.0]] },
+    { name: 'Paraguai', color: '#f97316', coords: [[-20.0,-62.0],[-20.0,-58.0],[-22.0,-56.0],[-24.0,-55.0],[-27.0,-55.0],[-28.0,-56.0],[-28.0,-59.0],[-27.0,-61.0],[-25.0,-62.0],[-22.0,-62.0]] },
+    { name: 'Bolívia', color: '#a855f7', coords: [[-10.0,-68.0],[-10.0,-65.0],[-12.0,-62.0],[-15.0,-60.0],[-18.0,-58.0],[-20.0,-63.0],[-22.0,-65.0],[-24.0,-68.0],[-20.0,-70.0],[-15.0,-68.0]] },
+    { name: 'Peru', color: '#ec4899', coords: [[-0.1,-80.0],[-5.0,-80.0],[-10.0,-78.0],[-15.0,-73.0],[-18.0,-70.0],[-15.0,-68.0],[-10.0,-72.0],[-5.0,-75.0],[-0.1,-78.0]] },
+    { name: 'Equador', color: '#14b8a6', coords: [[1.0,-92.0],[1.0,-78.0],[-0.1,-75.0],[-2.0,-77.0],[-5.0,-80.0],[-2.0,-82.0],[0.0,-85.0],[2.0,-90.0]] },
+    { name: 'Colômbia', color: '#f97316', coords: [[12.0,-73.0],[8.0,-77.0],[4.0,-78.0],[1.0,-78.0],[1.0,-72.0],[4.0,-70.0],[8.0,-72.0],[11.0,-74.0]] },
+    { name: 'Venezuela', color: '#8b5cf6', coords: [[12.0,-73.0],[8.0,-72.0],[4.0,-70.0],[1.0,-67.0],[4.0,-62.0],[8.0,-60.0],[11.0,-62.0],[12.0,-67.0]] },
+    { name: 'Guiana', color: '#22c55e', coords: [[8.0,-60.0],[5.0,-58.0],[2.0,-57.0],[2.0,-54.0],[5.0,-52.0],[8.0,-55.0]] },
+    { name: 'Suriname', color: '#84cc16', coords: [[6.0,-58.0],[4.0,-56.0],[2.0,-55.0],[2.0,-54.0],[4.0,-52.0],[6.0,-54.0]] },
+    { name: 'Guiana Francesa', color: '#10b981', coords: [[5.0,-54.0],[3.0,-52.0],[2.0,-51.0],[4.0,-49.0],[6.0,-51.0]] },
+  ];
+  
+  mapLayerObjs['country-borders'] = L.layerGroup(
+    southAmericaCountries.map(c => 
+      L.polygon(c.coords, { 
+        color: c.color, 
+        fillColor: c.color, 
+        fillOpacity: 0.05, 
+        weight: 2,
+        dashArray: '5,5'
+      }).bindTooltip(`<b>${c.name}</b>`, { permanent: false, direction: 'center' })
+    )
+  ).addTo(leafletMap);
 
   const addZones = (key, zones) => {
     mapLayerObjs[key] = L.layerGroup(zones.map(z =>
@@ -2937,7 +2967,7 @@ function initSankey() {
   const el = document.getElementById('logMap');
   if (!el || logMap) { if (logMap) setTimeout(() => logMap.invalidateSize(), 80); return; }
 
-  logMap = L.map('logMap', { center:[-15,-50], zoom:4, zoomControl:true, attributionControl:false });
+  logMap = L.map('logMap', { center:[-10,-60], zoom:3, zoomControl:true, attributionControl:false });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:18, subdomains:'abcd' }).addTo(logMap);
 
   // ── RODOVIAS (principais corredores de escoamento) ────────────
@@ -4944,7 +4974,7 @@ let activePolygons = {};
 
 function initMunicipal() {
   window._munInit = true;
-  munMap = L.map('map-municipal', { center: [-15, -55], zoom: 4, zoomControl: true });
+  munMap = L.map('map-municipal', { center: [-10, -60], zoom: 3, zoomControl: true });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     { attribution:'© CartoDB', maxZoom:18 }).addTo(munMap);
 
@@ -6693,7 +6723,7 @@ let _bcRiskCycle = -1;
 function initBioCommand() {
   if (_bcInit) { setTimeout(() => bcMap && bcMap.invalidateSize(), 80); return; }
   _bcInit = true;
-  bcMap = L.map('bc-map', { center:[-15,-52], zoom:4, zoomControl:true, attributionControl:false });
+  bcMap = L.map('bc-map', { center:[-10,-60], zoom:3, zoomControl:true, attributionControl:false });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:19, subdomains:'abcd' }).addTo(bcMap);
 
   // Fetch SIDRA data for ALL cultures
@@ -8384,7 +8414,7 @@ const FLVModule = {
       const data = await fetch(`/api/flv/heatmap?culture=${culture}`).then(r=>r.json()).catch(()=>[]);
       const container = document.getElementById('flv-heatmap-container');
       if (!this._heatMap) {
-        this._heatMap = L.map(container, {zoomControl:true, attributionControl:false}).setView([-14, -51], 4);
+        this._heatMap = L.map(container, {zoomControl:true, attributionControl:false}).setView([-10, -60], 3);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom:18}).addTo(this._heatMap);
         this._heatMarkers = L.layerGroup().addTo(this._heatMap);
       }
@@ -8655,7 +8685,7 @@ window.Predictix = {
 
   init() {
     if (!this._initialized) {
-      this._map = L.map('px-map', { zoomControl:true, attributionControl:false }).setView([-14, -50], 4);
+      this._map = L.map('px-map', { zoomControl:true, attributionControl:false }).setView([-10, -60], 3);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {maxZoom:18, opacity:0.7}).addTo(this._map);
       // Thin state borders
       this._flowLayer = L.layerGroup().addTo(this._map);
