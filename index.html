@@ -2911,7 +2911,7 @@ function showPolosMap() {
               <div><span style="color:#ef4444;">●</span> Chile (Vales Centrais)</div>
               <div><span style="color:#f97316;">●</span> Colômbia (Eixo Cafeeiro, Palma)</div>
               <div><span style="color:#a855f7;">●</span> Venezuela (Portuguesa, Zulia)</div>
-              <div><span style="color:#000;">■</span> Portos Estratégicos</div>
+              <div><span style="color:#c9d1d9;">■</span> Portos Estratégicos</div>
             </div>
           </div>
         </div>
@@ -5077,7 +5077,7 @@ function pushAnomalyEvent() {
   div.className = 'lf-item';
   div.style.borderLeft = `2px solid ${cls==='lf-danger'?'var(--danger)':cls==='lf-warn'?'var(--warn)':cls==='lf-ok'?'var(--accent2)':'var(--accent)'}`;
   div.style.paddingLeft = '8px';
-  div.innerHTML = `<span class="${cls}" style="font-size:10px;">${msg}</span><br><span class="lf-time">${ts} · ${{'BR':'Brasil','AR':'Argentina','PY':'Paraguai','UY':'Uruguai'}[mun.country]}</span>`;
+  div.innerHTML = `<span class="${cls}" style="font-size:10px;">${msg}</span><br><span class="lf-time">${ts} · ${{'BR':'Brasil','AR':'Argentina','PY':'Paraguai','UY':'Uruguai','CO':'Colômbia','VE':'Venezuela','CL':'Chile','PE':'Peru','EC':'Equador','BO':'Bolívia'}[mun.country] || mun.country}</span>`;
   list.insertBefore(div, list.firstChild);
   while (list.children.length > 60) list.removeChild(list.lastChild);
 }
@@ -5179,31 +5179,31 @@ const MUNICIPAL_DB_EXTRA = [
     poly:[[-24.4,-70.6],[-23.8,-70.6],[-23.8,-69.8],[-24.4,-69.8]], argus:'norte-chile', ceasa_ref:'Antofagasta' },
 
   // ── COLÔMBIA — POLOS CAFÉ/FLORES/ABACATE/BANANA/PALMA ──
-  { id:'CO-BOG-BOG', name:'Bogotá',             state:'Cundinamarca', country:'CO', culture:'flores',   areaMha:0.18, area_ha:1800, ndvi:0.65, coef:0.88, temp_max:20, chuva_7d:28, phenology:'flores/corte — altitude 2600m',
+  { id:'CO-BOG-BOG', name:'Bogotá',             state:'Cundinamarca', country:'CO', culture:'flores',   areaMha:0.18, area_ha:18000, ndvi:0.65, coef:0.88, temp_max:20, chuva_7d:28, phenology:'flores/corte — altitude 2600m',
     poly:[[4.2,-74.4],[4.8,-74.4],[4.8,-74.0],[4.2,-74.0]], argus:'altiplano-colombia', ceasa_ref:'Bogotá' },
-  { id:'CO-MED-MED', name:'Medellín',           state:'Antioquia', country:'CO', culture:'cafe',     areaMha:0.42, area_ha:4200, ndvi:0.72, coef:0.91, temp_max:26, chuva_7d:32, phenology:'café arábica — eixo cafeeiro',
+  { id:'CO-MED-MED', name:'Medellín',           state:'Antioquia', country:'CO', culture:'cafe',     areaMha:0.42, area_ha:42000, ndvi:0.72, coef:0.91, temp_max:26, chuva_7d:32, phenology:'café arábica — eixo cafeeiro',
     poly:[[6.0,-75.8],[6.6,-75.8],[6.6,-75.2],[6.0,-75.2]], argus:'eje-cafetero', ceasa_ref:'Medellín' },
-  { id:'CO-CAL-CAL', name:'Cali',               state:'Valle del Cauca', country:'CO', culture:'cana',     areaMha:0.55, area_ha:5500, ndvi:0.68, coef:0.89, temp_max:31, chuva_7d:25, phenology:'cana-de-açúcar — vale do Cauca',
+  { id:'CO-CAL-CAL', name:'Cali',               state:'Valle del Cauca', country:'CO', culture:'cana',     areaMha:0.55, area_ha:55000, ndvi:0.68, coef:0.89, temp_max:31, chuva_7d:25, phenology:'cana-de-açúcar — vale do Cauca',
     poly:[[3.0,-76.8],[3.6,-76.8],[3.6,-76.2],[3.0,-76.2]], argus:'pacifico-colombia', ceasa_ref:'Cali' },
-  { id:'CO-ARM-ARM', name:'Armenia',            state:'Quindío', country:'CO', culture:'cafe',     areaMha:0.38, area_ha:3800, ndvi:0.74, coef:0.92, temp_max:25, chuva_7d:30, phenology:'café arábica lavado — maior produtor mundial',
+  { id:'CO-ARM-ARM', name:'Armenia',            state:'Quindío', country:'CO', culture:'cafe',     areaMha:0.38, area_ha:38000, ndvi:0.74, coef:0.92, temp_max:25, chuva_7d:30, phenology:'café arábica lavado — maior produtor mundial',
     poly:[[4.2,-75.8],[4.8,-75.8],[4.8,-75.2],[4.2,-75.2]], argus:'eje-cafetero', ceasa_ref:'Armenia' },
-  { id:'CO-CAJ-CAJ', name:'Cajicá',             state:'Cundinamarca', country:'CO', culture:'flores',   areaMha:0.09, area_ha:900, ndvi:0.68, coef:0.90, temp_max:19, chuva_7d:26, phenology:'rosas/cravos — líder global exportação',
+  { id:'CO-CAJ-CAJ', name:'Cajicá',             state:'Cundinamarca', country:'CO', culture:'flores',   areaMha:0.09, area_ha:9000, ndvi:0.68, coef:0.90, temp_max:19, chuva_7d:26, phenology:'rosas/cravos — líder global exportação',
     poly:[[4.5,-74.1],[4.9,-74.1],[4.9,-73.7],[4.5,-73.7]], argus:'savana-bogota', ceasa_ref:'Cajicá' },
-  { id:'CO-SMT-SMT', name:'Santa Marta',        state:'Magdalena', country:'CO', culture:'banana',   areaMha:0.95, area_ha:9500, ndvi:0.71, coef:0.89, temp_max:32, chuva_7d:12, phenology:'banana/cacau — costa caribenha',
+  { id:'CO-SMT-SMT', name:'Santa Marta',        state:'Magdalena', country:'CO', culture:'banana',   areaMha:0.95, area_ha:95000, ndvi:0.71, coef:0.89, temp_max:32, chuva_7d:12, phenology:'banana/cacau — costa caribenha',
     poly:[[10.8,-74.4],[11.4,-74.4],[11.4,-73.8],[10.8,-73.8]], argus:'caribe-colombia', ceasa_ref:'Santa Marta' },
-  { id:'CO-VIL-VIL', name:'Villavicencio',      state:'Meta', country:'CO', culture:'palma',    areaMha:1.80, area_ha:18000, ndvi:0.69, coef:0.87, temp_max:33, chuva_7d:28, phenology:'palma de óleo/cacau — orla amazônica',
+  { id:'CO-VIL-VIL', name:'Villavicencio',      state:'Meta', country:'CO', culture:'palma',    areaMha:1.80, area_ha:180000, ndvi:0.69, coef:0.87, temp_max:33, chuva_7d:28, phenology:'palma de óleo/cacau — orla amazônica',
     poly:[[3.8,-73.8],[4.4,-73.8],[4.4,-73.2],[3.8,-73.2]], argus:'llanos-colombia', ceasa_ref:'Villavicencio' },
-  { id:'CO-CTG-CTG', name:'Cartagena',          state:'Bolívar', country:'CO', culture:'abacate',  areaMha:0.45, area_ha:4500, ndvi:0.66, coef:0.86, temp_max:31, chuva_7d:15, phenology:'abacate hass — exportação Europa',
+  { id:'CO-CTG-CTG', name:'Cartagena',          state:'Bolívar', country:'CO', culture:'abacate',  areaMha:0.45, area_ha:45000, ndvi:0.66, coef:0.86, temp_max:31, chuva_7d:15, phenology:'abacate hass — exportação Europa',
     poly:[[9.9,-75.6],[10.5,-75.6],[10.5,-75.0],[9.9,-75.0]], argus:'caribe-colombia', ceasa_ref:'Cartagena' },
 
   // ── VENEZUELA — POLOS MILHO/ARROZ/CANA/SORGO ──
-  { id:'VE-GUA-GUA', name:'Guanare',            state:'Portuguesa', country:'VE', culture:'milho',    areaMha:2.80, area_ha:28000, ndvi:0.58, coef:0.82, temp_max:34, chuva_7d:18, phenology:'milho/sorgo — celeiro nacional 1.26M ton',
+  { id:'VE-GUA-GUA', name:'Guanare',            state:'Portuguesa', country:'VE', culture:'milho',    areaMha:2.80, area_ha:280000, ndvi:0.58, coef:0.82, temp_max:34, chuva_7d:18, phenology:'milho/sorgo — celeiro nacional 1.26M ton',
     poly:[[8.8,-69.2],[9.4,-69.2],[9.4,-68.6],[8.8,-68.6]], argus:'llanos-venezuela', ceasa_ref:'Guanare' },
-  { id:'VE-CAL-CAL', name:'Calabozo',           state:'Guárico', country:'VE', culture:'arroz',    areaMha:1.20, area_ha:12000, ndvi:0.62, coef:0.84, temp_max:35, chuva_7d:22, phenology:'arroz irrigado — 464k ton/ano',
+  { id:'VE-CAL-CAL', name:'Calabozo',           state:'Guárico', country:'VE', culture:'arroz',    areaMha:1.20, area_ha:120000, ndvi:0.62, coef:0.84, temp_max:35, chuva_7d:22, phenology:'arroz irrigado — 464k ton/ano',
     poly:[[8.6,-67.6],[9.2,-67.6],[9.2,-67.0],[8.6,-67.0]], argus:'llanos-venezuela', ceasa_ref:'Calabozo' },
-  { id:'VE-CAR-CAR', name:'Carora',             state:'Lara', country:'VE', culture:'cana',     areaMha:0.85, area_ha:8500, ndvi:0.65, coef:0.83, temp_max:33, chuva_7d:8, phenology:'cana-de-açúcar/sorgo — áreas mecanizáveis',
+  { id:'VE-CAR-CAR', name:'Carora',             state:'Lara', country:'VE', culture:'cana',     areaMha:0.85, area_ha:85000, ndvi:0.65, coef:0.83, temp_max:33, chuva_7d:8, phenology:'cana-de-açúcar/sorgo — áreas mecanizáveis',
     poly:[[9.9,-70.4],[10.5,-70.4],[10.5,-69.8],[9.9,-69.8]], argus:'lara-venezuela', ceasa_ref:'Carora' },
-  { id:'VE-MAR-MAR', name:'Maracaibo',          state:'Zulia', country:'VE', culture:'sorgo',    areaMha:1.50, area_ha:15000, ndvi:0.59, coef:0.81, temp_max:36, chuva_7d:5, phenology:'sorgo/milho/gergelim — potencial norte',
+  { id:'VE-MAR-MAR', name:'Maracaibo',          state:'Zulia', country:'VE', culture:'sorgo',    areaMha:1.50, area_ha:150000, ndvi:0.59, coef:0.81, temp_max:36, chuva_7d:5, phenology:'sorgo/milho/gergelim — potencial norte',
     poly:[[10.4,-72.0],[11.0,-72.0],[11.0,-71.4],[10.4,-71.4]], argus:'zulia-venezuela', ceasa_ref:'Maracaibo' },
 
   // ── PERU — POLOS ASPARGOS/QUINOA ──
@@ -6884,8 +6884,17 @@ function _bcArbSnippet(m) {
 function bcToggleLayer(name,cb) { if(!bcMap||!bcMapLayers[name])return; cb.checked?bcMapLayers[name].addTo(bcMap):bcMap.removeLayer(bcMapLayers[name]); }
 
 async function bcTrocarCultura(cult) {
+  // Normaliza string: remove acentos, converte para lowercase, remove espaços e underscores
+  const normalize = (str) => str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[\s_]+/g, '');
+  
   document.querySelectorAll('#bc-left .cult-btn').forEach(b=>{
-    const match=cult==='all'?b.id==='bc-cult-all':b.textContent.toLowerCase().replace(/\s+/g,'').includes(cult.replace('-',''));
+    const btnText = normalize(b.textContent);
+    const cultNorm = normalize(cult);
+    const match = cult==='all' ? b.id==='bc-cult-all' : btnText.includes(cultNorm);
     b.classList.toggle('active',match);
   });
 
