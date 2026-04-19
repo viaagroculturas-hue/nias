@@ -55,5 +55,22 @@ def run_pipeline():
     except Exception as e:
         print(f'[FLV-Pipeline] Prophet erro: {e}')
 
+    # 7. Feedback loop: score past predictions vs observed prices
+    try:
+        from flv.model.evaluator import evaluate_predictions
+        n = evaluate_predictions()
+        print(f'[FLV-Pipeline] Evaluator: {n} predicoes avaliadas')
+    except Exception as e:
+        print(f'[FLV-Pipeline] Evaluator erro: {e}')
+
+    # 8. Retrain controller: log triggers when MAPE exceeds thresholds
+    try:
+        from flv.model.retrain_controller import run as retrain_run
+        res = retrain_run()
+        if res['triggers']:
+            print(f'[FLV-Pipeline] Retrain: {len(res["triggers"])} triggers ({[t["culture_slug"] for t in res["triggers"]]})')
+    except Exception as e:
+        print(f'[FLV-Pipeline] Retrain erro: {e}')
+
     elapsed = time.time() - t0
     print(f'[FLV-Pipeline] Ciclo completo em {elapsed:.1f}s')

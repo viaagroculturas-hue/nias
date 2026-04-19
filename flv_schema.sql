@@ -131,6 +131,22 @@ CREATE TABLE IF NOT EXISTS flv_accuracy (
     evaluated_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Log de retreinos de modelo (MLOps / Pilar 3).
+-- Um registro por decisao do retrain_controller: 'completed', 'failed', 'deferred'.
+CREATE TABLE IF NOT EXISTS flv_model_runs (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    culture_slug    TEXT NOT NULL,
+    terminal        TEXT,
+    model_version   TEXT,
+    started_at      TEXT DEFAULT (datetime('now')),
+    finished_at     TEXT,
+    mape_before     REAL,
+    mape_after      REAL,
+    trigger_reason  TEXT,
+    status          TEXT CHECK(status IN ('completed','failed','deferred','pending')) DEFAULT 'pending',
+    notes           TEXT
+);
+
 -- Indicadores macroeconomicos (USD PTAX, Selic, IPCA, Diesel ANP).
 -- Consumidos pelo feature_builder como regressores opcionais.
 CREATE TABLE IF NOT EXISTS flv_macro (
@@ -149,6 +165,9 @@ CREATE INDEX IF NOT EXISTS idx_ndvi_mun_date    ON flv_ndvi(mun_id, obs_date);
 CREATE INDEX IF NOT EXISTS idx_pred_cult_target  ON flv_predictions(culture_id, target_date);
 CREATE INDEX IF NOT EXISTS idx_alerts_sev_date   ON flv_alerts(severity, created_at);
 CREATE INDEX IF NOT EXISTS idx_macro_series_date ON flv_macro(series, obs_date);
+CREATE INDEX IF NOT EXISTS idx_model_runs_cult    ON flv_model_runs(culture_slug, terminal, started_at);
+CREATE INDEX IF NOT EXISTS idx_accuracy_pred_id   ON flv_accuracy(prediction_id);
+CREATE INDEX IF NOT EXISTS idx_accuracy_date      ON flv_accuracy(actual_date);
 
 -- Tabela de Produtores (RJ e outros estados)
 CREATE TABLE IF NOT EXISTS flv_producers (
