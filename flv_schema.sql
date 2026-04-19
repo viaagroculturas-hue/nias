@@ -223,6 +223,51 @@ CREATE INDEX IF NOT EXISTS idx_sat_scenes_mun_date ON flv_sat_scenes(mun_id, obs
 CREATE INDEX IF NOT EXISTS idx_lulc_mun_year       ON flv_lulc_stats(mun_id, year);
 CREATE INDEX IF NOT EXISTS idx_cv_class_mun        ON flv_crop_classification(mun_id, year);
 
+-- =========================================================================
+-- Pilar 4.B — Estimativa de produtividade (ton/ha) + deteccao de anomalias
+-- visuais (change-detection). Populated por flv/cv/yield_model.py e
+-- flv/cv/change_detection.py.
+-- =========================================================================
+
+-- Previsoes de produtividade por (mun, cultura, safra_ano).
+-- Gradient boosting sobre NDVI peak + GDD + macro + LULC priors.
+CREATE TABLE IF NOT EXISTS flv_yield_predictions (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    mun_id           INTEGER NOT NULL REFERENCES flv_municipalities(id),
+    culture_slug     TEXT NOT NULL,
+    year             INTEGER NOT NULL,
+    yield_ton_ha     REAL NOT NULL,
+    yield_lower      REAL,                 -- IC 90% inferior
+    yield_upper      REAL,                 -- IC 90% superior
+    ndvi_peak        REAL,
+    gdd_total        REAL,
+    features_json    TEXT,
+    model_version    TEXT DEFAULT 'gbr-yield-v1',
+    predicted_at     TEXT DEFAULT (datetime('now')),
+    UNIQUE(mun_id, culture_slug, year, model_version)
+);
+
+-- Anomalias detectadas por diff mensal (NDVI drop, LULC shift, desmate detectado).
+-- Consumido pelo dashboard (badge "CV ATIVO" pulsa quando ha anomalia recente)
+-- e pela API /api/flv/cv/anomalies?since=.
+CREATE TABLE IF NOT EXISTS flv_cv_anomalies (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    mun_id           INTEGER NOT NULL REFERENCES flv_municipalities(id),
+    detected_at      TEXT NOT NULL,        -- data da observacao mais recente
+    kind             TEXT NOT NULL,        -- 'ndvi_drop' | 'lulc_shift' | 'bare_soil_off_season' | 'pivot_new'
+    severity         TEXT NOT NULL CHECK(severity IN ('info','warn','alert')),
+    delta            REAL,                 -- magnitude do diff (ex: -0.25 NDVI)
+    baseline_value   REAL,                 -- valor de referencia (media 12m)
+    current_value    REAL,                 -- valor atual
+    details_json     TEXT,                 -- contexto adicional (crop envolvida, janela, etc)
+    created_at       TEXT DEFAULT (datetime('now')),
+    UNIQUE(mun_id, detected_at, kind)
+);
+
+CREATE INDEX IF NOT EXISTS idx_yield_mun_year   ON flv_yield_predictions(mun_id, year);
+CREATE INDEX IF NOT EXISTS idx_anomalies_date   ON flv_cv_anomalies(detected_at DESC);
+CREATE INDEX IF NOT EXISTS idx_anomalies_mun    ON flv_cv_anomalies(mun_id, detected_at DESC);
+
 -- Tabela de Produtores (RJ e outros estados)
 CREATE TABLE IF NOT EXISTS flv_producers (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,

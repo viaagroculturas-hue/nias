@@ -1913,7 +1913,8 @@ tr:hover td{background:rgba(0,212,255,.04);}
     <div class="panel flv-panel" id="panel-flv_insights">
       <div class="panel-header" style="background:var(--flv-carbon);border-bottom:1px solid #2a4a2a;">
         <span class="panel-title" style="color:var(--flv-green);">MARKET INSIGHTS — ANTECIPAÇÃO FLV</span>
-        <span class="panel-badge ok" style="border-color:var(--flv-green);color:var(--flv-green);background:rgba(80,200,120,.1);">PROPHET ATIVO</span>
+        <span class="panel-badge ok" id="flv-model-badge" style="border-color:var(--flv-green);color:var(--flv-green);background:rgba(80,200,120,.1);">ENSEMBLE ATIVO</span>
+        <span class="panel-badge" id="flv-cv-badge" title="Pilar 4 — Computer Vision: reconhecimento de safra por satélite" style="border-color:#3B82F6;color:#3B82F6;background:rgba(59,130,246,.08);">CV ATIVO</span>
         <span class="panel-badge" id="flv-trend-badge" style="border-color:var(--flv-green);color:var(--flv-green);background:rgba(80,200,120,.08);">TENDÊNCIA: —</span>
         <span class="badge-live" style="border-color:var(--flv-green);color:var(--flv-green);">● FLV</span>
       </div>
@@ -8248,8 +8249,49 @@ const FLVModule = {
       document.getElementById('flv-kpi-alerts').textContent = Array.isArray(alerts) ? alerts.length : 0;
       document.getElementById('flv-trend-badge').textContent = `TENDÊNCIA: ${(pred.trend||'estavel').toUpperCase()} ${trendPct > 0 ? '↑' : trendPct < 0 ? '↓' : '→'}`;
 
+      // Pilar 2 — model badge: reflete o model_version que o backend escolheu.
+      const modelBadge = document.getElementById('flv-model-badge');
+      if (modelBadge) {
+        const mv = (pred.model || pred.model_version || '').toString();
+        if (mv.startsWith('ensemble')) modelBadge.textContent = 'ENSEMBLE ATIVO';
+        else if (mv.startsWith('xgb')) modelBadge.textContent = 'XGBOOST ATIVO';
+        else if (mv.startsWith('prophet')) modelBadge.textContent = 'PROPHET ATIVO';
+        else if (mv.startsWith('ets')) modelBadge.textContent = 'ETS FALLBACK';
+        else if (mv) modelBadge.textContent = mv.toUpperCase();
+      }
+
+      // Pilar 4 — CV badge: fetch live status from /api/flv/cv/badge.
+      this._refreshCvBadge();
+
       this._renderPriceChart(prices, pred);
     } catch(e) { console.warn('FLV insights error:', e); }
+  },
+
+  async _refreshCvBadge() {
+    const el = document.getElementById('flv-cv-badge');
+    if (!el) return;
+    try {
+      const r = await fetch('/api/flv/cv/badge');
+      if (!r.ok) throw 0;
+      const b = await r.json();
+      el.textContent = b.label || 'CV ATIVO';
+      const colors = {
+        active:    { color: '#3B82F6', bg: 'rgba(59,130,246,.08)' },
+        alerting:  { color: '#FFAA00', bg: 'rgba(255,170,0,.12)' },
+        degraded:  { color: '#6a92b0', bg: 'rgba(106,146,176,.08)' },
+      };
+      const c = colors[b.status] || colors.active;
+      el.style.borderColor = c.color;
+      el.style.color = c.color;
+      el.style.background = c.bg;
+      el.title = `Pilar 4 CV — ${b.model_version || ''} · ` +
+                 `${b.classified_municipalities || 0} munis classificados · ` +
+                 `${b.alerts_72h || 0} alertas 72h`;
+    } catch(e) {
+      el.textContent = 'CV INATIVO';
+      el.style.borderColor = '#6a92b0';
+      el.style.color = '#6a92b0';
+    }
   },
 
   _renderPriceChart(prices, pred) {
