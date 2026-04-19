@@ -27,6 +27,7 @@
 @keyframes flv-shimmer{0%,100%{opacity:0.15;}50%{opacity:0.35;}}
 .flv-climate-pending{animation:flv-shimmer 2s ease-in-out infinite;background:#1a2a1a;border:1px dashed rgba(80,200,120,0.3);min-height:180px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-direction:column;color:var(--flv-green);font-size:12px;}
 @keyframes flvReveal{0%{opacity:0;transform:translateY(12px);}100%{opacity:1;transform:translateY(0);}}
+@keyframes flvPulse{0%{transform:scale(1);opacity:.35;}50%{transform:scale(1.35);opacity:.1;}100%{transform:scale(1);opacity:.35;}}
 .flv-climate-revealed{animation:flvReveal 0.8s ease-out;}
 .flv-alert-card{padding:10px 12px;border-bottom:1px solid #2a4a2a;cursor:default;}
 .flv-alert-card.vermelho{border-left:3px solid var(--flv-red);}
@@ -1979,9 +1980,18 @@ tr:hover td{background:rgba(0,212,255,.04);}
         <div class="flv-kpi-card"><div class="flv-kpi-val" id="flv-kpi-conf">—</div><div class="flv-kpi-lbl">CONFIANCA MODELO</div></div>
         <div class="flv-kpi-card"><div class="flv-kpi-val" id="flv-kpi-alerts">0</div><div class="flv-kpi-lbl">ALERTAS ATIVOS</div></div>
       </div>
-      <div style="flex:1;display:flex;overflow:hidden;">
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="flex:1;display:flex;overflow:hidden;min-height:0;">
         <div style="flex:1;display:flex;flex-direction:column;border-right:1px solid #2a4a2a;">
-          <div style="padding:5px 12px;background:#0a0a0a;border-bottom:1px solid #2a4a2a;font-size:9px;color:var(--flv-green);letter-spacing:1px;flex-shrink:0;">PRECO HISTORICO 90d + PREVISAO PROPHET 15d</div>
+          <div style="padding:5px 12px;background:#0a0a0a;border-bottom:1px solid #2a4a2a;font-size:9px;color:var(--flv-green);letter-spacing:1px;flex-shrink:0;display:flex;align-items:center;gap:10px;">
+            <span id="flv-chart-title">PRECO HISTORICO 90d + PREVISAO</span>
+            <span id="flv-chart-mape" style="color:#6a92b0;font-weight:normal;letter-spacing:0;">MAPE 30d: —</span>
+            <span style="flex:1;"></span>
+            <span style="display:inline-block;width:10px;height:10px;background:#50C878;border-radius:50%;"></span>
+            <span style="color:#50C878;">ENSEMBLE</span>
+            <span style="display:inline-block;width:10px;height:2px;background:#6a92b0;margin-left:8px;"></span>
+            <span style="color:#6a92b0;">PROPHET</span>
+          </div>
           <div style="flex:1;padding:8px;"><canvas id="flv-price-chart"></canvas></div>
         </div>
         <div style="width:320px;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;">
@@ -1996,6 +2006,46 @@ tr:hover td{background:rgba(0,212,255,.04);}
           </div>
           <div id="flv-climate-content" style="display:none;margin:8px;"></div>
         </div>
+      </div>
+      <!-- ═══ PILAR 4 — VISÃO COMPUTACIONAL (satellite intelligence row) ═══ -->
+      <div id="flv-cv-section" style="height:230px;display:flex;flex-direction:column;border-top:2px solid #2a4a2a;background:#050a10;flex-shrink:0;overflow:hidden;">
+        <div style="padding:6px 14px;background:linear-gradient(90deg,#0a0a0a 0%,#101a22 100%);border-bottom:1px solid #2a4a2a;font-size:10px;color:#3B82F6;letter-spacing:2px;flex-shrink:0;display:flex;align-items:center;gap:10px;">
+          <span>🛰 PILAR 4 — VISÃO COMPUTACIONAL</span>
+          <span id="flv-cv-section-health" style="color:#6a92b0;font-size:9px;letter-spacing:1px;">classifier: — · yields: — · anomalies 30d: —</span>
+          <span style="flex:1;"></span>
+          <button onclick="FLVModule._refreshCvSection()" style="background:rgba(59,130,246,.1);color:#3B82F6;border:1px solid #3B82F6;padding:2px 8px;font-family:var(--font);font-size:9px;border-radius:3px;cursor:pointer;">↻ ATUALIZAR</button>
+        </div>
+        <div style="flex:1;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:#2a4a2a;overflow:hidden;">
+          <!-- Widget 1: classificações -->
+          <div style="background:#050a10;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:5px 10px;font-size:9px;color:#3B82F6;letter-spacing:1px;background:#0a0f18;border-bottom:1px solid #1a2a3a;flex-shrink:0;">🌱 CLASSIFICAÇÃO POR MUNICÍPIO</div>
+            <div id="flv-cv-class-body" style="flex:1;overflow-y:auto;padding:4px 8px;font-size:10px;color:var(--text);">
+              <div style="color:var(--text2);text-align:center;padding:20px 10px;">—</div>
+            </div>
+          </div>
+          <!-- Widget 2: yields -->
+          <div style="background:#050a10;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:5px 10px;font-size:9px;color:#3B82F6;letter-spacing:1px;background:#0a0f18;border-bottom:1px solid #1a2a3a;flex-shrink:0;">📊 YIELD TOP 5 (ton/ha)</div>
+            <div id="flv-cv-yield-body" style="flex:1;overflow-y:auto;padding:4px 8px;font-size:10px;color:var(--text);">
+              <div style="color:var(--text2);text-align:center;padding:20px 10px;">—</div>
+            </div>
+          </div>
+          <!-- Widget 3: anomalias -->
+          <div style="background:#050a10;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:5px 10px;font-size:9px;color:#3B82F6;letter-spacing:1px;background:#0a0f18;border-bottom:1px solid #1a2a3a;flex-shrink:0;">⚠ FEED DE ANOMALIAS (30d)</div>
+            <div id="flv-cv-anom-body" style="flex:1;overflow-y:auto;padding:4px 8px;font-size:10px;color:var(--text);">
+              <div style="color:var(--text2);text-align:center;padding:20px 10px;">—</div>
+            </div>
+          </div>
+          <!-- Widget 4: saúde modelo -->
+          <div style="background:#050a10;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:5px 10px;font-size:9px;color:#3B82F6;letter-spacing:1px;background:#0a0f18;border-bottom:1px solid #1a2a3a;flex-shrink:0;">🩺 SAÚDE DO MODELO CV</div>
+            <div id="flv-cv-health-body" style="flex:1;overflow-y:auto;padding:4px 8px;font-size:10px;color:var(--text);">
+              <div style="color:var(--text2);text-align:center;padding:20px 10px;">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
       </div>
     </div>
 
@@ -8225,13 +8275,15 @@ const FLVModule = {
     const t = this._activeTerminal;
     try {
       let prices = {series:[]}, pred = {forecast:[],trend:'estavel',confidence:0,trend_pct:0}, alerts = [];
+      let predProphet = null;
       try {
-        const [p, pr, al] = await Promise.all([
+        const [p, pr, al, prProphet] = await Promise.all([
           fetch(`/api/flv/prices?culture=${c}&terminal=${t}&days=90`).then(r=>{if(!r.ok)throw 0;return r.json();}),
           fetch(`/api/flv/predictions/${c}?terminal=${t}&horizon=15`).then(r=>{if(!r.ok)throw 0;return r.json();}),
           fetch('/api/flv/alerts?severity=all').then(r=>{if(!r.ok)throw 0;return r.json();}),
+          fetch(`/api/flv/predictions/${c}?terminal=${t}&horizon=15&model=prophet`).then(r=>r.ok?r.json():null).catch(()=>null),
         ]);
-        prices = p; pred = pr; alerts = al;
+        prices = p; pred = pr; alerts = al; predProphet = prProphet;
       } catch(e) { /* backend unavailable — use synthetic */ }
       if (!prices.series || !prices.series.length) {
         prices = this._syntheticPrices(c);
@@ -8262,9 +8314,212 @@ const FLVModule = {
 
       // Pilar 4 — CV badge: fetch live status from /api/flv/cv/badge.
       this._refreshCvBadge();
+      // Pilar 2/3 — atualiza MAPE 30d no cabeçalho do gráfico + título dinâmico.
+      this._refreshForecastHeader(c, t, pred);
+      // Pilar 4 — popula as 4 caixinhas de Visão Computacional.
+      this._refreshCvSection();
 
-      this._renderPriceChart(prices, pred);
+      this._renderPriceChart(prices, pred, predProphet);
     } catch(e) { console.warn('FLV insights error:', e); }
+  },
+
+  async _refreshForecastHeader(culture, terminal, pred) {
+    const titleEl = document.getElementById('flv-chart-title');
+    const mapeEl = document.getElementById('flv-chart-mape');
+    const mv = (pred?.model || pred?.model_version || 'ensemble').toString();
+    let label = 'ENSEMBLE';
+    if (mv.startsWith('xgb')) label = 'XGBOOST';
+    else if (mv.startsWith('prophet')) label = 'PROPHET';
+    else if (mv.startsWith('ets')) label = 'ETS-FALLBACK';
+    else if (mv.startsWith('ensemble')) label = 'ENSEMBLE';
+    else if (mv.startsWith('synthetic')) label = 'SINTÉTICO';
+    if (titleEl) titleEl.textContent = `PRECO HISTORICO 90d + PREVISAO ${label} 15d`;
+    if (!mapeEl) return;
+    try {
+      const h = await fetch('/api/flv/model/health').then(r=>r.ok?r.json():null);
+      if (!h || !Array.isArray(h.cultures)) { mapeEl.textContent = 'MAPE 30d: —'; return; }
+      // Pega a melhor leitura da cultura ativa (qualquer terminal), preferindo o terminal atual.
+      let best = null;
+      for (const row of h.cultures) {
+        if (row.culture !== culture) continue;
+        if (row.mape_30d == null) continue;
+        if (terminal && row.terminal === terminal) { best = row; break; }
+        if (!best || (row.mape_30d < best.mape_30d)) best = row;
+      }
+      const thr = h.thresholds?.max_mape_30d_pct ?? 12;
+      if (!best) { mapeEl.textContent = `MAPE 30d: — · threshold ${thr}%`; mapeEl.style.color = '#6a92b0'; return; }
+      const val = best.mape_30d;
+      const color = val > thr ? '#ff3d3d' : val > thr*0.75 ? '#FFAA00' : '#50C878';
+      mapeEl.textContent = `MAPE 30d: ${val.toFixed(1)}% · threshold ${thr}%`;
+      mapeEl.style.color = color;
+      mapeEl.title = `Erro médio absoluto percentual (30 dias) — modelo ${best.model_version} · terminal ${best.terminal || 'todos'} · ${best.sample_size || 0} amostras`;
+    } catch(e) { mapeEl.textContent = 'MAPE 30d: —'; }
+  },
+
+  async _refreshCvSection() {
+    const classBody = document.getElementById('flv-cv-class-body');
+    const yieldBody = document.getElementById('flv-cv-yield-body');
+    const anomBody  = document.getElementById('flv-cv-anom-body');
+    const healthBody= document.getElementById('flv-cv-health-body');
+    const headline  = document.getElementById('flv-cv-section-health');
+    if (!classBody) return;
+    const empty = '<div style="color:var(--text2);text-align:center;padding:20px 10px;">—</div>';
+    try {
+      const [clsResp, yieldResp, anomResp, healthResp] = await Promise.all([
+        fetch('/api/flv/cv/classifications?limit=20').then(r=>r.ok?r.json():{classifications:[]}).catch(()=>({classifications:[]})),
+        fetch('/api/flv/cv/yields?limit=5').then(r=>r.ok?r.json():{yields:[]}).catch(()=>({yields:[]})),
+        fetch('/api/flv/cv/anomalies?limit=20').then(r=>r.ok?r.json():{anomalies:[]}).catch(()=>({anomalies:[]})),
+        fetch('/api/flv/cv/health').then(r=>r.ok?r.json():null).catch(()=>null),
+      ]);
+
+      // Widget 1: classificações
+      const cls = clsResp.classifications || [];
+      if (cls.length) {
+        const rows = cls.map(r => {
+          const confPct = Math.round((r.confidence||0)*100);
+          const barColor = confPct > 75 ? '#50C878' : confPct > 50 ? '#FFAA00' : '#ff3d3d';
+          return `<div style="padding:3px 0;border-bottom:1px solid #1a2a3a;display:flex;align-items:center;gap:6px;">
+            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              <b style="color:#3B82F6;">${(r.mun_name||'').slice(0,14)}</b>/${r.state_uf||''}
+            </span>
+            <span style="color:var(--text);font-weight:bold;">${r.predicted_crop||'—'}</span>
+            <span style="font-size:9px;color:${barColor};font-weight:bold;min-width:30px;text-align:right;">${confPct}%</span>
+          </div>`;
+        }).join('');
+        classBody.innerHTML = rows;
+      } else {
+        classBody.innerHTML = empty;
+      }
+
+      // Widget 2: yields
+      const yields = yieldResp.yields || [];
+      if (yields.length) {
+        const rows = yields.map(y => {
+          const band = (y.yield_upper!=null && y.yield_lower!=null) ? `(${y.yield_lower.toFixed(1)}–${y.yield_upper.toFixed(1)})` : '';
+          return `<div style="padding:3px 0;border-bottom:1px solid #1a2a3a;display:flex;align-items:center;gap:6px;">
+            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              <b style="color:#3B82F6;">${(y.mun_name||'').slice(0,14)}</b>/${y.state_uf||''}
+            </span>
+            <span style="color:var(--text);">${y.culture_slug}</span>
+            <span style="color:#50C878;font-weight:bold;min-width:55px;text-align:right;">${(y.yield_ton_ha||0).toFixed(2)}</span>
+            <span style="font-size:8px;color:var(--text2);">${band}</span>
+          </div>`;
+        }).join('');
+        yieldBody.innerHTML = rows;
+      } else {
+        yieldBody.innerHTML = empty;
+      }
+
+      // Widget 3: anomalias
+      const anoms = anomResp.anomalies || [];
+      if (anoms.length) {
+        const sevColor = { alert:'#ff3d3d', warn:'#FFAA00', info:'#3B82F6' };
+        const rows = anoms.map(a => {
+          const sc = sevColor[a.severity] || '#6a92b0';
+          const when = (a.detected_at||'').slice(5,10);
+          return `<div style="padding:3px 0;border-bottom:1px solid #1a2a3a;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:9px;color:${sc};font-weight:bold;min-width:28px;">${when}</span>
+            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              <b style="color:#3B82F6;">${(a.mun_name||'').slice(0,12)}</b>/${a.state_uf||''}
+            </span>
+            <span style="color:${sc};font-weight:bold;font-size:9px;">${a.kind}</span>
+            <span style="color:${sc};text-transform:uppercase;font-size:8px;">${a.severity}</span>
+          </div>`;
+        }).join('');
+        anomBody.innerHTML = rows;
+      } else {
+        anomBody.innerHTML = `<div style="color:#50C878;text-align:center;padding:20px 10px;font-size:10px;">Nenhuma anomalia<br>nos últimos 30d</div>`;
+      }
+
+      // Widget 4: saúde modelo
+      if (healthResp) {
+        const cov = healthResp.coverage || {};
+        const pct = cov.total_municipalities ? Math.round(100*(cov.classified_municipalities||0)/cov.total_municipalities) : 0;
+        const scenes = healthResp.scenes_by_platform || {};
+        const scene_lines = Object.entries(scenes).map(([k,v]) => `<span style="color:#3B82F6;">${k}</span>: ${v}`).join(' · ') || '—';
+        const classDist = healthResp.class_distribution || [];
+        const distHtml = classDist.slice(0,5).map(c => `<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text2);"><span>${c.crop}</span><span>${c.n}× · ${(c.avg_conf*100).toFixed(0)}%</span></div>`).join('');
+        healthBody.innerHTML = `
+          <div style="color:var(--text2);font-size:9px;letter-spacing:1px;margin-bottom:4px;">MODELO</div>
+          <div style="color:#50C878;font-weight:bold;">${healthResp.model_version||'rf-cv-v1'}</div>
+          <div style="color:var(--text2);font-size:9px;margin-top:6px;">COBERTURA</div>
+          <div style="color:#3B82F6;">${cov.classified_municipalities||0} / ${cov.total_municipalities||0} munis (${pct}%)</div>
+          <div style="width:100%;height:4px;background:#1a2a3a;border-radius:2px;margin:3px 0 6px;"><div style="width:${pct}%;height:100%;background:#3B82F6;border-radius:2px;"></div></div>
+          <div style="color:var(--text2);font-size:9px;">CENAS SATÉLITE</div>
+          <div style="font-size:9px;color:var(--text);">${scene_lines}</div>
+          <div style="color:var(--text2);font-size:9px;margin-top:6px;">TOP CULTURAS</div>
+          ${distHtml || '<span style="font-size:9px;color:var(--text2);">—</span>'}
+        `;
+      } else {
+        healthBody.innerHTML = empty;
+      }
+
+      // Headline resumindo os 3 números-chave
+      if (headline) {
+        const nClass = cls.length;
+        const nYield = yields.length;
+        const nAnom = anoms.length;
+        const alerts = anoms.filter(a => a.severity === 'alert').length;
+        headline.innerHTML = `classifier: <b style="color:#3B82F6;">${nClass}</b> munis · yields: <b style="color:#50C878;">${nYield}</b> · anomalias 30d: <b style="color:${alerts>0?'#ff3d3d':'#50C878'};">${nAnom}</b>${alerts>0?` (${alerts} alertas)`:''}`;
+      }
+
+      // Pinta marcadores CV no mapa (se disponível).
+      try { this._refreshCvMapMarkers(cls); } catch(e) {}
+    } catch(e) {
+      console.warn('FLV cv section error:', e);
+      classBody.innerHTML = empty;
+      yieldBody.innerHTML = empty;
+      anomBody.innerHTML = empty;
+      healthBody.innerHTML = empty;
+    }
+  },
+
+  _refreshCvMapMarkers(classifications) {
+    if (typeof leafletMap === 'undefined' || !leafletMap) return;
+    if (this._cvMarkerLayer) {
+      try { leafletMap.removeLayer(this._cvMarkerLayer); } catch(e) {}
+    }
+    const cropColor = {
+      soja: '#50C878',
+      milho: '#FFAA00',
+      tomate: '#ff3d3d',
+      cebola: '#a855f7',
+      batata: '#8b5cf6',
+      pimentao: '#ec4899',
+      alface: '#22c55e',
+      cenoura: '#f97316',
+      manga: '#ffc107',
+      uva: '#a855f7',
+    };
+    const markers = [];
+    (classifications || []).forEach(c => {
+      if (c.lat == null || c.lon == null) return;
+      const color = cropColor[c.predicted_crop] || '#3B82F6';
+      const confPct = Math.round((c.confidence||0)*100);
+      const icon = L.divIcon({
+        className: 'flv-cv-marker',
+        html: `<div style="position:relative;width:26px;height:26px;">
+          <div style="position:absolute;inset:0;border-radius:50%;background:${color};opacity:.18;animation:flvPulse 2s infinite;"></div>
+          <div style="position:absolute;inset:6px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 6px ${color};display:flex;align-items:center;justify-content:center;font-size:10px;">🌱</div>
+        </div>`,
+        iconSize: [26,26], iconAnchor:[13,13],
+      });
+      const tkHtml = Array.isArray(c.top_k) && c.top_k.length
+        ? '<br>' + c.top_k.slice(0,3).map(tk => `${tk.crop} ${Math.round((tk.probability||tk.prob||0)*100)}%`).join(' · ')
+        : '';
+      const marker = L.marker([c.lat, c.lon], { icon })
+        .bindPopup(`<div style="font-family:monospace;font-size:11px;color:#050e1a;">
+          <b>${c.mun_name}/${c.state_uf}</b>${c.ibge_code ? ` <span style="opacity:.6;">(${c.ibge_code})</span>` : ''}<br>
+          <span style="color:${color};font-weight:bold;">${c.predicted_crop}</span> · ${confPct}% confidence
+          ${tkHtml}
+          <br><span style="opacity:.6;font-size:9px;">model ${c.model_version||'rf-cv-v1'} · ${c.year||'—'}</span>
+        </div>`);
+      markers.push(marker);
+    });
+    this._cvMarkerLayer = L.layerGroup(markers).addTo(leafletMap);
+    if (typeof mapLayerObjs !== 'undefined') {
+      mapLayerObjs['cv-classified'] = this._cvMarkerLayer;
+    }
   },
 
   async _refreshCvBadge() {
@@ -8294,7 +8549,7 @@ const FLVModule = {
     }
   },
 
-  _renderPriceChart(prices, pred) {
+  _renderPriceChart(prices, pred, predProphet) {
     const canvas = document.getElementById('flv-price-chart');
     if (!canvas) return;
     if (this._priceChart) this._priceChart.destroy();
@@ -8304,18 +8559,22 @@ const FLVModule = {
     const fcLower = (pred.forecast || []).map(r => ({x: r.date, y: r.lower}));
     const fcUpper = (pred.forecast || []).map(r => ({x: r.date, y: r.upper}));
     const sma21 = (prices.sma21 || []).map((v, i) => v !== null && prices.series[i] ? {x: prices.series[i].date, y: v} : null).filter(Boolean);
+    // Prophet overlay (Pilar 2 — comparação ensemble vs prophet).
+    const prophetFc = (predProphet?.forecast || []).map(r => ({x: r.date, y: r.price}));
+    const datasets = [
+      {label:'Preco Real', data:hist, borderColor:'#50C878', backgroundColor:'rgba(80,200,120,.1)', pointRadius:1, borderWidth:1.5, fill:false, order:2},
+      {label:'SMA-21', data:sma21, borderColor:'rgba(80,200,120,.4)', borderDash:[4,3], pointRadius:0, borderWidth:1, fill:false, order:3},
+      {label:'Ensemble', data:fc, borderColor:'#50C878', pointRadius:2, borderWidth:2, fill:false, order:1},
+      {label:'IC 80% Superior', data:fcUpper, borderColor:'rgba(80,200,120,.2)', pointRadius:0, borderWidth:0, fill:'+1', backgroundColor:'rgba(80,200,120,.08)', order:4},
+      {label:'IC 80% Inferior', data:fcLower, borderColor:'rgba(80,200,120,.2)', pointRadius:0, borderWidth:0, fill:false, order:5},
+    ];
+    if (prophetFc.length) {
+      datasets.push({label:'Prophet', data:prophetFc, borderColor:'#6a92b0', borderDash:[5,3], pointRadius:1, borderWidth:1.5, fill:false, order:6});
+    }
 
     this._priceChart = new Chart(canvas, {
       type: 'line',
-      data: {
-        datasets: [
-          {label:'Preco Real', data:hist, borderColor:'#50C878', backgroundColor:'rgba(80,200,120,.1)', pointRadius:1, borderWidth:1.5, fill:false, order:2},
-          {label:'SMA-21', data:sma21, borderColor:'rgba(80,200,120,.4)', borderDash:[4,3], pointRadius:0, borderWidth:1, fill:false, order:3},
-          {label:'Previsão', data:fc, borderColor:'#E8F4F8', borderDash:[6,3], pointRadius:2, borderWidth:2, fill:false, order:1},
-          {label:'IC 80% Superior', data:fcUpper, borderColor:'rgba(232,244,248,.2)', pointRadius:0, borderWidth:0, fill:'+1', backgroundColor:'rgba(80,200,120,.08)', order:4},
-          {label:'IC 80% Inferior', data:fcLower, borderColor:'rgba(232,244,248,.2)', pointRadius:0, borderWidth:0, fill:false, order:5},
-        ]
-      },
+      data: { datasets },
       options: {
         responsive:true, maintainAspectRatio:false,
         scales: {

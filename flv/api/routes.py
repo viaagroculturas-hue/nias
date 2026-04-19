@@ -33,6 +33,8 @@ def handle_flv(handler, path):
             data = _trigger_pipeline()
         elif route == '/api/flv/model/health':
             data = _get_model_health(params)
+        elif route == '/api/flv/cv/classifications':
+            data = _get_cv_classifications_all(params)
         elif route.startswith('/api/flv/cv/classification/'):
             ident = route.split('/api/flv/cv/classification/')[-1].split('?')[0]
             data = _get_cv_classification(ident, params)
@@ -41,6 +43,8 @@ def handle_flv(handler, path):
             data = _get_cv_scenes(ident, params)
         elif route == '/api/flv/cv/health':
             data = _get_cv_health(params)
+        elif route == '/api/flv/cv/yields':
+            data = _get_cv_yields_all(params)
         elif route.startswith('/api/flv/cv/yield/'):
             ident = route.split('/api/flv/cv/yield/')[-1].split('?')[0]
             data = _get_cv_yield(ident, params)
@@ -595,6 +599,117 @@ def _get_cv_anomalies(params):
         'count': len(items),
         'by_kind': by_kind,
         'by_severity': by_severity,
+    }
+
+
+def _get_cv_classifications_all(params):
+    """Aggregated feed of latest classifications across all munis (for UI).
+
+    Query params:
+        limit=N              cap response (default 50)
+        min_confidence=F     drop items below threshold (default 0.0)
+        year=YYYY            specific year
+    Returns each classified muni once with its latest prediction, including
+    lat/lon so the heavy client can drop markers on the map.
+    """
+    from flv.db import get_conn
+    from flv.cv.crop_classifier import MODEL_VERSION as CLF_VERSION
+    conn = get_conn()
+    limit = int(params.get('limit', '50'))
+    min_conf = float(params.get('min_confidence', '0.0'))
+    year = params.get('year')
+
+    sql = (
+        "SELECT c.mun_id, m.ibge_code, m.name AS mun_name, m.state_uf, "
+        "m.lat, m.lon, c.year, c.predicted_crop, c.confidence, c.top_k_json, "
+        "c.model_version, c.predicted_at "
+        "FROM flv_crop_classification c "
+        "JOIN flv_municipalities m ON m.id = c.mun_id "
+        "WHERE c.model_version = ? AND c.confidence >= ? "
+    )
+    args = [CLF_VERSION, min_conf]
+    if year:
+        sql += " AND c.year = ? "
+        args.append(int(year))
+    sql += " ORDER BY c.predicted_at DESC, c.confidence DESC LIMIT ?"
+    args.append(limit)
+
+    rows = conn.execute(sql, args).fetchall()
+    items = []
+    by_crop = {}
+    for r in rows:
+        d = dict(r)
+        top_k = None
+        if d.get('top_k_json'):
+            try:
+                top_k = json.loads(d.pop('top_k_json'))
+            except Exception:
+                top_k = None
+                d.pop('top_k_json', None)
+        d['top_k'] = top_k
+        items.append(d)
+        by_crop[d['predicted_crop']] = by_crop.get(d['predicted_crop'], 0) + 1
+
+    return {
+        'model_version': CLF_VERSION,
+        'count': len(items),
+        'by_crop': by_crop,
+        'classifications': items,
+    }
+
+
+def _get_cv_yields_all(params):
+    """Aggregated feed of top yield predictions across all munis (for UI).
+
+    Query params:
+        culture=<slug>   filter by culture (optional)
+        year=YYYY        filter by year (optional, default latest)
+        limit=N          cap response (default 20)
+        order=desc|asc   sort by yield_ton_ha (default desc)
+    """
+    from flv.db import get_conn
+    conn = get_conn()
+    culture = params.get('culture')
+    year = params.get('year')
+    limit = int(params.get('limit', '20'))
+    order = 'DESC' if params.get('order', 'desc').lower() != 'asc' else 'ASC'
+
+    if not year:
+        row = conn.execute(
+            "SELECT MAX(year) AS y FROM flv_yield_predictions"
+        ).fetchone()
+        year = row['y'] if row and row['y'] else None
+
+    sql = (
+        "SELECT y.mun_id, m.ibge_code, m.name AS mun_name, m.state_uf, "
+        "m.lat, m.lon, y.culture_slug, y.year, y.yield_ton_ha, y.yield_lower, "
+        "y.yield_upper, y.ndvi_peak, y.gdd_total, y.model_version, y.predicted_at "
+        "FROM flv_yield_predictions y "
+        "JOIN flv_municipalities m ON m.id = y.mun_id "
+        "WHERE 1=1 "
+    )
+    args = []
+    if culture:
+        sql += " AND y.culture_slug = ? "
+        args.append(culture)
+    if year:
+        sql += " AND y.year = ? "
+        args.append(int(year))
+    sql += f" ORDER BY y.yield_ton_ha {order}, y.predicted_at DESC LIMIT ?"
+    args.append(limit)
+
+    rows = conn.execute(sql, args).fetchall()
+    items = [dict(r) for r in rows]
+    by_culture = {}
+    for it in items:
+        by_culture[it['culture_slug']] = by_culture.get(it['culture_slug'], 0) + 1
+
+    return {
+        'year': year,
+        'culture': culture,
+        'count': len(items),
+        'by_culture': by_culture,
+        'yields': items,
     }
 
 
