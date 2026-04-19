@@ -55,6 +55,15 @@ def run_pipeline():
     except Exception as e:
         print(f'[FLV-Pipeline] Prophet erro: {e}')
 
+    # 6b. Run ensemble (Prophet + XGBoost) predictions
+    try:
+        from flv.model.ensemble import run_all as ensemble_run_all, register as ensemble_register
+        ensemble_register()  # register retrain callback before retrain controller runs
+        n = ensemble_run_all()
+        print(f'[FLV-Pipeline] Ensemble: {n} predicoes persistidas')
+    except Exception as e:
+        print(f'[FLV-Pipeline] Ensemble erro: {e}')
+
     # 7. Feedback loop: score past predictions vs observed prices
     try:
         from flv.model.evaluator import evaluate_predictions
