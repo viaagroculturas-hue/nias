@@ -34,6 +34,13 @@ def run_pipeline():
     except Exception as e:
         print(f'[FLV-Pipeline] CEASA erro: {e}')
 
+    # 4b. Macro indicators (BCB PTAX/Selic/IPCA + ANP diesel)
+    try:
+        from flv.collectors.macro import fetch_all as macro_fetch
+        macro_fetch()
+    except Exception as e:
+        print(f'[FLV-Pipeline] Macro erro: {e}')
+
     # 5. Evaluate anticipation thresholds
     try:
         from flv.model.thresholds import evaluate_realtime

@@ -51,6 +51,11 @@ def _run_prophet(features, horizon, culture_slug):
     df['y_orig'] = df['y']
     df['y'] = np.log(df['y'].clip(lower=0.01))
 
+    from flv.model.feature_builder import active_macro_regressors, build_future_regressors
+    macro_cols = active_macro_regressors(features)
+    base_cols = ['precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday']
+    regressor_cols = base_cols + macro_cols
+
     m = Prophet(
         yearly_seasonality=True,
         weekly_seasonality=True,
@@ -59,23 +64,20 @@ def _run_prophet(features, horizon, culture_slug):
         changepoint_prior_scale=0.20,
         interval_width=0.80,
     )
-    m.add_regressor('precip_7d')
-    m.add_regressor('temp_max_avg')
-    m.add_regressor('ndvi')
-    m.add_regressor('is_holiday')
-    m.fit(df[['ds', 'y', 'precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday']])
+    for col in regressor_cols:
+        m.add_regressor(col)
+    m.fit(df[['ds', 'y'] + regressor_cols])
 
     future = m.make_future_dataframe(periods=horizon)
 
     # Fill future regressors
-    from flv.model.feature_builder import build_future_regressors
     future_regs = build_future_regressors(features, horizon)
     future_map = {r['ds']: r for r in future_regs}
 
-    for col in ['precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday']:
+    for col in regressor_cols:
         last_val = df[col].iloc[-1]
         future[col] = future['ds'].apply(
-            lambda d: future_map.get(d.strftime('%Y-%m-%d'), {}).get(col, last_val)
+            lambda d, c=col, lv=last_val: future_map.get(d.strftime('%Y-%m-%d'), {}).get(c, lv)
         )
 
     forecast = m.predict(future)
