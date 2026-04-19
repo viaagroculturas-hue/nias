@@ -105,6 +105,25 @@ class TestMacroCollector(unittest.TestCase):
         rows2 = self.conn.execute("SELECT COUNT(*) AS c FROM flv_macro").fetchone()
         self.assertEqual(rows2["c"], 6)
 
+    def test_fetch_bcb_handles_comma_decimal(self):
+        """BCB may return 'valor' as 'X,YZ' (pt-BR). Must normalize to float."""
+        from flv.collectors import macro
+
+        fake_json = [
+            {"data": "01/03/2026", "valor": "5,10"},
+            {"data": "02/03/2026", "valor": "5,15"},
+        ]
+        with mock.patch.object(macro, "_http_get_json", return_value=fake_json):
+            inserted = macro.fetch_bcb(self.conn, lookback_days=10)
+
+        self.assertEqual(inserted, 6)
+        rows = self.conn.execute(
+            "SELECT value FROM flv_macro WHERE series='usd_brl' ORDER BY obs_date"
+        ).fetchall()
+        self.assertEqual(len(rows), 2)
+        self.assertAlmostEqual(rows[0]["value"], 5.10)
+        self.assertAlmostEqual(rows[1]["value"], 5.15)
+
     def test_fetch_bcb_skips_malformed(self):
         from flv.collectors import macro
 

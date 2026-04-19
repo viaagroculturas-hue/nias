@@ -86,7 +86,12 @@ def fetch_bcb(conn, lookback_days=DEFAULT_LOOKBACK_DAYS):
             if not iso or val in (None, ""):
                 continue
             try:
-                _upsert(conn, slug, iso, float(val), source)
+                # BCB SGS may return values with comma decimal separator (pt-BR
+                # locale) depending on the series. `formato=json` currently
+                # returns dots, but we normalize defensively — same pattern
+                # used in flv/collectors/ceagesp_live.py.
+                normalized = float(str(val).replace(",", "."))
+                _upsert(conn, slug, iso, normalized, source)
                 count += 1
             except (ValueError, TypeError):
                 continue
