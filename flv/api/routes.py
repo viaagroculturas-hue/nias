@@ -41,6 +41,13 @@ def handle_flv(handler, path):
             data = _get_cv_scenes(ident, params)
         elif route == '/api/flv/cv/health':
             data = _get_cv_health(params)
+        elif route.startswith('/api/flv/cv/yield/'):
+            ident = route.split('/api/flv/cv/yield/')[-1].split('?')[0]
+            data = _get_cv_yield(ident, params)
+        elif route == '/api/flv/cv/anomalies':
+            data = _get_cv_anomalies(params)
+        elif route == '/api/flv/cv/badge':
+            data = _get_cv_badge(params)
         else:
             _send_json(handler, 404, {'error': 'FLV route not found', 'path': route})
             return
@@ -469,3 +476,183 @@ def _get_cv_health(params):
 def _latest_lulc_year(conn):
     row = conn.execute("SELECT MAX(year) AS y FROM flv_lulc_stats").fetchone()
     return row['y'] if row else None
+
+
+def _get_cv_yield(ident, params):
+    """Return yield predictions (ton/ha) for a municipality.
+
+    Query params:
+        culture=<slug>   limit to a single culture
+        year=YYYY        target year (default: latest in flv_yield_predictions)
+        predict=1        force an on-demand prediction when no row exists
+    """
+    mun = _resolve_mun(ident)
+    if not mun:
+        return {'error': 'municipality_not_found', 'ident': ident}
+
+    from flv.db import get_conn
+    conn = get_conn()
+    culture = params.get('culture')
+    year = params.get('year')
+
+    sql = ("SELECT culture_slug, year, yield_ton_ha, yield_lower, yield_upper, "
+           "ndvi_peak, gdd_total, model_version, predicted_at "
+           "FROM flv_yield_predictions WHERE mun_id = ?")
+    args = [mun['id']]
+    if culture:
+        sql += " AND culture_slug = ?"
+        args.append(culture)
+    if year:
+        sql += " AND year = ?"
+        args.append(int(year))
+    sql += " ORDER BY year DESC, yield_ton_ha DESC LIMIT 50"
+    rows = conn.execute(sql, args).fetchall()
+    items = [dict(r) for r in rows]
+
+    if not items and params.get('predict') in ('1', 'true', 'yes') and culture:
+        try:
+            from flv.cv.yield_model import predict_one
+            target_year = int(year) if year else _latest_lulc_year(conn) or 2024
+            live = predict_one(conn, mun['id'], culture, target_year)
+            items.append({
+                'culture_slug': culture,
+                'year': live['year'],
+                'yield_ton_ha': live['yield_ton_ha'],
+                'yield_lower': live['yield_lower'],
+                'yield_upper': live['yield_upper'],
+                'ndvi_peak': live['ndvi_peak'],
+                'gdd_total': live['gdd_total'],
+                'model_version': live['model_version'],
+                'predicted_at': 'live',
+                'source': live['source'],
+            })
+        except Exception as e:
+            return {'error': f'predict_failed: {e}', 'municipality': dict(mun)}
+
+    return {
+        'municipality': {
+            'id': mun['id'],
+            'ibge_code': mun['ibge_code'],
+            'name': mun['name'],
+            'state_uf': mun['state_uf'],
+        },
+        'yield_predictions': items,
+        'count': len(items),
+    }
+
+
+def _get_cv_anomalies(params):
+    """Return recent CV-detected anomalies (change-detection).
+
+    Query params:
+        since=YYYY-MM-DD   filter to detected_at >= since (default: last 30d)
+        kind=<type>        filter by anomaly kind
+        severity=<sev>     filter by severity (info|warn|alert)
+        limit=N            cap response size (default 100)
+    """
+    from flv.db import get_conn
+    conn = get_conn()
+    since = params.get('since')
+    if not since:
+        from datetime import datetime, timedelta, timezone
+        since = (datetime.now(timezone.utc) - timedelta(days=30)).date().isoformat()
+
+    sql = ("SELECT a.id, a.mun_id, m.name AS mun_name, m.state_uf, m.ibge_code, "
+           "a.detected_at, a.kind, a.severity, a.delta, a.baseline_value, "
+           "a.current_value, a.details_json, a.created_at "
+           "FROM flv_cv_anomalies a "
+           "JOIN flv_municipalities m ON m.id = a.mun_id "
+           "WHERE a.detected_at >= ?")
+    args = [since]
+    if params.get('kind'):
+        sql += " AND a.kind = ?"
+        args.append(params['kind'])
+    if params.get('severity'):
+        sql += " AND a.severity = ?"
+        args.append(params['severity'])
+    limit = int(params.get('limit', '100'))
+    sql += " ORDER BY a.detected_at DESC, a.id DESC LIMIT ?"
+    args.append(limit)
+
+    rows = conn.execute(sql, args).fetchall()
+    items = []
+    for r in rows:
+        d = dict(r)
+        if d.get('details_json'):
+            try:
+                d['details'] = json.loads(d.pop('details_json'))
+            except Exception:
+                d['details'] = None
+        items.append(d)
+    by_kind = {}
+    by_severity = {}
+    for it in items:
+        by_kind[it['kind']] = by_kind.get(it['kind'], 0) + 1
+        by_severity[it['severity']] = by_severity.get(it['severity'], 0) + 1
+    return {
+        'since': since,
+        'anomalies': items,
+        'count': len(items),
+        'by_kind': by_kind,
+        'by_severity': by_severity,
+    }
+
+
+def _get_cv_badge(params):
+    """Compact payload the dashboard uses to render the 'CV ATIVO' badge.
+
+    Returns a tri-state status that the heavy-client can map to a green/yellow/red
+    pill without computing anything on the client. States:
+        - 'active'    : classifier rodou recentemente, sem anomalias alert
+        - 'alerting'  : ao menos uma anomalia severidade 'alert' nas ultimas 72h
+        - 'degraded'  : sem classificaçoes recentes ou dados insuficientes
+    """
+    from flv.db import get_conn
+    from flv.cv.crop_classifier import MODEL_VERSION as CLF_VERSION
+    conn = get_conn()
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+    alert_window = (now - timedelta(hours=72)).date().isoformat()
+    stale_window = (now - timedelta(days=14)).isoformat()
+
+    last_pred = conn.execute(
+        "SELECT MAX(predicted_at) AS ts FROM flv_crop_classification WHERE model_version = ?",
+        (CLF_VERSION,),
+    ).fetchone()['ts']
+    alerts = conn.execute(
+        "SELECT COUNT(*) AS n FROM flv_cv_anomalies "
+        "WHERE severity = 'alert' AND detected_at >= ?",
+        (alert_window,),
+    ).fetchone()['n']
+    warns = conn.execute(
+        "SELECT COUNT(*) AS n FROM flv_cv_anomalies "
+        "WHERE severity = 'warn' AND detected_at >= ?",
+        (alert_window,),
+    ).fetchone()['n']
+    classified = conn.execute(
+        "SELECT COUNT(DISTINCT mun_id) AS n FROM flv_crop_classification "
+        "WHERE model_version = ?",
+        (CLF_VERSION,),
+    ).fetchone()['n']
+
+    if not last_pred or last_pred < stale_window or classified == 0:
+        status = 'degraded'
+        label = 'CV INATIVO'
+    elif alerts > 0:
+        status = 'alerting'
+        label = f'CV ATIVO • {alerts} alerta' + ('s' if alerts != 1 else '')
+    else:
+        status = 'active'
+        label = 'CV ATIVO'
+
+    return {
+        'status': status,
+        'label': label,
+        'model_version': CLF_VERSION,
+        'last_prediction_at': last_pred,
+        'classified_municipalities': classified,
+        'alerts_72h': alerts,
+        'warnings_72h': warns,
+        'generated_at': now.isoformat(),
+    }

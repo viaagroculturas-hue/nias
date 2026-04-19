@@ -102,5 +102,21 @@ def run_pipeline():
     except Exception as e:
         print(f'[FLV-Pipeline] CV erro: {e}')
 
+    # 9d. Pilar 4.B: yield regression
+    try:
+        from flv.cv.yield_model import run_all as yield_run
+        n = yield_run()
+        print(f'[FLV-Pipeline] Yield Model: {n} previsoes de produtividade')
+    except Exception as e:
+        print(f'[FLV-Pipeline] Yield erro: {e}')
+
+    # 9e. Pilar 4.B: change-detection (anomalies)
+    try:
+        from flv.cv.change_detection import run_all as cd_run
+        n = cd_run()
+        print(f'[FLV-Pipeline] Change-Detect: {n} anomalias')
+    except Exception as e:
+        print(f'[FLV-Pipeline] Change-detect erro: {e}')
+
     elapsed = time.time() - t0
     print(f'[FLV-Pipeline] Ciclo completo em {elapsed:.1f}s')
