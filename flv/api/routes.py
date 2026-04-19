@@ -114,7 +114,13 @@ def _sma(values, window):
 def _get_predictions(slug, params):
     terminal = params.get('terminal', '')
     horizon = int(params.get('horizon', '15'))
-    from flv.model.prophet_model import predict
+    model = params.get('model', 'ensemble')  # 'ensemble' | 'prophet' | 'xgb'
+    if model == 'prophet':
+        from flv.model.prophet_model import predict
+    elif model == 'xgb':
+        from flv.model.xgb_model import predict
+    else:
+        from flv.model.ensemble import predict
     return predict(slug, terminal or None, horizon=horizon)
 
 def _get_alerts(params):
