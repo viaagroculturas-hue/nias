@@ -33,6 +33,14 @@ def handle_flv(handler, path):
             data = _trigger_pipeline()
         elif route == '/api/flv/model/health':
             data = _get_model_health(params)
+        elif route.startswith('/api/flv/cv/classification/'):
+            ident = route.split('/api/flv/cv/classification/')[-1].split('?')[0]
+            data = _get_cv_classification(ident, params)
+        elif route.startswith('/api/flv/cv/scenes/'):
+            ident = route.split('/api/flv/cv/scenes/')[-1].split('?')[0]
+            data = _get_cv_scenes(ident, params)
+        elif route == '/api/flv/cv/health':
+            data = _get_cv_health(params)
         else:
             _send_json(handler, 404, {'error': 'FLV route not found', 'path': route})
             return
@@ -276,3 +284,188 @@ def _get_model_health(params):
         'pending_triggers': triggers,
         'generated_at': datetime.now().isoformat(),
     }
+
+
+def _resolve_mun(ident):
+    """Resolve a path segment to a (mun_id, ibge_code, name). Accepts id or ibge code."""
+    from flv.db import get_conn
+    conn = get_conn()
+    if ident.isdigit() and len(ident) == 7:
+        row = conn.execute(
+            "SELECT id, ibge_code, name, state_uf, lat, lon FROM flv_municipalities WHERE ibge_code = ?",
+            (ident,),
+        ).fetchone()
+    else:
+        try:
+            mid = int(ident)
+        except ValueError:
+            return None
+        row = conn.execute(
+            "SELECT id, ibge_code, name, state_uf, lat, lon FROM flv_municipalities WHERE id = ?",
+            (mid,),
+        ).fetchone()
+    return row
+
+
+def _get_cv_classification(ident, params):
+    """Return crop_classification rows for a municipality.
+
+    Accepts either the internal mun_id or the 7-digit IBGE code. Optional
+    ?year=YYYY filter. If no rows exist and ?predict=1, attempts on-demand
+    inference.
+    """
+    mun = _resolve_mun(ident)
+    if not mun:
+        return {'error': 'municipality_not_found', 'ident': ident}
+
+    from flv.db import get_conn
+    conn = get_conn()
+    year = params.get('year')
+    sql = ("SELECT year, predicted_crop, confidence, top_k_json, model_version, "
+           "predicted_at FROM flv_crop_classification WHERE mun_id = ?")
+    args = [mun['id']]
+    if year:
+        sql += " AND year = ?"
+        args.append(int(year))
+    sql += " ORDER BY year DESC, predicted_at DESC LIMIT 10"
+    rows = conn.execute(sql, args).fetchall()
+
+    items = []
+    for r in rows:
+        top_k = None
+        if r['top_k_json']:
+            try:
+                top_k = json.loads(r['top_k_json'])
+            except Exception:
+                top_k = None
+        items.append({
+            'year': r['year'],
+            'predicted_crop': r['predicted_crop'],
+            'confidence': r['confidence'],
+            'top_k': top_k,
+            'model_version': r['model_version'],
+            'predicted_at': r['predicted_at'],
+        })
+
+    if not items and params.get('predict') in ('1', 'true', 'yes'):
+        try:
+            from flv.cv.crop_classifier import predict_one
+            target_year = int(year) if year else _latest_lulc_year(conn) or 2024
+            live = predict_one(conn, mun['id'], target_year)
+            if live:
+                items.append({
+                    'year': live['year'],
+                    'predicted_crop': live['predicted_crop'],
+                    'confidence': live['confidence'],
+                    'top_k': live['top_k'],
+                    'model_version': live['model_version'],
+                    'predicted_at': 'live',
+                })
+        except Exception as e:
+            return {'error': f'predict_failed: {e}', 'municipality': dict(mun)}
+
+    return {
+        'municipality': {
+            'id': mun['id'],
+            'ibge_code': mun['ibge_code'],
+            'name': mun['name'],
+            'state_uf': mun['state_uf'],
+        },
+        'classifications': items,
+        'count': len(items),
+    }
+
+
+def _get_cv_scenes(ident, params):
+    """Return recent satellite scenes for a municipality (S2/S1/Landsat metadata)."""
+    mun = _resolve_mun(ident)
+    if not mun:
+        return {'error': 'municipality_not_found', 'ident': ident}
+
+    from flv.db import get_conn
+    conn = get_conn()
+    platform = params.get('platform')
+    max_cloud = params.get('max_cloud')
+    limit = int(params.get('limit', '20'))
+
+    sql = ("SELECT platform, scene_id, obs_date, cloud_pct, asset_url, source "
+           "FROM flv_sat_scenes WHERE mun_id = ?")
+    args = [mun['id']]
+    if platform:
+        sql += " AND platform = ?"
+        args.append(platform)
+    if max_cloud:
+        sql += " AND (cloud_pct IS NULL OR cloud_pct <= ?)"
+        args.append(float(max_cloud))
+    sql += " ORDER BY obs_date DESC LIMIT ?"
+    args.append(limit)
+    rows = conn.execute(sql, args).fetchall()
+
+    scenes = [dict(r) for r in rows]
+    by_platform = {}
+    for s in scenes:
+        by_platform[s['platform']] = by_platform.get(s['platform'], 0) + 1
+    return {
+        'municipality': {
+            'id': mun['id'],
+            'ibge_code': mun['ibge_code'],
+            'name': mun['name'],
+        },
+        'scenes': scenes,
+        'count': len(scenes),
+        'by_platform': by_platform,
+    }
+
+
+def _get_cv_health(params):
+    """Summarize the CV classifier: coverage, top classes, last retrain."""
+    from flv.db import get_conn
+    from flv.cv.crop_classifier import MODEL_VERSION
+    conn = get_conn()
+
+    total_muns = conn.execute("SELECT COUNT(*) AS n FROM flv_municipalities").fetchone()['n']
+    classified = conn.execute(
+        "SELECT COUNT(DISTINCT mun_id) AS n FROM flv_crop_classification "
+        "WHERE model_version = ?",
+        (MODEL_VERSION,),
+    ).fetchone()['n']
+
+    class_dist = conn.execute(
+        "SELECT predicted_crop AS crop, COUNT(*) AS n, AVG(confidence) AS avg_conf "
+        "FROM flv_crop_classification WHERE model_version = ? "
+        "GROUP BY predicted_crop ORDER BY n DESC",
+        (MODEL_VERSION,),
+    ).fetchall()
+
+    last = conn.execute(
+        "SELECT MAX(predicted_at) AS ts FROM flv_crop_classification "
+        "WHERE model_version = ?",
+        (MODEL_VERSION,),
+    ).fetchone()['ts']
+
+    scene_totals = conn.execute(
+        "SELECT platform, COUNT(*) AS n FROM flv_sat_scenes GROUP BY platform"
+    ).fetchall()
+
+    lulc_years = conn.execute(
+        "SELECT DISTINCT year FROM flv_lulc_stats ORDER BY year DESC LIMIT 5"
+    ).fetchall()
+
+    return {
+        'model_version': MODEL_VERSION,
+        'coverage': {
+            'total_municipalities': total_muns,
+            'classified_municipalities': classified,
+            'coverage_pct': round(100.0 * classified / total_muns, 2) if total_muns else 0.0,
+        },
+        'class_distribution': [dict(r) for r in class_dist],
+        'scenes_by_platform': [dict(r) for r in scene_totals],
+        'lulc_years_covered': [r['year'] for r in lulc_years],
+        'last_prediction_at': last,
+        'generated_at': datetime.now().isoformat(),
+    }
+
+
+def _latest_lulc_year(conn):
+    row = conn.execute("SELECT MAX(year) AS y FROM flv_lulc_stats").fetchone()
+    return row['y'] if row else None

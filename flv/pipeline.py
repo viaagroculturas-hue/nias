@@ -81,5 +81,26 @@ def run_pipeline():
     except Exception as e:
         print(f'[FLV-Pipeline] Retrain erro: {e}')
 
+    # 9. Pilar 4.A (CV): satellite scene metadata + LULC stats + crop classifier
+    try:
+        from flv.collectors.sentinel_stac import fetch_all as sentinel_fetch
+        sentinel_fetch(limit_muns=20)  # throttle: 20 muns x 3 platforms = 60 STAC calls/cycle
+    except Exception as e:
+        print(f'[FLV-Pipeline] Sentinel STAC erro: {e}')
+
+    try:
+        from flv.collectors.lulc import fetch_all as lulc_fetch
+        lulc_fetch()
+    except Exception as e:
+        print(f'[FLV-Pipeline] LULC erro: {e}')
+
+    try:
+        from flv.cv.crop_classifier import register as cv_register, run_all as cv_run_all
+        cv_register()
+        n = cv_run_all()
+        print(f'[FLV-Pipeline] CV Classifier: {n} classificacoes persistidas')
+    except Exception as e:
+        print(f'[FLV-Pipeline] CV erro: {e}')
+
     elapsed = time.time() - t0
     print(f'[FLV-Pipeline] Ciclo completo em {elapsed:.1f}s')
