@@ -131,11 +131,24 @@ CREATE TABLE IF NOT EXISTS flv_accuracy (
     evaluated_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Indicadores macroeconomicos (USD PTAX, Selic, IPCA, Diesel ANP).
+-- Consumidos pelo feature_builder como regressores opcionais.
+CREATE TABLE IF NOT EXISTS flv_macro (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    series      TEXT NOT NULL,
+    obs_date    TEXT NOT NULL,
+    value       REAL NOT NULL,
+    source      TEXT NOT NULL DEFAULT 'BCB',
+    created_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(series, obs_date)
+);
+
 CREATE INDEX IF NOT EXISTS idx_prices_cult_date ON flv_ceasa_prices(culture_id, price_date);
 CREATE INDEX IF NOT EXISTS idx_climate_mun_date ON flv_climate(mun_id, obs_date);
 CREATE INDEX IF NOT EXISTS idx_ndvi_mun_date    ON flv_ndvi(mun_id, obs_date);
 CREATE INDEX IF NOT EXISTS idx_pred_cult_target  ON flv_predictions(culture_id, target_date);
 CREATE INDEX IF NOT EXISTS idx_alerts_sev_date   ON flv_alerts(severity, created_at);
+CREATE INDEX IF NOT EXISTS idx_macro_series_date ON flv_macro(series, obs_date);
 
 -- Tabela de Produtores (RJ e outros estados)
 CREATE TABLE IF NOT EXISTS flv_producers (
