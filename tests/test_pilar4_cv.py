@@ -597,6 +597,36 @@ class TestCVRoutes(unittest.TestCase):
         finally:
             for p in patches: p.stop()
 
+    def test_get_cv_classifications_all_returns_latlon(self):
+        """UI aggregator: /api/flv/cv/classifications returns lat/lon so map markers work."""
+        from flv.api import routes
+        patches = self._patch_db()
+        for p in patches: p.start()
+        try:
+            data = routes._get_cv_classifications_all({"limit": "5"})
+            self.assertIn("classifications", data)
+            self.assertEqual(data["model_version"], "rf-cv-v1")
+            self.assertEqual(data["count"], 1)
+            row = data["classifications"][0]
+            self.assertIn("lat", row)
+            self.assertIn("lon", row)
+            self.assertEqual(row["predicted_crop"], "soja")
+            self.assertEqual(data["by_crop"], {"soja": 1})
+        finally:
+            for p in patches: p.stop()
+
+    def test_get_cv_classifications_all_respects_min_confidence(self):
+        from flv.api import routes
+        patches = self._patch_db()
+        for p in patches: p.start()
+        try:
+            # Raise threshold above stored row's confidence — should yield zero items.
+            data = routes._get_cv_classifications_all({"min_confidence": "0.99"})
+            self.assertEqual(data["count"], 0)
+            self.assertEqual(data["classifications"], [])
+        finally:
+            for p in patches: p.stop()
+
 
 if __name__ == "__main__":
     unittest.main()
