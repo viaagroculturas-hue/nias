@@ -31,6 +31,8 @@ def handle_flv(handler, path):
             data = _get_climate(ibge, params)
         elif route == '/api/flv/pipeline/run':
             data = _trigger_pipeline()
+        elif route == '/api/flv/model/health':
+            data = _get_model_health(params)
         else:
             _send_json(handler, 404, {'error': 'FLV route not found', 'path': route})
             return
@@ -234,3 +236,37 @@ def _trigger_pipeline():
     from flv.pipeline import run_pipeline
     threading.Thread(target=run_pipeline, daemon=True).start()
     return {'status': 'pipeline_started', 'timestamp': datetime.now().isoformat()}
+
+
+def _get_model_health(params):
+    """MLOps health summary: rolling MAPE per (culture, terminal, model) + retrain status."""
+    from flv.db import get_conn
+    from flv.model.evaluator import summary
+    from flv.model.retrain_controller import MAX_MAPE_PCT, check_triggers
+
+    refresh = params.get('refresh') in ('1', 'true', 'yes')
+    conn = get_conn()
+
+    if refresh:
+        # Opt-in: caller asked to re-score pending predictions before reading.
+        try:
+            from flv.model.evaluator import evaluate_predictions
+            evaluate_predictions(conn)
+        except Exception as e:
+            return {'error': f'evaluator_failed: {e}', 'cultures': []}
+
+    cultures = summary(conn)
+    triggers = check_triggers(conn)
+    trig_keys = {(t['culture_slug'], t['terminal'], t['model_version']): t for t in triggers}
+    for row in cultures:
+        key = (row['culture'], row['terminal'], row['model_version'])
+        t = trig_keys.get(key)
+        row['needs_retrain'] = bool(t)
+        row['retrain_reason'] = t['reason'] if t else None
+
+    return {
+        'thresholds': {'max_mape_30d_pct': MAX_MAPE_PCT},
+        'cultures': cultures,
+        'pending_triggers': triggers,
+        'generated_at': datetime.now().isoformat(),
+    }
