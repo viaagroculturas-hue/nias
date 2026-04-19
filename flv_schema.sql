@@ -169,6 +169,60 @@ CREATE INDEX IF NOT EXISTS idx_model_runs_cult    ON flv_model_runs(culture_slug
 CREATE INDEX IF NOT EXISTS idx_accuracy_pred_id   ON flv_accuracy(prediction_id);
 CREATE INDEX IF NOT EXISTS idx_accuracy_date      ON flv_accuracy(actual_date);
 
+-- =========================================================================
+-- Pilar 4.A — Visao Computacional / Reconhecimento de safra via satelite.
+-- Populated by flv/collectors/sentinel_stac.py + flv/collectors/lulc.py
+-- Consumed by flv/cv/crop_classifier.py (RandomForest multi-temporal).
+-- =========================================================================
+
+-- Cenas de satelite disponiveis por municipio (metadados STAC, sem raster).
+-- Fonte: Microsoft Planetary Computer STAC API (sem auth, publico).
+CREATE TABLE IF NOT EXISTS flv_sat_scenes (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    mun_id      INTEGER NOT NULL REFERENCES flv_municipalities(id),
+    platform    TEXT NOT NULL,         -- 'sentinel-2-l2a' | 'sentinel-1-grd' | 'landsat-c2-l2'
+    scene_id    TEXT NOT NULL,         -- STAC item id
+    obs_date    TEXT NOT NULL,         -- YYYY-MM-DD
+    cloud_pct   REAL,                  -- eo:cloud_cover (null para SAR)
+    asset_url   TEXT,                  -- URL do COG principal (B04/B08 ou VV)
+    bbox_json   TEXT,                  -- [minx,miny,maxx,maxy]
+    source      TEXT DEFAULT 'planetary-computer',
+    created_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(mun_id, platform, scene_id)
+);
+
+-- Estatisticas de uso/cobertura do solo por municipio x ano.
+-- Fonte primaria: MapBiomas Colecao (AR/BR/UY/PY/BO). Fallback: SIDRA PAM.
+CREATE TABLE IF NOT EXISTS flv_lulc_stats (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    mun_id      INTEGER NOT NULL REFERENCES flv_municipalities(id),
+    year        INTEGER NOT NULL,
+    crop_class  TEXT NOT NULL,         -- 'soja' | 'milho' | 'tomate' | 'pastagem' | 'floresta' | ...
+    area_pct    REAL NOT NULL,         -- 0..1 (fracao da area municipal)
+    area_ha     REAL,                  -- hectares (quando disponivel)
+    source      TEXT DEFAULT 'mapbiomas',
+    UNIQUE(mun_id, year, crop_class, source)
+);
+
+-- Resultado do classificador de cultura (Pilar 4.A).
+-- Populada pelo flv/cv/crop_classifier.predict_all().
+CREATE TABLE IF NOT EXISTS flv_crop_classification (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    mun_id          INTEGER NOT NULL REFERENCES flv_municipalities(id),
+    year            INTEGER NOT NULL,
+    predicted_crop  TEXT NOT NULL,      -- slug em flv_cultures (ou 'outros')
+    confidence      REAL NOT NULL,      -- 0..1
+    top_k_json      TEXT,               -- JSON: {'soja':0.42,'milho':0.31,...}
+    model_version   TEXT DEFAULT 'rf-cv-v1',
+    features_json   TEXT,               -- vetor de features usado
+    predicted_at    TEXT DEFAULT (datetime('now')),
+    UNIQUE(mun_id, year, model_version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sat_scenes_mun_date ON flv_sat_scenes(mun_id, obs_date);
+CREATE INDEX IF NOT EXISTS idx_lulc_mun_year       ON flv_lulc_stats(mun_id, year);
+CREATE INDEX IF NOT EXISTS idx_cv_class_mun        ON flv_crop_classification(mun_id, year);
+
 -- Tabela de Produtores (RJ e outros estados)
 CREATE TABLE IF NOT EXISTS flv_producers (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
