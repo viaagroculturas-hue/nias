@@ -116,6 +116,47 @@ def upsert_ndvi(ibge_code, obs_date, ndvi_value, ndvi_anomaly=None, source='SATV
     )
     conn.commit()
 
+def upsert_macro_indicators(
+    obs_date,
+    diesel_brl_l=None,
+    diesel_change_pct=None,
+    usd_brl=None,
+    selic_pct=None,
+    ipca_yoy_pct=None,
+    source='BCB/ANP'
+):
+    conn = get_conn()
+    conn.execute(
+        "INSERT OR REPLACE INTO flv_macro_indicators (obs_date,diesel_brl_l,diesel_change_pct,usd_brl,selic_pct,ipca_yoy_pct,source) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (obs_date, diesel_brl_l, diesel_change_pct, usd_brl, selic_pct, ipca_yoy_pct, source)
+    )
+    conn.commit()
+
+def insert_news_event(obs_ts, source=None, title=None, url=None, risk_score=None, tags_json=None):
+    conn = get_conn()
+    conn.execute(
+        "INSERT INTO flv_news_events (obs_ts,source,title,url,risk_score,tags_json) VALUES (?,?,?,?,?,?)",
+        (obs_ts, source, title, url, risk_score, tags_json),
+    )
+    conn.commit()
+
+def upsert_news_risk_daily(obs_date, risk_index, top_tags_json=None, sources_json=None):
+    conn = get_conn()
+    conn.execute(
+        "INSERT OR REPLACE INTO flv_news_risk_daily (obs_date,risk_index,top_tags_json,sources_json) VALUES (?,?,?,?)",
+        (obs_date, risk_index, top_tags_json, sources_json),
+    )
+    conn.commit()
+
+def upsert_global_climate(obs_date, oni=None, atl_north_warm_idx=None, source="NOAA/ESRL"):
+    conn = get_conn()
+    conn.execute(
+        "INSERT OR REPLACE INTO flv_global_climate (obs_date,oni,atl_north_warm_idx,source) VALUES (?,?,?,?)",
+        (obs_date, oni, atl_north_warm_idx, source),
+    )
+    conn.commit()
+
 def query(sql, params=()):
     conn = get_conn()
     rows = conn.execute(sql, params).fetchall()

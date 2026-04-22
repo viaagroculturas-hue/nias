@@ -8,6 +8,14 @@ CACHE_TTL = 3600  # 1 hour
 MIN_DATAPOINTS = 60
 HORIZON_DAYS = 15
 
+def _attach_report(culture_slug, terminal, features, result):
+    try:
+        from flv.model.explainer import gerar_relatorio_previsao
+        result['report'] = gerar_relatorio_previsao(culture_slug, terminal, features, result)
+    except Exception:
+        pass
+    return result
+
 def predict(culture_slug, terminal=None, mun_id=None, horizon=None):
     """Run Prophet forecast for a culture. Returns dict with forecast, trend, confidence."""
     horizon = horizon or HORIZON_DAYS
@@ -23,6 +31,7 @@ def predict(culture_slug, terminal=None, mun_id=None, horizon=None):
 
     if len(features) < MIN_DATAPOINTS:
         result = _fallback_ets(features, horizon, culture_slug)
+        result = _attach_report(culture_slug, terminal, features, result)
         _cache[cache_key] = (result, time.time())
         return result
 
@@ -31,6 +40,9 @@ def predict(culture_slug, terminal=None, mun_id=None, horizon=None):
     except Exception as e:
         print(f'[FLV-Prophet] Prophet failed for {culture_slug}: {e}, falling back to ETS')
         result = _fallback_ets(features, horizon, culture_slug)
+
+    # Explicação (Gemini com fallback)
+    result = _attach_report(culture_slug, terminal, features, result)
 
     _cache[cache_key] = (result, time.time())
     return result
@@ -63,7 +75,20 @@ def _run_prophet(features, horizon, culture_slug):
     m.add_regressor('temp_max_avg')
     m.add_regressor('ndvi')
     m.add_regressor('is_holiday')
-    m.fit(df[['ds', 'y', 'precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday']])
+    # Macro (economia/energia): melhora sensibilidade a choques de custo/logística
+    m.add_regressor('usd_brl')
+    m.add_regressor('selic_pct')
+    m.add_regressor('ipca_yoy_pct')
+    m.add_regressor('diesel_brl_l')
+    m.add_regressor('diesel_change_pct')
+    # Notícias + teleconexões (clima global)
+    m.add_regressor('news_risk_index')
+    m.add_regressor('oni')
+    m.add_regressor('atl_north_warm_idx')
+
+    m.fit(df[['ds', 'y', 'precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday',
+              'usd_brl', 'selic_pct', 'ipca_yoy_pct', 'diesel_brl_l', 'diesel_change_pct',
+              'news_risk_index', 'oni', 'atl_north_warm_idx']])
 
     future = m.make_future_dataframe(periods=horizon)
 
@@ -72,7 +97,9 @@ def _run_prophet(features, horizon, culture_slug):
     future_regs = build_future_regressors(features, horizon)
     future_map = {r['ds']: r for r in future_regs}
 
-    for col in ['precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday']:
+    for col in ['precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday',
+                'usd_brl', 'selic_pct', 'ipca_yoy_pct', 'diesel_brl_l', 'diesel_change_pct',
+                'news_risk_index', 'oni', 'atl_north_warm_idx']:
         last_val = df[col].iloc[-1]
         future[col] = future['ds'].apply(
             lambda d: future_map.get(d.strftime('%Y-%m-%d'), {}).get(col, last_val)

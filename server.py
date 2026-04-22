@@ -1,4 +1,5 @@
 import http.server, urllib.request, urllib.parse, json, os, re, time, base64, threading
+from datetime import datetime, timedelta
 
 try:
     from curl_cffi import requests as _cf_requests
@@ -221,6 +222,25 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
         if self.path == '/api/produtores-rj':
             self._serve_produtores_rj()
+            return
+        # NIA$ Soberano Digital v5.0 - Novos Endpoints
+        if self.path.startswith('/api/crisis/'):
+            self._serve_crisis_api()
+            return
+        if self.path.startswith('/api/growth/'):
+            self._serve_growth_api()
+            return
+        if self.path.startswith('/api/distributors'):
+            self._serve_distributors_api()
+            return
+        if self.path.startswith('/api/dossier'):
+            self._serve_dossier_api()
+            return
+        if self.path.startswith('/api/news'):
+            self._serve_news_api()
+            return
+        if self.path.startswith('/api/reports'):
+            self._serve_reports_api()
             return
         if self.path.startswith('/proxy/'):
             self._proxy('GET')
@@ -453,6 +473,380 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
+    # ═══════════════════════════════════════════════════════════════════
+    # NIA$ SOBERANO DIGITAL v5.0 - NOVOS ENDPOINTS
+    # ═══════════════════════════════════════════════════════════════════
+
+    def _serve_crisis_api(self):
+        """API de CrisisWatch - Vigilância de Crise"""
+        import json
+        
+        try:
+            from flv.collectors.crisis_watch import CrisisWatch
+            cw = CrisisWatch()
+            
+            path = self.path.replace('/api/crisis/', '')
+            result = {}
+            
+            if path == 'summary' or path == '':
+                result = cw.get_crisis_summary()
+            elif path == 'new-rj':
+                result = {'new_processes': cw.check_new_rj()}
+            elif path.startswith('credit-score/'):
+                cnpj = path.replace('credit-score/', '')
+                result = cw.calculate_credit_score(cnpj)
+            elif path.startswith('companies/'):
+                risk_level = path.replace('companies/', '')
+                result = {'companies': cw.get_companies_by_risk_level(risk_level)}
+            elif path == 'run-daily-check':
+                result = cw.run_daily_check()
+            else:
+                result = {'error': 'Endpoint não encontrado', 'path': path}
+            
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+    def _serve_growth_api(self):
+        """API de GrowthRadar - Radar de Crescimento"""
+        import json
+        from urllib.parse import urlparse, parse_qs
+        
+        try:
+            from flv.collectors.growth_radar import GrowthRadar
+            from flv.model.growth_scorer import GrowthPredictor, GrowthBenchmark
+            
+            radar = GrowthRadar()
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/growth/', '')
+            params = parse_qs(parsed.query)
+            
+            result = {}
+            
+            if path == 'summary' or path == '':
+                result = radar.get_growth_summary()
+            elif path == 'high-growth':
+                min_growth = float(params.get('min', [0.15])[0])
+                result = {'companies': radar.identify_high_growth_companies(min_growth)}
+            elif path == 'poles':
+                result = {'growth_poles': radar.detect_new_growth_poles()}
+            elif path.startswith('predict/'):
+                cnpj = path.replace('predict/', '')
+                predictor = GrowthPredictor()
+                pred = predictor.predict_growth(cnpj)
+                result = pred.__dict__ if pred else {'error': 'Empresa não encontrada'}
+            elif path.startswith('benchmark/'):
+                cnpj = path.replace('benchmark/', '')
+                benchmark = GrowthBenchmark()
+                result = benchmark.benchmark_company(cnpj) or {'error': 'Empresa não encontrada'}
+            else:
+                result = {'error': 'Endpoint não encontrado', 'path': path}
+            
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+    def _serve_distributors_api(self):
+        """API de SupplyChainMonitor - Distribuidores"""
+        import json
+        from urllib.parse import urlparse, parse_qs
+        
+        try:
+            from flv.collectors.supply_chain import SupplyChainMonitor
+            
+            monitor = SupplyChainMonitor()
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/distributors', '').lstrip('/')
+            params = parse_qs(parsed.query)
+            
+            result = {}
+            
+            if path == '' or path == 'summary':
+                result = monitor.get_supply_chain_summary()
+            elif path == 'list':
+                segment = params.get('segment', [''])[0]
+                if segment:
+                    result = {'distributors': monitor.get_distributors_by_segment(segment)}
+                else:
+                    # Lista todos
+                    import sqlite3
+                    conn = sqlite3.connect(os.path.join(DIR, 'nia_flv.db'))
+                    conn.row_factory = sqlite3.Row
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT * FROM flv_distributors WHERE status='ativo' ORDER BY annual_revenue DESC")
+                    result = {'distributors': [dict(r) for r in cursor.fetchall()]}
+                    conn.close()
+            elif path.startswith('risk/'):
+                cnpj = path.replace('risk/', '')
+                result = monitor.get_distributor_risk(cnpj)
+            elif path == 'supply-chain-map':
+                product = params.get('product', [''])[0]
+                result = monitor.map_supply_chain(product if product else None)
+            elif path == 'risks':
+                result = {'risks': monitor.identify_supply_risks()}
+            else:
+                result = {'error': 'Endpoint não encontrado', 'path': path}
+            
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+    def _serve_dossier_api(self):
+        """API de Dossier Analítico - Situation Room"""
+        import json
+        import sqlite3
+        from urllib.parse import urlparse, parse_qs
+        
+        try:
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/dossier', '').lstrip('/')
+            params = parse_qs(parsed.query)
+            
+            db_path = os.path.join(DIR, 'nia_flv.db')
+            result = {}
+            
+            if path.startswith('company/'):
+                cnpj = path.replace('company/', '')
+                conn = sqlite3.connect(db_path)
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                
+                # Busca em todas as tabelas
+                dossier = {'cnpj': cnpj}
+                
+                # Dados básicos de RJ
+                cursor.execute("SELECT * FROM flv_producers_rj WHERE cnpj=?", (cnpj,))
+                rj_data = cursor.fetchone()
+                if rj_data:
+                    dossier['judicial_status'] = dict(rj_data)
+                
+                # Dados de crescimento
+                cursor.execute("SELECT * FROM flv_growth_companies WHERE cnpj=?", (cnpj,))
+                growth_data = cursor.fetchone()
+                if growth_data:
+                    dossier['growth_data'] = dict(growth_data)
+                
+                # Dados de distribuidor
+                cursor.execute("SELECT * FROM flv_distributors WHERE cnpj=?", (cnpj,))
+                dist_data = cursor.fetchone()
+                if dist_data:
+                    dossier['distributor_data'] = dict(dist_data)
+                
+                # Alterações societárias
+                cursor.execute("""
+                    SELECT * FROM flv_corporate_changes 
+                    WHERE company_cnpj=? ORDER BY change_date DESC LIMIT 10
+                """, (cnpj,))
+                dossier['corporate_changes'] = [dict(r) for r in cursor.fetchall()]
+                
+                conn.close()
+                result = dossier
+                
+            elif path == 'changes':
+                # Lista alterações recentes
+                days = int(params.get('days', [7])[0])
+                conn = sqlite3.connect(db_path)
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                from datetime import datetime, timedelta
+                since = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+                cursor.execute("""
+                    SELECT * FROM flv_corporate_changes 
+                    WHERE change_date >= ? ORDER BY change_date DESC
+                """, (since,))
+                result = {'changes': [dict(r) for r in cursor.fetchall()]}
+                conn.close()
+            else:
+                result = {'error': 'Endpoint não encontrado', 'path': path}
+            
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+    def _serve_news_api(self):
+        """API de News Pulse - Feeds Globais"""
+        import json
+        import sqlite3
+        from urllib.parse import urlparse, parse_qs
+        
+        try:
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/news', '').lstrip('/')
+            params = parse_qs(parsed.query)
+            
+            db_path = os.path.join(DIR, 'nia_flv.db')
+            result = {}
+            
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            if path == '' or path == 'feeds':
+                # Retorna notícias recentes
+                source = params.get('source', [''])[0]
+                category = params.get('category', [''])[0]
+                limit = int(params.get('limit', [20])[0])
+                
+                query = "SELECT * FROM flv_news_global WHERE 1=1"
+                args = []
+                
+                if source:
+                    query += " AND source = ?"
+                    args.append(source)
+                if category:
+                    query += " AND category = ?"
+                    args.append(category)
+                
+                query += " ORDER BY published_at DESC LIMIT ?"
+                args.append(limit)
+                
+                cursor.execute(query, args)
+                result = {'news': [dict(r) for r in cursor.fetchall()]}
+                
+            elif path == 'sources':
+                # Lista fontes disponíveis
+                cursor.execute("SELECT DISTINCT source FROM flv_news_global ORDER BY source")
+                result = {'sources': [r[0] for r in cursor.fetchall()]}
+                
+            elif path == 'sentiment':
+                # Análise de sentimento agregada
+                days = int(params.get('days', [7])[0])
+                from datetime import datetime, timedelta
+                since = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+                
+                cursor.execute("""
+                    SELECT 
+                        sentiment,
+                        COUNT(*) as count,
+                        AVG(sentiment_score) as avg_score
+                    FROM flv_news_global 
+                    WHERE published_at >= ?
+                    GROUP BY sentiment
+                """, (since,))
+                
+                result = {'sentiment_analysis': [dict(r) for r in cursor.fetchall()]}
+            else:
+                result = {'error': 'Endpoint não encontrado', 'path': path}
+            
+            conn.close()
+            
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+    def _serve_reports_api(self):
+        """API de Relatórios Soberanos"""
+        import json
+        import sqlite3
+        from urllib.parse import urlparse, parse_qs
+        
+        try:
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/reports', '').lstrip('/')
+            params = parse_qs(parsed.query)
+            
+            db_path = os.path.join(DIR, 'nia_flv.db')
+            result = {}
+            
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            if path == 'retrovisor' or path == 'd-8':
+                # Relatório D-8 (Retrovisor)
+                report_type = 'd-8'
+                cursor.execute("""
+                    SELECT * FROM flv_sovereign_reports 
+                    WHERE report_type = ? ORDER BY report_date DESC LIMIT 1
+                """, (report_type,))
+                row = cursor.fetchone()
+                result = dict(row) if row else {'message': 'Nenhum relatório D-8 gerado ainda'}
+                
+            elif path == 'predicao' or path == 'd+7':
+                # Relatório D+7 (Predição)
+                report_type = 'd+7'
+                cursor.execute("""
+                    SELECT * FROM flv_sovereign_reports 
+                    WHERE report_type = ? ORDER BY report_date DESC LIMIT 1
+                """, (report_type,))
+                row = cursor.fetchone()
+                result = dict(row) if row else {'message': 'Nenhum relatório D+7 gerado ainda'}
+                
+            elif path == 'list':
+                # Lista relatórios
+                cursor.execute("""
+                    SELECT id, report_date, report_type, stress_market_score, companies_rj_entered
+                    FROM flv_sovereign_reports 
+                    ORDER BY report_date DESC LIMIT 20
+                """)
+                result = {'reports': [dict(r) for r in cursor.fetchall()]}
+                
+            elif path == 'generate':
+                # Gatilho para geração de relatório (placeholder)
+                result = {'message': 'Geração de relatório iniciada', 'status': 'processing'}
+            else:
+                result = {'error': 'Endpoint não encontrado', 'path': path}
+            
+            conn.close()
+            
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+
     def _proxy(self, method):
         target = self.path[7:]  # strip /proxy/
         target = 'https://' + target if not target.startswith('http') else target
@@ -492,6 +886,13 @@ try:
     from flv.db import init_db
     init_db()
 
+    def _seconds_until(hour, minute):
+        now = datetime.now()
+        nxt = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if nxt <= now:
+            nxt = nxt + timedelta(days=1)
+        return (nxt - now).total_seconds()
+
     def _flv_scheduler():
         time.sleep(10)  # Wait for server startup
         from flv.pipeline import run_pipeline
@@ -516,7 +917,21 @@ try:
             time.sleep(1800)
 
     threading.Thread(target=_flv_alert_watchdog, daemon=True).start()
-    print('[FLV] Pipeline e watchdog iniciados')
+    
+    def _flv_evolver_nightly():
+        # roda toda madrugada (03:30)
+        time.sleep(30)
+        while True:
+            try:
+                time.sleep(_seconds_until(3, 30))
+                from flv.model.model_evolver import ModelEvolver
+                ModelEvolver().avaliar_previsoes_recentes()
+            except Exception as e:
+                print(f'[FLV-Evolver] Erro: {e}')
+                time.sleep(300)
+
+    threading.Thread(target=_flv_evolver_nightly, daemon=True).start()
+    print('[FLV] Pipeline, watchdog e evolver iniciados')
 except Exception as e:
     print(f'[FLV] Init warning: {e}')
 

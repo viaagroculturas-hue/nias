@@ -34,6 +34,27 @@ def run_pipeline():
     except Exception as e:
         print(f'[FLV-Pipeline] CEASA erro: {e}')
 
+    # 4.5 Macro indicators (economia/energia) — importante para custo/logística
+    try:
+        from flv.collectors.macro import coletar_indicadores_macro
+        coletar_indicadores_macro()
+    except Exception as e:
+        print(f'[FLV-Pipeline] Macro erro: {e}')
+
+    # 4.6 Notícias (NLP) → índice de risco agregado
+    try:
+        from flv.collectors.news_risk import coletar_indice_risco_noticias
+        coletar_indice_risco_noticias()
+    except Exception as e:
+        print(f'[FLV-Pipeline] NewsRisk erro: {e}')
+
+    # 4.7 Teleconexões (El Niño/Atlântico Norte) → clima global
+    try:
+        from flv.collectors.teleconnections import coletar_teleconexoes_globais
+        coletar_teleconexoes_globais()
+    except Exception as e:
+        print(f'[FLV-Pipeline] Teleconexões erro: {e}')
+
     # 5. Evaluate anticipation thresholds
     try:
         from flv.model.thresholds import evaluate_realtime

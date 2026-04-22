@@ -20,7 +20,7 @@ def _parse_date(ds):
     return None
 
 def build_features(culture_slug, terminal=None, mun_id=None, days=120):
-    """Build Prophet-compatible DataFrame dict with columns: ds, y, precip_7d, temp_max_avg, ndvi, is_holiday."""
+    """Build Prophet-compatible DataFrame dict with columns: ds, y, local_clima, macro_*, news_risk_index, teleconnections_*."""
     from flv.db import get_conn
     from flv.model.thresholds import BR_HOLIDAYS_2026
     conn = get_conn()
@@ -59,6 +59,45 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
     ndvi_rows = conn.execute(ndvi_sql, (min_date,)).fetchall()
     ndvi_map = {r['obs_date']: r['ndvi'] for r in ndvi_rows}
 
+    # Get macro indicators (economia/energia) — JOIN por ds
+    macro_sql = """
+        SELECT obs_date, diesel_brl_l, diesel_change_pct, usd_brl, selic_pct, ipca_yoy_pct
+        FROM flv_macro_indicators
+        WHERE obs_date >= ?
+        ORDER BY obs_date
+    """
+    try:
+        macro_rows = conn.execute(macro_sql, (min_date,)).fetchall()
+        macro_map = {r['obs_date']: dict(r) for r in macro_rows}
+    except Exception:
+        macro_map = {}
+
+    # Notícias: risco diário agregado
+    news_sql = """
+        SELECT obs_date, risk_index
+        FROM flv_news_risk_daily
+        WHERE obs_date >= ?
+        ORDER BY obs_date
+    """
+    try:
+        news_rows = conn.execute(news_sql, (min_date,)).fetchall()
+        news_map = {r['obs_date']: float(r['risk_index']) for r in news_rows}
+    except Exception:
+        news_map = {}
+
+    # Teleconexões: ONI e Atlântico Norte
+    glob_sql = """
+        SELECT obs_date, oni, atl_north_warm_idx
+        FROM flv_global_climate
+        WHERE obs_date >= ?
+        ORDER BY obs_date
+    """
+    try:
+        glob_rows = conn.execute(glob_sql, (min_date,)).fetchall()
+        glob_map = {r['obs_date']: dict(r) for r in glob_rows}
+    except Exception:
+        glob_map = {}
+
     holiday_dates = set(h[0] for h in BR_HOLIDAYS_2026)
 
     # Build feature rows
@@ -66,6 +105,14 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
     last_ndvi = 0.55
     last_temp = 28.0
     last_precip = 5.0
+    last_usd = 5.0
+    last_selic = 10.0
+    last_ipca = 4.0
+    last_diesel = 6.0
+    last_diesel_chg = 0.0
+    last_news_risk = 0.0
+    last_oni = 0.0
+    last_atl = 0.0
 
     for p in prices:
         ds = _parse_date(p['ds'])
@@ -90,6 +137,36 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
         if ndvi:
             last_ndvi = ndvi
 
+        macro = macro_map.get(ds) or {}
+        usd_brl = macro.get('usd_brl')
+        selic_pct = macro.get('selic_pct')
+        ipca_yoy_pct = macro.get('ipca_yoy_pct')
+        diesel_brl_l = macro.get('diesel_brl_l')
+        diesel_change_pct = macro.get('diesel_change_pct')
+
+        if usd_brl is not None:
+            last_usd = usd_brl
+        if selic_pct is not None:
+            last_selic = selic_pct
+        if ipca_yoy_pct is not None:
+            last_ipca = ipca_yoy_pct
+        if diesel_brl_l is not None:
+            last_diesel = diesel_brl_l
+        if diesel_change_pct is not None:
+            last_diesel_chg = diesel_change_pct
+
+        news_risk = news_map.get(ds)
+        if news_risk is not None:
+            last_news_risk = float(news_risk)
+
+        glob = glob_map.get(ds) or {}
+        oni = glob.get('oni')
+        atl = glob.get('atl_north_warm_idx')
+        if oni is not None:
+            last_oni = oni
+        if atl is not None:
+            last_atl = atl
+
         is_hol = 1.0 if ds in holiday_dates else 0.0
 
         result.append({
@@ -99,6 +176,14 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
             'temp_max_avg': temp_max,
             'ndvi': ndvi or last_ndvi,
             'is_holiday': is_hol,
+            'usd_brl': usd_brl if usd_brl is not None else last_usd,
+            'selic_pct': selic_pct if selic_pct is not None else last_selic,
+            'ipca_yoy_pct': ipca_yoy_pct if ipca_yoy_pct is not None else last_ipca,
+            'diesel_brl_l': diesel_brl_l if diesel_brl_l is not None else last_diesel,
+            'diesel_change_pct': diesel_change_pct if diesel_change_pct is not None else last_diesel_chg,
+            'news_risk_index': news_risk if news_risk is not None else last_news_risk,
+            'oni': oni if oni is not None else last_oni,
+            'atl_north_warm_idx': atl if atl is not None else last_atl,
         })
 
     return result
@@ -123,6 +208,14 @@ def build_future_regressors(last_features, horizon=15):
             'temp_max_avg': last['temp_max_avg'],  # persistence
             'ndvi': last['ndvi'],                  # slow-changing
             'is_holiday': 1.0 if ds in holiday_dates else 0.0,
+            'usd_brl': last.get('usd_brl', 5.0),
+            'selic_pct': last.get('selic_pct', 10.0),
+            'ipca_yoy_pct': last.get('ipca_yoy_pct', 4.0),
+            'diesel_brl_l': last.get('diesel_brl_l', 6.0),
+            'diesel_change_pct': last.get('diesel_change_pct', 0.0),
+            'news_risk_index': last.get('news_risk_index', 0.0),
+            'oni': last.get('oni', 0.0),
+            'atl_north_warm_idx': last.get('atl_north_warm_idx', 0.0),
         })
 
     return future
