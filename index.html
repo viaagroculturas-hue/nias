@@ -2373,6 +2373,249 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ═══════════════════════════════════════════════════════════════════
+// SITUATION ROOM MODULE - NIA$ Soberano Digital v5.0
+// ═══════════════════════════════════════════════════════════════════
+const SituationRoom = {
+  currentFilter: 'rj',
+  currentProductTab: 'graos',
+  currentNewsFilter: 'all',
+  selectedCompany: null,
+  
+  init() {
+    console.log('[SituationRoom] Inicializando...');
+    this.loadCompanies();
+    this.loadNews();
+    this.updateTime();
+    setInterval(() => this.updateTime(), 60000);
+  },
+  
+  updateTime() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const el = document.getElementById('sit-update-time');
+    if (el) el.textContent = timeStr;
+  },
+  
+  async loadCompanies() {
+    try {
+      const response = await fetch('/api/crisis/summary');
+      const data = await response.json();
+      
+      const listEl = document.getElementById('sit-company-list');
+      if (!listEl) return;
+      
+      // Update alert badge
+      const alertBadge = document.getElementById('sit-alert-badge');
+      if (alertBadge && data.totals) {
+        const alerts = data.totals.in_rj + data.totals.bankrupt;
+        alertBadge.textContent = `● ALERTAS: ${alerts}`;
+      }
+      
+      // Render companies
+      if (data.recent_entries && data.recent_entries.length > 0) {
+        listEl.innerHTML = data.recent_entries.map(company => `
+          <div class="sit-company-item" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;"
+               onclick="SituationRoom.selectCompany('${company.cnpj}')"
+          >
+            <div style="font-size:10px;color:#fff;"">${company.company_name}</div>
+            <div style="font-size:8px;color:#888;"">${company.city || 'N/A'}/${company.state_uf || 'N/A'} • ${company.segment || 'N/A'}</div>
+            <div style="font-size:8px;color:#ff6b35;margin-top:2px;"">${company.judicial_status === 'falencia' ? '⚠️ FALÊNCIA' : '⚖️ EM RJ'}</div>
+          </div>
+        `).join('');
+      } else {
+        listEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Nenhuma empresa em monitoramento</div>';
+      }
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao carregar empresas:', e);
+      const listEl = document.getElementById('sit-company-list');
+      if (listEl) listEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Erro ao carregar</div>';
+    }
+  },
+  
+  async selectCompany(cnpj) {
+    this.selectedCompany = cnpj;
+    try {
+      // Load credit score
+      const scoreResponse = await fetch(`/api/crisis/credit-score/${cnpj}`);
+      const scoreData = await scoreResponse.json();
+      
+      const scoreEl = document.getElementById('sit-credit-score');
+      const classEl = document.getElementById('sit-credit-classification');
+      
+      if (scoreEl && scoreData.score !== null) {
+        scoreEl.textContent = Math.round(scoreData.score);
+        scoreEl.style.color = scoreData.score > 700 ? '#50C878' : scoreData.score > 500 ? '#FFD700' : scoreData.score > 300 ? '#ff6b35' : '#ff3d3d';
+      }
+      if (classEl) {
+        classEl.textContent = scoreData.classification || 'N/A';
+      }
+      
+      // Load judicial status
+      const statusEl = document.getElementById('sit-judicial-status');
+      const detailsEl = document.getElementById('sit-process-details');
+      
+      if (statusEl) {
+        statusEl.textContent = scoreData.status ? scoreData.status.toUpperCase() : 'NORMAL';
+        statusEl.style.color = scoreData.status === 'falencia' ? '#ff3d3d' : scoreData.status === 'em_recuperacao' ? '#ff6b35' : '#50C878';
+      }
+      if (detailsEl && scoreData.debts_total) {
+        detailsEl.textContent = `Dívida: R$ ${(scoreData.debts_total / 1000000).toFixed(1)}M`;
+      }
+      
+      // Load corporate changes
+      this.loadCorporateChanges(cnpj);
+      
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao selecionar empresa:', e);
+    }
+  },
+  
+  async loadCorporateChanges(cnpj) {
+    try {
+      const response = await fetch(`/api/dossier/changes?days=30`);
+      const data = await response.json();
+      
+      const timelineEl = document.getElementById('sit-admin-timeline');
+      if (!timelineEl) return;
+      
+      const changes = data.changes || [];
+      if (changes.length === 0) {
+        timelineEl.innerHTML = '<div style="font-size:9px;color:#666;">Sem alterações recentes</div>';
+        return;
+      }
+      
+      timelineEl.innerHTML = changes.slice(0, 5).map(change => `
+        <div class="sit-timeline-item" style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="width:8px;height:8px;background:#ff6b35;border-radius:50%;margin-top:3px;flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:9px;color:#fff;">${change.change_type?.toUpperCase() || 'ALTERAÇÃO'}</div>
+            <div style="font-size:8px;color:#666;">${change.change_date || 'N/A'}</div>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao carregar alterações:', e);
+    }
+  },
+  
+  filterCompanies(type) {
+    this.currentFilter = type;
+    
+    // Update button styles
+    ['rj', 'growth', 'all'].forEach(t => {
+      const btn = document.getElementById(`sit-filter-${t}`);
+      if (btn) {
+        if (t === type) {
+          btn.style.background = '#ff6b35';
+          btn.style.color = '#000';
+          btn.style.border = 'none';
+        } else {
+          btn.style.background = '#1a1a1a';
+          btn.style.color = '#888';
+          btn.style.border = '1px solid #333';
+        }
+      }
+    });
+    
+    // Reload with filter
+    this.loadCompanies();
+  },
+  
+  showProductTab(tab) {
+    this.currentProductTab = tab;
+    
+    const graosContent = document.getElementById('sit-graos-content');
+    const hortifrutiContent = document.getElementById('sit-hortifruti-content');
+    const graosTab = document.getElementById('sit-tab-graos');
+    const hortifrutiTab = document.getElementById('sit-tab-hortifruti');
+    
+    if (tab === 'graos') {
+      if (graosContent) graosContent.style.display = 'block';
+      if (hortifrutiContent) hortifrutiContent.style.display = 'none';
+      if (graosTab) { graosTab.style.background = '#ff6b35'; graosTab.style.color = '#000'; graosTab.style.border = 'none'; }
+      if (hortifrutiTab) { hortifrutiTab.style.background = '#1a1a1a'; hortifrutiTab.style.color = '#888'; hortifrutiTab.style.border = '1px solid #333'; }
+    } else {
+      if (graosContent) graosContent.style.display = 'none';
+      if (hortifrutiContent) hortifrutiContent.style.display = 'block';
+      if (graosTab) { graosTab.style.background = '#1a1a1a'; graosTab.style.color = '#888'; graosTab.style.border = '1px solid #333'; }
+      if (hortifrutiTab) { hortifrutiTab.style.background = '#ff6b35'; hortifrutiTab.style.color = '#000'; hortifrutiTab.style.border = 'none'; }
+    }
+  },
+  
+  loadProductDetail(product) {
+    console.log(`[SituationRoom] Carregando detalhes de ${product}`);
+    // Placeholder - would open modal or navigate to detail view
+  },
+  
+  async loadNews() {
+    try {
+      const response = await fetch('/api/news/feeds?limit=10');
+      const data = await response.json();
+      
+      const feedEl = document.getElementById('sit-news-feed');
+      if (!feedEl) return;
+      
+      const news = data.news || [];
+      if (news.length === 0) {
+        feedEl.innerHTML = `
+          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
+            <div style="font-size:9px;color:#ff6b35;">REUTERS</div>
+            <div style="font-size:10px;color:#fff;margin-top:2px;">Soja sobe 3% com demanda de exportação</div>
+            <div style="font-size:8px;color:#666;margin-top:2px;">Agora</div>
+          </div>
+          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
+            <div style="font-size:9px;color:#ff6b35;">BLOOMBERG</div>
+            <div style="font-size:10px;color:#fff;margin-top:2px;">Clima afeta safra de milho no Centro-Oeste</div>
+            <div style="font-size:8px;color:#666;margin-top:2px;">30 min atrás</div>
+          </div>
+          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
+            <div style="font-size:9px;color:#ff6b35;">BBC</div>
+            <div style="font-size:10px;color:#fff;margin-top:2px;">Preço do café atinge máxima de 2 anos</div>
+            <div style="font-size:8px;color:#666;margin-top:2px;">1h atrás</div>
+          </div>
+        `;
+        return;
+      }
+      
+      feedEl.innerHTML = news.slice(0, 5).map(item => `
+        <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;" onclick="window.open('${item.url || '#'}', '_blank')">
+          <div style="font-size:9px;color:#ff6b35;">${item.source?.toUpperCase() || 'NEWS'}</div>
+          <div style="font-size:10px;color:#fff;margin-top:2px;">${item.title || 'Sem título'}</div>
+          <div style="font-size:8px;color:#666;margin-top:2px;">${item.published_at ? new Date(item.published_at).toLocaleString('pt-BR') : 'N/A'}</div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao carregar notícias:', e);
+      const feedEl = document.getElementById('sit-news-feed');
+      if (feedEl) {
+        feedEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;">Feeds indisponíveis</div>';
+      }
+    }
+  },
+  
+  filterNews(source) {
+    this.currentNewsFilter = source;
+    
+    ['all', 'reuters', 'bloomberg', 'bbc'].forEach(s => {
+      const btn = document.getElementById(`sit-news-${s}`);
+      if (btn) {
+        if (s === source) {
+          btn.style.background = '#ff6b35';
+          btn.style.color = '#000';
+          btn.style.border = 'none';
+        } else {
+          btn.style.background = '#1a1a1a';
+          btn.style.color = '#888';
+          btn.style.border = '1px solid #333';
+        }
+      }
+    });
+    
+    this.loadNews();
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════════════
 function showPanel(id) {
@@ -9888,259 +10131,6 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
 // Auto-start API loading after login
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(niasLoadRealData, 2000);
-
-// ═══════════════════════════════════════════════════════════════════
-// SITUATION ROOM MODULE - NIA$ Soberano Digital v5.0
-// ═══════════════════════════════════════════════════════════════════
-const SituationRoom = {
-  currentFilter: 'rj',
-  currentProductTab: 'graos',
-  currentNewsFilter: 'all',
-  selectedCompany: null,
-  
-  init() {
-    console.log('[SituationRoom] Inicializando...');
-    this.loadCompanies();
-    this.loadNews();
-    this.updateTime();
-    setInterval(() => this.updateTime(), 60000);
-  },
-  
-  updateTime() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const el = document.getElementById('sit-update-time');
-    if (el) el.textContent = timeStr;
-  },
-  
-  async loadCompanies() {
-    try {
-      const response = await fetch('/api/crisis/summary');
-      const data = await response.json();
-      
-      const listEl = document.getElementById('sit-company-list');
-      if (!listEl) return;
-      
-      // Update alert badge
-      const alertBadge = document.getElementById('sit-alert-badge');
-      if (alertBadge && data.totals) {
-        const alerts = data.totals.in_rj + data.totals.bankrupt;
-        alertBadge.textContent = `● ALERTAS: ${alerts}`;
-      }
-      
-      // Render companies
-      if (data.recent_entries && data.recent_entries.length > 0) {
-        listEl.innerHTML = data.recent_entries.map(company => `
-          <div class="sit-company-item" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;"
-               onclick="SituationRoom.selectCompany('${company.cnpj}')"
-          >
-            <div style="font-size:10px;color:#fff;"">${company.company_name}</div>
-            <div style="font-size:8px;color:#888;"">${company.city || 'N/A'}/${company.state_uf || 'N/A'} • ${company.segment || 'N/A'}</div>
-            <div style="font-size:8px;color:#ff6b35;margin-top:2px;"">${company.judicial_status === 'falencia' ? '⚠️ FALÊNCIA' : '⚖️ EM RJ'}</div>
-          </div>
-        `).join('');
-      } else {
-        listEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Nenhuma empresa em monitoramento</div>';
-      }
-    } catch (e) {
-      console.error('[SituationRoom] Erro ao carregar empresas:', e);
-      const listEl = document.getElementById('sit-company-list');
-      if (listEl) listEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Erro ao carregar</div>';
-    }
-  },
-  
-  async selectCompany(cnpj) {
-    this.selectedCompany = cnpj;
-    try {
-      // Load credit score
-      const scoreResponse = await fetch(`/api/crisis/credit-score/${cnpj}`);
-      const scoreData = await scoreResponse.json();
-      
-      const scoreEl = document.getElementById('sit-credit-score');
-      const classEl = document.getElementById('sit-credit-classification');
-      
-      if (scoreEl && scoreData.score !== null) {
-        scoreEl.textContent = Math.round(scoreData.score);
-        scoreEl.style.color = scoreData.score > 700 ? '#50C878' : scoreData.score > 500 ? '#FFD700' : scoreData.score > 300 ? '#ff6b35' : '#ff3d3d';
-      }
-      if (classEl) {
-        classEl.textContent = scoreData.classification || 'N/A';
-      }
-      
-      // Load judicial status
-      const statusEl = document.getElementById('sit-judicial-status');
-      const detailsEl = document.getElementById('sit-process-details');
-      
-      if (statusEl) {
-        statusEl.textContent = scoreData.status ? scoreData.status.toUpperCase() : 'NORMAL';
-        statusEl.style.color = scoreData.status === 'falencia' ? '#ff3d3d' : scoreData.status === 'em_recuperacao' ? '#ff6b35' : '#50C878';
-      }
-      if (detailsEl && scoreData.debts_total) {
-        detailsEl.textContent = `Dívida: R$ ${(scoreData.debts_total / 1000000).toFixed(1)}M`;
-      }
-      
-      // Load corporate changes
-      this.loadCorporateChanges(cnpj);
-      
-    } catch (e) {
-      console.error('[SituationRoom] Erro ao selecionar empresa:', e);
-    }
-  },
-  
-  async loadCorporateChanges(cnpj) {
-    try {
-      const response = await fetch(`/api/dossier/changes?days=30`);
-      const data = await response.json();
-      
-      const timelineEl = document.getElementById('sit-admin-timeline');
-      if (!timelineEl) return;
-      
-      const changes = data.changes || [];
-      if (changes.length === 0) {
-        timelineEl.innerHTML = '<div style="font-size:9px;color:#666;">Sem alterações recentes</div>';
-        return;
-      }
-      
-      timelineEl.innerHTML = changes.slice(0, 5).map(change => `
-        <div class="sit-timeline-item" style="display:flex;gap:8px;align-items:flex-start;">
-          <div style="width:8px;height:8px;background:#ff6b35;border-radius:50%;margin-top:3px;flex-shrink:0;"></div>
-          <div>
-            <div style="font-size:9px;color:#fff;">${change.change_type?.toUpperCase() || 'ALTERAÇÃO'}</div>
-            <div style="font-size:8px;color:#666;">${change.change_date || 'N/A'}</div>
-          </div>
-        </div>
-      `).join('');
-    } catch (e) {
-      console.error('[SituationRoom] Erro ao carregar alterações:', e);
-    }
-  },
-  
-  filterCompanies(type) {
-    this.currentFilter = type;
-    
-    // Update button styles
-    ['rj', 'growth', 'all'].forEach(t => {
-      const btn = document.getElementById(`sit-filter-${t}`);
-      if (btn) {
-        if (t === type) {
-          btn.style.background = '#ff6b35';
-          btn.style.color = '#000';
-          btn.style.border = 'none';
-        } else {
-          btn.style.background = '#1a1a1a';
-          btn.style.color = '#888';
-          btn.style.border = '1px solid #333';
-        }
-      }
-    });
-    
-    // Reload with filter
-    this.loadCompanies();
-  },
-  
-  showProductTab(tab) {
-    this.currentProductTab = tab;
-    
-    const graosContent = document.getElementById('sit-graos-content');
-    const hortifrutiContent = document.getElementById('sit-hortifruti-content');
-    const graosTab = document.getElementById('sit-tab-graos');
-    const hortifrutiTab = document.getElementById('sit-tab-hortifruti');
-    
-    if (tab === 'graos') {
-      if (graosContent) graosContent.style.display = 'block';
-      if (hortifrutiContent) hortifrutiContent.style.display = 'none';
-      if (graosTab) { graosTab.style.background = '#ff6b35'; graosTab.style.color = '#000'; graosTab.style.border = 'none'; }
-      if (hortifrutiTab) { hortifrutiTab.style.background = '#1a1a1a'; hortifrutiTab.style.color = '#888'; hortifrutiTab.style.border = '1px solid #333'; }
-    } else {
-      if (graosContent) graosContent.style.display = 'none';
-      if (hortifrutiContent) hortifrutiContent.style.display = 'block';
-      if (graosTab) { graosTab.style.background = '#1a1a1a'; graosTab.style.color = '#888'; graosTab.style.border = '1px solid #333'; }
-      if (hortifrutiTab) { hortifrutiTab.style.background = '#ff6b35'; hortifrutiTab.style.color = '#000'; hortifrutiTab.style.border = 'none'; }
-    }
-  },
-  
-  loadProductDetail(product) {
-    console.log(`[SituationRoom] Carregando detalhes de ${product}`);
-    // Placeholder - would open modal or navigate to detail view
-  },
-  
-  async loadNews() {
-    try {
-      const response = await fetch('/api/news/feeds?limit=10');
-      const data = await response.json();
-      
-      const feedEl = document.getElementById('sit-news-feed');
-      if (!feedEl) return;
-      
-      const news = data.news || [];
-      if (news.length === 0) {
-        feedEl.innerHTML = `
-          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
-            <div style="font-size:9px;color:#ff6b35;">REUTERS</div>
-            <div style="font-size:10px;color:#fff;margin-top:2px;">Soja sobe 3% com demanda de exportação</div>
-            <div style="font-size:8px;color:#666;margin-top:2px;">Agora</div>
-          </div>
-          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
-            <div style="font-size:9px;color:#ff6b35;">BLOOMBERG</div>
-            <div style="font-size:10px;color:#fff;margin-top:2px;">Clima afeta safra de milho no Centro-Oeste</div>
-            <div style="font-size:8px;color:#666;margin-top:2px;">30 min atrás</div>
-          </div>
-          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
-            <div style="font-size:9px;color:#ff6b35;">BBC</div>
-            <div style="font-size:10px;color:#fff;margin-top:2px;">Preço do café atinge máxima de 2 anos</div>
-            <div style="font-size:8px;color:#666;margin-top:2px;">1h atrás</div>
-          </div>
-        `;
-        return;
-      }
-      
-      feedEl.innerHTML = news.slice(0, 5).map(item => `
-        <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;" onclick="window.open('${item.url || '#'}', '_blank')">
-          <div style="font-size:9px;color:#ff6b35;">${item.source?.toUpperCase() || 'NEWS'}</div>
-          <div style="font-size:10px;color:#fff;margin-top:2px;">${item.title || 'Sem título'}</div>
-          <div style="font-size:8px;color:#666;margin-top:2px;">${item.published_at ? new Date(item.published_at).toLocaleString('pt-BR') : 'N/A'}</div>
-        </div>
-      `).join('');
-    } catch (e) {
-      console.error('[SituationRoom] Erro ao carregar notícias:', e);
-      const feedEl = document.getElementById('sit-news-feed');
-      if (feedEl) {
-        feedEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;">Feeds indisponíveis</div>';
-      }
-    }
-  },
-  
-  filterNews(source) {
-    this.currentNewsFilter = source;
-    
-    ['all', 'reuters', 'bloomberg', 'bbc'].forEach(s => {
-      const btn = document.getElementById(`sit-news-${s}`);
-      if (btn) {
-        if (s === source) {
-          btn.style.background = '#ff6b35';
-          btn.style.color = '#000';
-          btn.style.border = 'none';
-        } else {
-          btn.style.background = '#1a1a1a';
-          btn.style.color = '#888';
-          btn.style.border = '1px solid #333';
-        }
-      }
-    });
-    
-    this.loadNews();
-  }
-};
-
-// Auto-start when panel is shown
-const originalShowPanel = window.showPanel;
-window.showPanel = function(id) {
-  if (originalShowPanel) originalShowPanel(id);
-  if (id === 'situation') {
-    setTimeout(() => SituationRoom.init(), 100);
-  }
-};
-
 });
 </script>
 </body>
