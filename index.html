@@ -176,7 +176,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 
 /* LAYOUT */
 #app{display:flex;height:calc(100vh - 72px);}
-#sidebar{width:56px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:6px;transition:width .3s;flex-shrink:0;}
+#sidebar{width:56px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:6px;transition:width .3s;flex-shrink:0;overflow-y:auto;}
 #sidebar.expanded{width:180px;}
 .nav-btn{width:40px;height:38px;border-radius:8px;border:1px solid transparent;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px;transition:all .2s;flex-shrink:0;}
 .nav-btn:hover,.nav-btn.active{background:rgba(0,212,255,.1);border-color:var(--accent);color:var(--accent);}
