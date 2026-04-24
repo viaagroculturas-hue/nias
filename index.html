@@ -176,7 +176,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 
 /* LAYOUT */
 #app{display:flex;height:calc(100vh - 72px);}
-#sidebar{width:56px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:6px;transition:width .3s;flex-shrink:0;overflow-y:auto;}
+#sidebar{width:56px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:6px;transition:width .3s;flex-shrink:0;}
 #sidebar.expanded{width:180px;}
 .nav-btn{width:40px;height:38px;border-radius:8px;border:1px solid transparent;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px;transition:all .2s;flex-shrink:0;}
 .nav-btn:hover,.nav-btn.active{background:rgba(0,212,255,.1);border-color:var(--accent);color:var(--accent);}
@@ -2376,25 +2376,17 @@ updateClock();
 // ═══════════════════════════════════════════════════════════════════
 // SITUATION ROOM MODULE - NIA$ Soberano Digital v5.0
 // ═══════════════════════════════════════════════════════════════════
-// SITUATION ROOM - VERSAO INDEPENDENTE
 const SituationRoom = {
-  data: {
-    totals: { in_rj: 3, bankrupt: 1, total_companies: 4, total_debt_billions: 23.35, employees_at_risk: 56481 },
-    recent_entries: [
-      { company_name: 'Agroindustrial Paulista S.A.', cnpj: '12.345.678/0001-90', city: 'São Paulo', state_uf: 'SP', segment: 'Comercialização de Grãos', judicial_status: 'em_recuperacao', debts_total: 150000000 },
-      { company_name: 'Café Premium Minas S.A.', cnpj: '34.567.890/0001-12', city: 'Belo Horizonte', state_uf: 'MG', segment: 'Exportação de Café', judicial_status: 'em_recuperacao', debts_total: 89000000 },
-      { company_name: 'Grão Goiano Comercial Ltda', cnpj: '45.678.901/0001-23', city: 'Goiânia', state_uf: 'GO', segment: 'Trading de Grãos', judicial_status: 'em_recuperacao', debts_total: 125000000 },
-      { company_name: 'Fertilizantes do Interior Ltda', cnpj: '23.456.789/0001-01', city: 'Campinas', state_uf: 'SP', segment: 'Distribuição de Insumos', judicial_status: 'falencia', debts_total: 45000000 }
-    ],
-    by_state: [{ state_uf: 'SP', count: 2, debt: 195000000 }, { state_uf: 'MG', count: 1, debt: 89000000 }, { state_uf: 'GO', count: 1, debt: 125000000 }]
-  },
+  currentFilter: 'rj',
+  currentProductTab: 'graos',
+  currentNewsFilter: 'all',
+  selectedCompany: null,
   
   init() {
-    console.log('[SituationRoom] Inicializando versao independente...');
-    this.renderCompanies();
-    this.renderAlertBadge();
+    console.log('[SituationRoom] Inicializando...');
+    this.loadCompanies();
+    this.loadNews();
     this.updateTime();
-    this.renderNews();
     setInterval(() => this.updateTime(), 60000);
   },
   
@@ -2405,162 +2397,222 @@ const SituationRoom = {
     if (el) el.textContent = timeStr;
   },
   
-  renderAlertBadge() {
-    const badge = document.getElementById('sit-alert-badge');
-    if (badge && this.data.totals) {
-      const alerts = (this.data.totals.in_rj || 0) + (this.data.totals.bankrupt || 0);
-      badge.textContent = `● ALERTAS: ${alerts}`;
+  async loadCompanies() {
+    try {
+      const response = await fetch('/api/crisis/summary');
+      const data = await response.json();
+      
+      const listEl = document.getElementById('sit-company-list');
+      if (!listEl) return;
+      
+      // Update alert badge
+      const alertBadge = document.getElementById('sit-alert-badge');
+      if (alertBadge && data.totals) {
+        const alerts = data.totals.in_rj + data.totals.bankrupt;
+        alertBadge.textContent = `● ALERTAS: ${alerts}`;
+      }
+      
+      // Render companies
+      if (data.recent_entries && data.recent_entries.length > 0) {
+        listEl.innerHTML = data.recent_entries.map(company => `
+          <div class="sit-company-item" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;"
+               onclick="SituationRoom.selectCompany('${company.cnpj}')"
+          >
+            <div style="font-size:10px;color:#fff;"">${company.company_name}</div>
+            <div style="font-size:8px;color:#888;"">${company.city || 'N/A'}/${company.state_uf || 'N/A'} • ${company.segment || 'N/A'}</div>
+            <div style="font-size:8px;color:#ff6b35;margin-top:2px;"">${company.judicial_status === 'falencia' ? '⚠️ FALÊNCIA' : '⚖️ EM RJ'}</div>
+          </div>
+        `).join('');
+      } else {
+        listEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Nenhuma empresa em monitoramento</div>';
+      }
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao carregar empresas:', e);
+      const listEl = document.getElementById('sit-company-list');
+      if (listEl) listEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Erro ao carregar</div>';
     }
   },
   
-  renderCompanies() {
-    const listEl = document.getElementById('sit-company-list');
-    if (!listEl) {
-      console.error('[SituationRoom] Elemento sit-company-list nao encontrado!');
-      return;
+  async selectCompany(cnpj) {
+    this.selectedCompany = cnpj;
+    try {
+      // Load credit score
+      const scoreResponse = await fetch(`/api/crisis/credit-score/${cnpj}`);
+      const scoreData = await scoreResponse.json();
+      
+      const scoreEl = document.getElementById('sit-credit-score');
+      const classEl = document.getElementById('sit-credit-classification');
+      
+      if (scoreEl && scoreData.score !== null) {
+        scoreEl.textContent = Math.round(scoreData.score);
+        scoreEl.style.color = scoreData.score > 700 ? '#50C878' : scoreData.score > 500 ? '#FFD700' : scoreData.score > 300 ? '#ff6b35' : '#ff3d3d';
+      }
+      if (classEl) {
+        classEl.textContent = scoreData.classification || 'N/A';
+      }
+      
+      // Load judicial status
+      const statusEl = document.getElementById('sit-judicial-status');
+      const detailsEl = document.getElementById('sit-process-details');
+      
+      if (statusEl) {
+        statusEl.textContent = scoreData.status ? scoreData.status.toUpperCase() : 'NORMAL';
+        statusEl.style.color = scoreData.status === 'falencia' ? '#ff3d3d' : scoreData.status === 'em_recuperacao' ? '#ff6b35' : '#50C878';
+      }
+      if (detailsEl && scoreData.debts_total) {
+        detailsEl.textContent = `Dívida: R$ ${(scoreData.debts_total / 1000000).toFixed(1)}M`;
+      }
+      
+      // Load corporate changes
+      this.loadCorporateChanges(cnpj);
+      
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao selecionar empresa:', e);
     }
-    
-    if (this.data.recent_entries && this.data.recent_entries.length > 0) {
-      listEl.innerHTML = this.data.recent_entries.map(company => `
-        <div class="sit-company-item" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;margin-bottom:4px;"
-             onclick="SituationRoom.selectCompany('${company.cnpj}')">
-          <div style="font-size:10px;color:#fff;font-weight:bold;">${company.company_name}</div>
-          <div style="font-size:8px;color:#888;">${company.city}/${company.state_uf} • ${company.segment}</div>
-          <div style="font-size:8px;color:${company.judicial_status === 'falencia' ? '#ff3d3d' : '#ff6b35'};margin-top:2px;">
-            ${company.judicial_status === 'falencia' ? '⚠️ FALÊNCIA' : '⚖️ EM RJ'} • R$ ${(company.debts_total/1000000).toFixed(1)}M
+  },
+  
+  async loadCorporateChanges(cnpj) {
+    try {
+      const response = await fetch(`/api/dossier/changes?days=30`);
+      const data = await response.json();
+      
+      const timelineEl = document.getElementById('sit-admin-timeline');
+      if (!timelineEl) return;
+      
+      const changes = data.changes || [];
+      if (changes.length === 0) {
+        timelineEl.innerHTML = '<div style="font-size:9px;color:#666;">Sem alterações recentes</div>';
+        return;
+      }
+      
+      timelineEl.innerHTML = changes.slice(0, 5).map(change => `
+        <div class="sit-timeline-item" style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="width:8px;height:8px;background:#ff6b35;border-radius:50%;margin-top:3px;flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:9px;color:#fff;">${change.change_type?.toUpperCase() || 'ALTERAÇÃO'}</div>
+            <div style="font-size:8px;color:#666;">${change.change_date || 'N/A'}</div>
           </div>
         </div>
       `).join('');
-      console.log(`[SituationRoom] ${this.data.recent_entries.length} empresas renderizadas`);
-    } else {
-      listEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Nenhuma empresa em monitoramento</div>';
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao carregar alterações:', e);
     }
-  },
-  
-  selectCompany(cnpj) {
-    const company = this.data.recent_entries.find(c => c.cnpj === cnpj);
-    if (!company) return;
-    
-    this.selectedCompany = cnpj;
-    
-    // Score de credito (simulado)
-    const scoreEl = document.getElementById('sit-credit-score');
-    const classEl = document.getElementById('sit-credit-classification');
-    if (scoreEl) {
-      const score = company.judicial_status === 'falencia' ? 250 : 450;
-      scoreEl.textContent = score;
-      scoreEl.style.color = score > 700 ? '#50C878' : score > 500 ? '#FFD700' : score > 300 ? '#ff6b35' : '#ff3d3d';
-    }
-    if (classEl) {
-      classEl.textContent = company.judicial_status === 'falencia' ? 'Risco Crítico - Evitar' : 'Risco Alto - Cautela';
-    }
-    
-    // Status judicial
-    const statusEl = document.getElementById('sit-judicial-status');
-    const detailsEl = document.getElementById('sit-process-details');
-    if (statusEl) {
-      statusEl.textContent = company.judicial_status === 'falencia' ? 'FALÊNCIA' : 'EM RECUPERAÇÃO JUDICIAL';
-      statusEl.style.color = company.judicial_status === 'falencia' ? '#ff3d3d' : '#ff6b35';
-    }
-    if (detailsEl) {
-      detailsEl.textContent = `Dívida: R$ ${(company.debts_total/1000000).toFixed(1)} milhões`;
-    }
-    
-    // Timeline de alteracoes (simulada)
-    const timelineEl = document.getElementById('sit-admin-timeline');
-    if (timelineEl) {
-      timelineEl.innerHTML = `
-        <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">
-          <div style="width:8px;height:8px;background:#ff6b35;border-radius:50%;margin-top:3px;flex-shrink:0;"></div>
-          <div>
-            <div style="font-size:9px;color:#fff;">Entrada em ${company.judicial_status === 'falencia' ? 'Falência' : 'Recuperação Judicial'}</div>
-            <div style="font-size:8px;color:#666;">Processo iniciado em 2024</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:flex-start;">
-          <div style="width:8px;height:8px;background:#555;border-radius:50%;margin-top:3px;flex-shrink:0;"></div>
-          <div>
-            <div style="font-size:9px;color:#888;">Última atualização</div>
-            <div style="font-size:8px;color:#666;">${new Date().toLocaleDateString('pt-BR')}</div>
-          </div>
-        </div>
-      `;
-    }
-  },
-  
-  renderNews() {
-    const feedEl = document.getElementById('sit-news-feed');
-    if (!feedEl) return;
-    
-    feedEl.innerHTML = `
-      <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;margin-bottom:6px;">
-        <div style="font-size:9px;color:#ff6b35;">REUTERS</div>
-        <div style="font-size:10px;color:#fff;margin-top:2px;">Soja sobe 3% com demanda de exportação da China</div>
-        <div style="font-size:8px;color:#666;margin-top:2px;">Agora</div>
-      </div>
-      <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;margin-bottom:6px;">
-        <div style="font-size:9px;color:#ff6b35;">BLOOMBERG</div>
-        <div style="font-size:10px;color:#fff;margin-top:2px;">Clima irregular afeta safra de milho no Centro-Oeste</div>
-        <div style="font-size:8px;color:#666;margin-top:2px;">30 min atrás</div>
-      </div>
-      <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
-        <div style="font-size:9px;color:#ff6b35;">BBC</div>
-        <div style="font-size:10px;color:#fff;margin-top:2px;">Preço do café atinge máxima de 2 anos em Nova York</div>
-        <div style="font-size:8px;color:#666;margin-top:2px;">1h atrás</div>
-      </div>
-    `;
   },
   
   filterCompanies(type) {
     this.currentFilter = type;
+    
+    // Update button styles
     ['rj', 'growth', 'all'].forEach(t => {
       const btn = document.getElementById(`sit-filter-${t}`);
       if (btn) {
         if (t === type) {
           btn.style.background = '#ff6b35';
           btn.style.color = '#000';
+          btn.style.border = 'none';
         } else {
           btn.style.background = '#1a1a1a';
           btn.style.color = '#888';
+          btn.style.border = '1px solid #333';
         }
       }
     });
+    
+    // Reload with filter
+    this.loadCompanies();
   },
   
   showProductTab(tab) {
     this.currentProductTab = tab;
-    const graos = document.getElementById('sit-graos-content');
-    const horti = document.getElementById('sit-hortifruti-content');
-    const tabGraos = document.getElementById('sit-tab-graos');
-    const tabHorti = document.getElementById('sit-tab-hortifruti');
+    
+    const graosContent = document.getElementById('sit-graos-content');
+    const hortifrutiContent = document.getElementById('sit-hortifruti-content');
+    const graosTab = document.getElementById('sit-tab-graos');
+    const hortifrutiTab = document.getElementById('sit-tab-hortifruti');
     
     if (tab === 'graos') {
-      if (graos) graos.style.display = 'block';
-      if (horti) horti.style.display = 'none';
-      if (tabGraos) { tabGraos.style.background = '#ff6b35'; tabGraos.style.color = '#000'; }
-      if (tabHorti) { tabHorti.style.background = '#1a1a1a'; tabHorti.style.color = '#888'; }
+      if (graosContent) graosContent.style.display = 'block';
+      if (hortifrutiContent) hortifrutiContent.style.display = 'none';
+      if (graosTab) { graosTab.style.background = '#ff6b35'; graosTab.style.color = '#000'; graosTab.style.border = 'none'; }
+      if (hortifrutiTab) { hortifrutiTab.style.background = '#1a1a1a'; hortifrutiTab.style.color = '#888'; hortifrutiTab.style.border = '1px solid #333'; }
     } else {
-      if (graos) graos.style.display = 'none';
-      if (horti) horti.style.display = 'block';
-      if (tabGraos) { tabGraos.style.background = '#1a1a1a'; tabGraos.style.color = '#888'; }
-      if (tabHorti) { tabHorti.style.background = '#ff6b35'; tabHorti.style.color = '#000'; }
+      if (graosContent) graosContent.style.display = 'none';
+      if (hortifrutiContent) hortifrutiContent.style.display = 'block';
+      if (graosTab) { graosTab.style.background = '#1a1a1a'; graosTab.style.color = '#888'; graosTab.style.border = '1px solid #333'; }
+      if (hortifrutiTab) { hortifrutiTab.style.background = '#ff6b35'; hortifrutiTab.style.color = '#000'; hortifrutiTab.style.border = 'none'; }
+    }
+  },
+  
+  loadProductDetail(product) {
+    console.log(`[SituationRoom] Carregando detalhes de ${product}`);
+    // Placeholder - would open modal or navigate to detail view
+  },
+  
+  async loadNews() {
+    try {
+      const response = await fetch('/api/news/feeds?limit=10');
+      const data = await response.json();
+      
+      const feedEl = document.getElementById('sit-news-feed');
+      if (!feedEl) return;
+      
+      const news = data.news || [];
+      if (news.length === 0) {
+        feedEl.innerHTML = `
+          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
+            <div style="font-size:9px;color:#ff6b35;">REUTERS</div>
+            <div style="font-size:10px;color:#fff;margin-top:2px;">Soja sobe 3% com demanda de exportação</div>
+            <div style="font-size:8px;color:#666;margin-top:2px;">Agora</div>
+          </div>
+          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
+            <div style="font-size:9px;color:#ff6b35;">BLOOMBERG</div>
+            <div style="font-size:10px;color:#fff;margin-top:2px;">Clima afeta safra de milho no Centro-Oeste</div>
+            <div style="font-size:8px;color:#666;margin-top:2px;">30 min atrás</div>
+          </div>
+          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
+            <div style="font-size:9px;color:#ff6b35;">BBC</div>
+            <div style="font-size:10px;color:#fff;margin-top:2px;">Preço do café atinge máxima de 2 anos</div>
+            <div style="font-size:8px;color:#666;margin-top:2px;">1h atrás</div>
+          </div>
+        `;
+        return;
+      }
+      
+      feedEl.innerHTML = news.slice(0, 5).map(item => `
+        <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;" onclick="window.open('${item.url || '#'}', '_blank')">
+          <div style="font-size:9px;color:#ff6b35;">${item.source?.toUpperCase() || 'NEWS'}</div>
+          <div style="font-size:10px;color:#fff;margin-top:2px;">${item.title || 'Sem título'}</div>
+          <div style="font-size:8px;color:#666;margin-top:2px;">${item.published_at ? new Date(item.published_at).toLocaleString('pt-BR') : 'N/A'}</div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao carregar notícias:', e);
+      const feedEl = document.getElementById('sit-news-feed');
+      if (feedEl) {
+        feedEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;">Feeds indisponíveis</div>';
+      }
     }
   },
   
   filterNews(source) {
     this.currentNewsFilter = source;
+    
     ['all', 'reuters', 'bloomberg', 'bbc'].forEach(s => {
       const btn = document.getElementById(`sit-news-${s}`);
       if (btn) {
         if (s === source) {
           btn.style.background = '#ff6b35';
           btn.style.color = '#000';
+          btn.style.border = 'none';
         } else {
           btn.style.background = '#1a1a1a';
           btn.style.color = '#888';
+          btn.style.border = '1px solid #333';
         }
       }
     });
+    
+    this.loadNews();
   }
 };
 
@@ -2595,19 +2647,7 @@ function showPanel(id) {
     if (id === 'warroom' && !window._warInit) { try { initWarRoom(); } catch(e) { console.error('warroom init error:', e); } }
     if (id === 'warroom') setTimeout(() => { try { WarRoomProtocol.refresh(); } catch(e) { console.error('warroom refresh error:', e); } }, 200);
     if (id === 'chat' && !window._chatInit) { try { initChatIA(); } catch(e) { console.error('chat init error:', e); } }
-    if (id === 'situation') setTimeout(() => { 
-      console.log('[DEBUG] Iniciando SituationRoom...'); 
-      try { 
-        if (typeof SituationRoom === 'undefined') {
-          console.error('[DEBUG] SituationRoom não está definido!');
-        } else {
-          console.log('[DEBUG] SituationRoom encontrado, chamando init...');
-          SituationRoom.init(); 
-        }
-      } catch(e) { 
-        console.error('SituationRoom init error:', e); 
-      } 
-    }, 100);
+    if (id === 'situation') setTimeout(() => { try { SituationRoom.init(); } catch(e) { console.error('SituationRoom init error:', e); } }, 100);
   } catch(e) {
     console.error('showPanel error:', e);
   }
