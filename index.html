@@ -718,6 +718,8 @@ tr:hover td{background:rgba(0,212,255,.04);}
     <button class="nav-btn flv-nav-marker" onclick="showPanel('flv_insights')" title="Antecipação FLV"><span>🌿</span><span class="nav-label">FLV</span></button>
     <button class="nav-btn" onclick="showPanel('warroom')" title="War Room"><span>🛡️</span><span class="nav-label">WAR ROOM</span></button>
     <button class="nav-btn" onclick="showPanel('predictix')" title="PREDICTIX" style="border-left:3px solid #FFD700 !important;"><span>⚡</span><span class="nav-label">PREDICTIX</span></button>
+    <!-- SITUATION ROOM BUTTON v5.0 -->
+    <button class="nav-btn" onclick="showPanel('situation')" title="Situation Room" style="border-left:3px solid #ff6b35 !important;"><span>🎯</span><span class="nav-label">SITUATION</span></button>
     <div class="nav-divider"></div>
     <button class="nav-btn" onclick="showPanel('chat')" title="Assistente IA"><span>◉</span><span class="nav-label">IA</span></button>
     <div style="flex:1"></div>
@@ -2105,6 +2107,195 @@ tr:hover td{background:rgba(0,212,255,.04);}
       </div>
     </div>
 
+            </div>
+      </div>
+    </div>
+
+    <!-- ═══ PANEL: SITUATION ROOM ═══ -->
+    <div class="panel" id="panel-situation" style="background:#0a0a0a;">
+      <!-- Header -->
+      <div style="height:42px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;">
+        <span style="color:#ff6b35;font-size:13px;font-weight:bold;letter-spacing:3px;font-family:'Courier New',monospace;">SITUATION ROOM</span>
+        <span style="color:#555;font-size:10px;letter-spacing:2px;">SOBERANO DIGITAL v5.0</span>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+          <span id="sit-alert-badge" class="panel-badge" style="background:rgba(255,107,53,.2);color:#ff6b35;border-color:#ff6b35;">● ALERTAS: 0</span>
+          <span id="sit-update-time" style="font-size:9px;color:#666;font-family:monospace;">--:--</span>
+        </div>
+      </div>
+      
+      <!-- Main Content: Two Columns -->
+      <div style="flex:1;display:flex;overflow:hidden;">
+        <!-- LEFT COLUMN: Dossier Analitico -->
+        <div id="sit-dossier" style="width:45%;border-right:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;">
+          
+          <!-- Secao: Situacao Juridica/Financeira -->
+          <div id="sit-dossier-judicial" style="flex:1;overflow-y:auto;padding:12px;border-bottom:1px solid #1a1a1a;">
+            <div style="font-size:10px;color:#ff6b35;letter-spacing:2px;margin-bottom:10px;">⚖️ SITUACAO JURIDICA/FINANCEIRA</div>
+            
+            <!-- Score de Credito -->
+            <div class="sit-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:10px;margin-bottom:8px;">
+              <div style="font-size:9px;color:#888;margin-bottom:4px;">SCORE DE CREDITO 2026</div>
+              <div id="sit-credit-score" style="font-size:24px;font-weight:bold;color:#ff6b35;font-family:monospace;">--</div>
+              <div id="sit-credit-classification" style="font-size:9px;color:#666;">Selecione uma empresa</div>
+            </div>
+            
+            <!-- Status Processos -->
+            <div class="sit-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:10px;margin-bottom:8px;">
+              <div style="font-size:9px;color:#888;margin-bottom:4px;">STATUS JUDICIAL</div>
+              <div id="sit-judicial-status" style="font-size:11px;color:#fff;">--</div>
+              <div id="sit-process-details" style="font-size:9px;color:#666;margin-top:4px;">--</div>
+            </div>
+            
+            <!-- Historico 24 meses -->
+            <div style="margin-top:10px;">
+              <div style="font-size:9px;color:#888;margin-bottom:4px;">HISTORICO 24 MESES</div>
+              <div id="sit-credit-history-chart" style="height:60px;background:#0a0a0a;border:1px solid #1a1a1a;display:flex;align-items:flex-end;gap:2px;padding:4px;">
+                <div style="flex:1;background:#333;height:50%;"></div>
+                <div style="flex:1;background:#333;height:60%;"></div>
+                <div style="flex:1;background:#333;height:45%;"></div>
+                <div style="flex:1;background:#ff6b35;height:70%;"></div>
+                <div style="flex:1;background:#ff6b35;height:80%;"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Secao: Situacao Administrativa -->
+          <div id="sit-dossier-admin" style="flex:1;overflow-y:auto;padding:12px;border-bottom:1px solid #1a1a1a;">
+            <div style="font-size:10px;color:#ff6b35;letter-spacing:2px;margin-bottom:10px;">👔 ALTERACOES ADMINISTRATIVAS</div>
+            
+            <div id="sit-admin-timeline" style="display:flex;flex-direction:column;gap:6px;">
+              <div class="sit-timeline-item" style="display:flex;gap:8px;align-items:flex-start;">
+                <div style="width:8px;height:8px;background:#ff6b35;border-radius:50%;margin-top:3px;flex-shrink:0;"></div>
+                <div>
+                  <div style="font-size:9px;color:#fff;">Alteracao de Diretoria</div>
+                  <div style="font-size:8px;color:#666;">Novo CEO nomeado - 15/04/2026</div>
+                </div>
+              </div>
+              <div class="sit-timeline-item" style="display:flex;gap:8px;align-items:flex-start;">
+                <div style="width:8px;height:8px;background:#555;border-radius:50%;margin-top:3px;flex-shrink:0;"></div>
+                <div>
+                  <div style="font-size:9px;color:#888;">Mudanca de Sede</div>
+                  <div style="font-size:8px;color:#666;">Transferencia para SP - 01/03/2026</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Secao: Empresas em Monitoramento -->
+          <div id="sit-dossier-monitor" style="height:200px;overflow-y:auto;padding:12px;">
+            <div style="font-size:10px;color:#ff6b35;letter-spacing:2px;margin-bottom:10px;">🔍 EMPRESAS EM MONITORAMENTO</div>
+            
+            <div style="display:flex;gap:4px;margin-bottom:8px;">
+              <button onclick="SituationRoom.filterCompanies('rj')" id="sit-filter-rj" style="background:#ff6b35;border:none;color:#000;font-size:8px;padding:2px 8px;border-radius:3px;cursor:pointer;font-weight:bold;">EM RJ</button>
+              <button onclick="SituationRoom.filterCompanies('growth')" id="sit-filter-growth" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:8px;padding:2px 8px;border-radius:3px;cursor:pointer;">CRESCIMENTO</button>
+              <button onclick="SituationRoom.filterCompanies('all')" id="sit-filter-all" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:8px;padding:2px 8px;border-radius:3px;cursor:pointer;">TODAS</button>
+            </div>
+            
+            <div id="sit-company-list" style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:10px;color:#666;text-align:center;padding:20px;">Carregando empresas...</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- RIGHT COLUMN: Portfolio de Ativos -->
+        <div id="sit-portfolio" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+          
+          <!-- Secao: Produtos -->
+          <div id="sit-portfolio-products" style="flex:1;overflow-y:auto;padding:12px;border-bottom:1px solid #1a1a1a;">
+            <div style="font-size:10px;color:#ff6b35;letter-spacing:2px;margin-bottom:10px;">📦 PORTFOLIO DE PRODUTOS</div>
+            
+            <div style="display:flex;gap:8px;margin-bottom:10px;border-bottom:1px solid #1a1a1a;padding-bottom:8px;">
+              <button onclick="SituationRoom.showProductTab('graos')" id="sit-tab-graos" style="background:#ff6b35;border:none;color:#000;font-size:10px;padding:4px 12px;border-radius:3px;cursor:pointer;font-weight:bold;">GRAOS</button>
+              <button onclick="SituationRoom.showProductTab('hortifruti')" id="sit-tab-hortifruti" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:10px;padding:4px 12px;border-radius:3px;cursor:pointer;">HORTIFRUTI</button>
+            </div>
+            
+            <!-- Graos Content -->
+            <div id="sit-graos-content">
+              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+                <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('soja')">
+                  <div style="font-size:10px;color:#ff6b35;">🌾 SOJA</div>
+                  <div style="font-size:8px;color:#666;">Safra: Fev-Mar | Export: Mar-Mai</div>
+                  <div id="sit-soja-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 142,00/sc</div>
+                  <div id="sit-soja-trend" style="font-size:8px;color:#50C878;">▲ +3.2%</div>
+                </div>
+                
+                <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('milho')">
+                  <div style="font-size:10px;color:#ff6b35;">🌽 MILHO</div>
+                  <div style="font-size:8px;color:#666;">Safra: Jun-Jul | Export: Jul-Set</div>
+                  <div id="sit-milho-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 72,00/sc</div>
+                  <div id="sit-milho-trend" style="font-size:8px;color:#ff3d3d;">▼ -1.5%</div>
+                </div>
+                
+                <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('cafe')">
+                  <div style="font-size:10px;color:#ff6b35;">☕ CAFE</div>
+                  <div style="font-size:8px;color:#666;">Safra: Mai-Set | Export: Jun-Out</div>
+                  <div id="sit-cafe-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 1.180,00/sc</div>
+                  <div id="sit-cafe-trend" style="font-size:8px;color:#50C878;">▲ +8.7%</div>
+                </div>
+                
+                <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('trigo')">
+                  <div style="font-size:10px;color:#ff6b35;">🌾 TRIGO</div>
+                  <div style="font-size:8px;color:#666;">Safra: Out-Dez | Export: Nov-Jan</div>
+                  <div id="sit-trigo-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 98,00/sc</div>
+                  <div id="sit-trigo-trend" style="font-size:8px;color:#ff3d3d;">▼ -3.4%</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Hortifruti Content (hidden by default) -->
+            <div id="sit-hortifruti-content" style="display:none;">
+              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+                <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('tomate')">
+                  <div style="font-size:10px;color:#ff6b35;">🍅 TOMATE</div>
+                  <div style="font-size:8px;color:#666;">Pico: Jun-Ago | Baixa: Dez-Fev</div>
+                  <div id="sit-tomate-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 88,50/cx</div>
+                  <div id="sit-tomate-alert" style="font-size:8px;color:#ff6b35;">⚠️ Quebra em GO +15%</div>
+                </div>
+                
+                <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('cebola')">
+                  <div style="font-size:10px;color:#ff6b35;">🧅 CEBOLA</div>
+                  <div style="font-size:8px;color:#666;">Pico: Dez-Jan | Baixa: Jun-Jul</div>
+                  <div id="sit-cebola-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 35,00/sc</div>
+                  <div id="sit-cebola-trend" style="font-size:8px;color:#ff3d3d;">▼ -8.2%</div>
+                </div>
+                
+                <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('batata')">
+                  <div style="font-size:10px;color:#ff6b35;">🥔 BATATA</div>
+                  <div style="font-size:8px;color:#666;">Pico: Nov-Jan | Baixa: Jun-Ago</div>
+                  <div id="sit-batata-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 62,00/sc</div>
+                  <div id="sit-batata-trend" style="font-size:8px;color:#50C878;">▲ +2.1%</div>
+                </div>
+                
+                <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('manga')">
+                  <div style="font-size:10px;color:#ff6b35;">🥭 MANGA</div>
+                  <div style="font-size:8px;color:#666;">Pico: Nov-Dez-Jan | Baixa: Mai-Jun</div>
+                  <div id="sit-manga-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 68,00/cx</div>
+                  <div id="sit-manga-trend" style="font-size:8px;color:#50C878;">▲ +4.5%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Secao: News Pulse -->
+          <div id="sit-portfolio-news" style="height:250px;overflow-y:auto;padding:12px;">
+            <div style="font-size:10px;color:#ff6b35;letter-spacing:2px;margin-bottom:10px;">📡 NEWS PULSE — FEEDS GLOBAIS</div>
+            
+            <div style="display:flex;gap:4px;margin-bottom:8px;">
+              <button onclick="SituationRoom.filterNews('all')" id="sit-news-all" style="background:#ff6b35;border:none;color:#000;font-size:7px;padding:2px 6px;border-radius:2px;cursor:pointer;font-weight:bold;">TODAS</button>
+              <button onclick="SituationRoom.filterNews('reuters')" id="sit-news-reuters" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:7px;padding:2px 6px;border-radius:2px;cursor:pointer;">REUTERS</button>
+              <button onclick="SituationRoom.filterNews('bloomberg')" id="sit-news-bloomberg" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:7px;padding:2px 6px;border-radius:2px;cursor:pointer;">BLOOMBERG</button>
+              <button onclick="SituationRoom.filterNews('bbc')" id="sit-news-bbc" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:7px;padding:2px 6px;border-radius:2px;cursor:pointer;">BBC</button>
+            </div>
+            
+            <div id="sit-news-feed" style="display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:10px;color:#666;text-align:center;padding:20px;">Carregando feeds...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <div class="panel" id="panel-chat">
       <div class="panel-header">
         <span class="panel-title">ASSISTENTE DE DECISÃO — NIA$ IA</span>
@@ -2183,6 +2374,249 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ═══════════════════════════════════════════════════════════════════
+// SITUATION ROOM MODULE - NIA$ Soberano Digital v5.0
+// ═══════════════════════════════════════════════════════════════════
+const SituationRoom = {
+  currentFilter: 'rj',
+  currentProductTab: 'graos',
+  currentNewsFilter: 'all',
+  selectedCompany: null,
+  
+  init() {
+    console.log('[SituationRoom] Inicializando...');
+    this.loadCompanies();
+    this.loadNews();
+    this.updateTime();
+    setInterval(() => this.updateTime(), 60000);
+  },
+  
+  updateTime() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const el = document.getElementById('sit-update-time');
+    if (el) el.textContent = timeStr;
+  },
+  
+  async loadCompanies() {
+    try {
+      const response = await fetch('/api/crisis/summary');
+      const data = await response.json();
+      
+      const listEl = document.getElementById('sit-company-list');
+      if (!listEl) return;
+      
+      // Update alert badge
+      const alertBadge = document.getElementById('sit-alert-badge');
+      if (alertBadge && data.totals) {
+        const alerts = data.totals.in_rj + data.totals.bankrupt;
+        alertBadge.textContent = `● ALERTAS: ${alerts}`;
+      }
+      
+      // Render companies
+      if (data.recent_entries && data.recent_entries.length > 0) {
+        listEl.innerHTML = data.recent_entries.map(company => `
+          <div class="sit-company-item" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;"
+               onclick="SituationRoom.selectCompany('${company.cnpj}')"
+          >
+            <div style="font-size:10px;color:#fff;"">${company.company_name}</div>
+            <div style="font-size:8px;color:#888;"">${company.city || 'N/A'}/${company.state_uf || 'N/A'} • ${company.segment || 'N/A'}</div>
+            <div style="font-size:8px;color:#ff6b35;margin-top:2px;"">${company.judicial_status === 'falencia' ? '⚠️ FALÊNCIA' : '⚖️ EM RJ'}</div>
+          </div>
+        `).join('');
+      } else {
+        listEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Nenhuma empresa em monitoramento</div>';
+      }
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao carregar empresas:', e);
+      const listEl = document.getElementById('sit-company-list');
+      if (listEl) listEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Erro ao carregar</div>';
+    }
+  },
+  
+  async selectCompany(cnpj) {
+    this.selectedCompany = cnpj;
+    try {
+      // Load credit score
+      const scoreResponse = await fetch(`/api/crisis/credit-score/${cnpj}`);
+      const scoreData = await scoreResponse.json();
+      
+      const scoreEl = document.getElementById('sit-credit-score');
+      const classEl = document.getElementById('sit-credit-classification');
+      
+      if (scoreEl && scoreData.score !== null) {
+        scoreEl.textContent = Math.round(scoreData.score);
+        scoreEl.style.color = scoreData.score > 700 ? '#50C878' : scoreData.score > 500 ? '#FFD700' : scoreData.score > 300 ? '#ff6b35' : '#ff3d3d';
+      }
+      if (classEl) {
+        classEl.textContent = scoreData.classification || 'N/A';
+      }
+      
+      // Load judicial status
+      const statusEl = document.getElementById('sit-judicial-status');
+      const detailsEl = document.getElementById('sit-process-details');
+      
+      if (statusEl) {
+        statusEl.textContent = scoreData.status ? scoreData.status.toUpperCase() : 'NORMAL';
+        statusEl.style.color = scoreData.status === 'falencia' ? '#ff3d3d' : scoreData.status === 'em_recuperacao' ? '#ff6b35' : '#50C878';
+      }
+      if (detailsEl && scoreData.debts_total) {
+        detailsEl.textContent = `Dívida: R$ ${(scoreData.debts_total / 1000000).toFixed(1)}M`;
+      }
+      
+      // Load corporate changes
+      this.loadCorporateChanges(cnpj);
+      
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao selecionar empresa:', e);
+    }
+  },
+  
+  async loadCorporateChanges(cnpj) {
+    try {
+      const response = await fetch(`/api/dossier/changes?days=30`);
+      const data = await response.json();
+      
+      const timelineEl = document.getElementById('sit-admin-timeline');
+      if (!timelineEl) return;
+      
+      const changes = data.changes || [];
+      if (changes.length === 0) {
+        timelineEl.innerHTML = '<div style="font-size:9px;color:#666;">Sem alterações recentes</div>';
+        return;
+      }
+      
+      timelineEl.innerHTML = changes.slice(0, 5).map(change => `
+        <div class="sit-timeline-item" style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="width:8px;height:8px;background:#ff6b35;border-radius:50%;margin-top:3px;flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:9px;color:#fff;">${change.change_type?.toUpperCase() || 'ALTERAÇÃO'}</div>
+            <div style="font-size:8px;color:#666;">${change.change_date || 'N/A'}</div>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao carregar alterações:', e);
+    }
+  },
+  
+  filterCompanies(type) {
+    this.currentFilter = type;
+    
+    // Update button styles
+    ['rj', 'growth', 'all'].forEach(t => {
+      const btn = document.getElementById(`sit-filter-${t}`);
+      if (btn) {
+        if (t === type) {
+          btn.style.background = '#ff6b35';
+          btn.style.color = '#000';
+          btn.style.border = 'none';
+        } else {
+          btn.style.background = '#1a1a1a';
+          btn.style.color = '#888';
+          btn.style.border = '1px solid #333';
+        }
+      }
+    });
+    
+    // Reload with filter
+    this.loadCompanies();
+  },
+  
+  showProductTab(tab) {
+    this.currentProductTab = tab;
+    
+    const graosContent = document.getElementById('sit-graos-content');
+    const hortifrutiContent = document.getElementById('sit-hortifruti-content');
+    const graosTab = document.getElementById('sit-tab-graos');
+    const hortifrutiTab = document.getElementById('sit-tab-hortifruti');
+    
+    if (tab === 'graos') {
+      if (graosContent) graosContent.style.display = 'block';
+      if (hortifrutiContent) hortifrutiContent.style.display = 'none';
+      if (graosTab) { graosTab.style.background = '#ff6b35'; graosTab.style.color = '#000'; graosTab.style.border = 'none'; }
+      if (hortifrutiTab) { hortifrutiTab.style.background = '#1a1a1a'; hortifrutiTab.style.color = '#888'; hortifrutiTab.style.border = '1px solid #333'; }
+    } else {
+      if (graosContent) graosContent.style.display = 'none';
+      if (hortifrutiContent) hortifrutiContent.style.display = 'block';
+      if (graosTab) { graosTab.style.background = '#1a1a1a'; graosTab.style.color = '#888'; graosTab.style.border = '1px solid #333'; }
+      if (hortifrutiTab) { hortifrutiTab.style.background = '#ff6b35'; hortifrutiTab.style.color = '#000'; hortifrutiTab.style.border = 'none'; }
+    }
+  },
+  
+  loadProductDetail(product) {
+    console.log(`[SituationRoom] Carregando detalhes de ${product}`);
+    // Placeholder - would open modal or navigate to detail view
+  },
+  
+  async loadNews() {
+    try {
+      const response = await fetch('/api/news/feeds?limit=10');
+      const data = await response.json();
+      
+      const feedEl = document.getElementById('sit-news-feed');
+      if (!feedEl) return;
+      
+      const news = data.news || [];
+      if (news.length === 0) {
+        feedEl.innerHTML = `
+          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
+            <div style="font-size:9px;color:#ff6b35;">REUTERS</div>
+            <div style="font-size:10px;color:#fff;margin-top:2px;">Soja sobe 3% com demanda de exportação</div>
+            <div style="font-size:8px;color:#666;margin-top:2px;">Agora</div>
+          </div>
+          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
+            <div style="font-size:9px;color:#ff6b35;">BLOOMBERG</div>
+            <div style="font-size:10px;color:#fff;margin-top:2px;">Clima afeta safra de milho no Centro-Oeste</div>
+            <div style="font-size:8px;color:#666;margin-top:2px;">30 min atrás</div>
+          </div>
+          <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;">
+            <div style="font-size:9px;color:#ff6b35;">BBC</div>
+            <div style="font-size:10px;color:#fff;margin-top:2px;">Preço do café atinge máxima de 2 anos</div>
+            <div style="font-size:8px;color:#666;margin-top:2px;">1h atrás</div>
+          </div>
+        `;
+        return;
+      }
+      
+      feedEl.innerHTML = news.slice(0, 5).map(item => `
+        <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;" onclick="window.open('${item.url || '#'}', '_blank')">
+          <div style="font-size:9px;color:#ff6b35;">${item.source?.toUpperCase() || 'NEWS'}</div>
+          <div style="font-size:10px;color:#fff;margin-top:2px;">${item.title || 'Sem título'}</div>
+          <div style="font-size:8px;color:#666;margin-top:2px;">${item.published_at ? new Date(item.published_at).toLocaleString('pt-BR') : 'N/A'}</div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.error('[SituationRoom] Erro ao carregar notícias:', e);
+      const feedEl = document.getElementById('sit-news-feed');
+      if (feedEl) {
+        feedEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;">Feeds indisponíveis</div>';
+      }
+    }
+  },
+  
+  filterNews(source) {
+    this.currentNewsFilter = source;
+    
+    ['all', 'reuters', 'bloomberg', 'bbc'].forEach(s => {
+      const btn = document.getElementById(`sit-news-${s}`);
+      if (btn) {
+        if (s === source) {
+          btn.style.background = '#ff6b35';
+          btn.style.color = '#000';
+          btn.style.border = 'none';
+        } else {
+          btn.style.background = '#1a1a1a';
+          btn.style.color = '#888';
+          btn.style.border = '1px solid #333';
+        }
+      }
+    });
+    
+    this.loadNews();
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════════════
 function showPanel(id) {
@@ -2213,6 +2647,7 @@ function showPanel(id) {
     if (id === 'warroom' && !window._warInit) { try { initWarRoom(); } catch(e) { console.error('warroom init error:', e); } }
     if (id === 'warroom') setTimeout(() => { try { WarRoomProtocol.refresh(); } catch(e) { console.error('warroom refresh error:', e); } }, 200);
     if (id === 'chat' && !window._chatInit) { try { initChatIA(); } catch(e) { console.error('chat init error:', e); } }
+    if (id === 'situation') setTimeout(() => { try { SituationRoom.init(); } catch(e) { console.error('SituationRoom init error:', e); } }, 100);
   } catch(e) {
     console.error('showPanel error:', e);
   }
