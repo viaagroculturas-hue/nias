@@ -281,6 +281,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path.startswith('/api/autonomous'):
             self._serve_autonomous_api()
             return
+        if self.path.startswith('/api/predictix/intel'):
+            self._serve_predictix_intelligence_api()
+            return
         if self.path.startswith('/proxy/'):
             self._proxy('GET')
         elif self.path == '/api/cepea':
@@ -1046,6 +1049,109 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+    def _serve_predictix_intelligence_api(self):
+        """API PREDICTIX INTELLIGENCE v2.0 - 5 novas funcionalidades"""
+        import json
+        import os
+        from urllib.parse import urlparse, parse_qs
+        
+        try:
+            # Importar módulo de inteligência
+            import predictix_intelligence
+            intel = predictix_intelligence.PredictixIntelligence()
+            
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/predictix/intel', '').lstrip('/')
+            params = parse_qs(parsed.query)
+            
+            result = {}
+            
+            if path == '' or path == 'status':
+                result = {
+                    'status': 'active',
+                    'version': '2.0',
+                    'features': [
+                        'logistics_risk_realtime',
+                        'total_cost_calculator', 
+                        'price_prediction_ml',
+                        'smart_seasonality',
+                        'predictive_alerts'
+                    ],
+                    'timestamp': datetime.now().isoformat()
+                }
+                
+            elif path == 'logistics-risk':
+                # 1. RISCO LOGÍSTICO EM TEMPO REAL
+                route = params.get('route', [None])[0]
+                result = intel.get_logistics_risk(route)
+                
+            elif path == 'calculate-cost':
+                # 2. CUSTO TOTAL CALCULADO
+                try:
+                    buy_price = float(params.get('buy_price', ['2.50'])[0])
+                    quantity = float(params.get('quantity', ['10000'])[0])
+                    distance = float(params.get('distance', ['850'])[0])
+                    product = params.get('product', ['tomate'])[0]
+                    
+                    result = intel.calculate_total_cost(
+                        buy_price=buy_price,
+                        quantity_kg=quantity,
+                        distance_km=distance,
+                        product_type=product
+                    )
+                except ValueError as e:
+                    result = {'error': 'Parâmetros numéricos inválidos', 'details': str(e)}
+                    
+            elif path == 'predict-price':
+                # 3. PREVISÃO DE PREÇOS (ML)
+                product = params.get('product', ['tomate'])[0]
+                days = int(params.get('days', ['7'])[0])
+                location = params.get('location', ['CEAGESP'])[0]
+                
+                result = intel.predict_price(product, days, location)
+                
+            elif path == 'seasonality':
+                # 4. SAZONALIDADE INTELIGENTE
+                product = params.get('product', ['tomate'])[0]
+                result = intel.get_seasonality(product)
+                
+            elif path == 'alerts':
+                # 5. ALERTAS PREDITIVOS
+                result = {'alerts': intel.generate_alerts()}
+                
+            elif path == 'full-intelligence':
+                # INTELIGÊNCIA COMPLETA
+                product = params.get('product', ['tomate'])[0]
+                result = intel.get_full_intelligence(product)
+                
+            else:
+                result = {
+                    'error': 'Endpoint não encontrado',
+                    'path': path,
+                    'available_endpoints': [
+                        '/api/predictix/intel/status',
+                        '/api/predictix/intel/logistics-risk',
+                        '/api/predictix/intel/calculate-cost?buy_price=2.50&quantity=10000&distance=850&product=tomate',
+                        '/api/predictix/intel/predict-price?product=tomate&days=7',
+                        '/api/predictix/intel/seasonality?product=tomate',
+                        '/api/predictix/intel/alerts',
+                        '/api/predictix/intel/full-intelligence?product=tomate'
+                    ]
+                }
+            
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e), 'module': 'predictix_intelligence'}).encode())
 
     def _build_cycle15_report(self, params):
         """
