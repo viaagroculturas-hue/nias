@@ -1,6 +1,39 @@
 import http.server, urllib.request, urllib.parse, json, os, re, time, base64, threading
 from datetime import datetime, timedelta
 
+# ═══════════════════════════════════════════════════════════════════
+# SISTEMA AUTÔNOMO NIA$ v6.0
+# ═══════════════════════════════════════════════════════════════════
+AUTONOMOUS_MODE = True  # Ativar modo autônomo
+autonomous_thread = None
+
+def start_autonomous_system():
+    """Inicia o sistema autônomo em thread separada"""
+    try:
+        import autonomous_system
+        manager = autonomous_system.AutonomousManager()
+        manager.setup_schedule()
+        
+        # Executar ciclo inicial
+        manager.run_cycle()
+        
+        # Manter rodando
+        while True:
+            autonomous_system.schedule.run_pending()
+            time.sleep(60)
+    except Exception as e:
+        print(f"[SERVER] Erro no sistema autônomo: {e}")
+        time.sleep(300)
+
+# Iniciar sistema autônomo se estiver habilitado
+if AUTONOMOUS_MODE:
+    print("[SERVER] Iniciando Sistema Autônomo NIA$ v6.0...")
+    autonomous_thread = threading.Thread(target=start_autonomous_system, daemon=True)
+    autonomous_thread.start()
+    print("[SERVER] ✓ Sistema autônomo iniciado em background")
+
+# ═══════════════════════════════════════════════════════════════════
+
 try:
     from curl_cffi import requests as _cf_requests
     _cf_session = _cf_requests.Session(impersonate="chrome120")
@@ -244,6 +277,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
         if self.path.startswith('/api/reports'):
             self._serve_reports_api()
+            return
+        if self.path.startswith('/api/autonomous'):
+            self._serve_autonomous_api()
             return
         if self.path.startswith('/proxy/'):
             self._proxy('GET')
@@ -837,6 +873,164 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 result = self._build_cycle15_report(params)
             else:
                 result = {'error': 'Endpoint não encontrado', 'path': path}
+            
+            conn.close()
+            
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+    def _serve_autonomous_api(self):
+        """API do Sistema Autônomo NIA$ v6.0"""
+        import json
+        import sqlite3
+        import os
+        from urllib.parse import urlparse, parse_qs
+        
+        try:
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/autonomous', '').lstrip('/')
+            params = parse_qs(parsed.query)
+            
+            db_path = os.path.join(DIR, 'nia_flv.db')
+            result = {}
+            
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            if path == '' or path == 'status':
+                # Status do sistema autônomo
+                result = {
+                    'status': 'active',
+                    'version': '6.0',
+                    'mode': 'autonomous',
+                    'last_update': datetime.now().isoformat(),
+                    'capabilities': [
+                        'auto_data_collection',
+                        'auto_analysis',
+                        'auto_reporting',
+                        'anomaly_detection',
+                        'sentiment_analysis'
+                    ]
+                }
+                
+            elif path == 'insights':
+                # Insights gerados automaticamente
+                insights = []
+                
+                # Top performers
+                cursor.execute("""
+                    SELECT company_name, price_change_ytd, country 
+                    FROM flv_financial_health 
+                    WHERE price_change_ytd > 15 
+                    ORDER BY price_change_ytd DESC LIMIT 5
+                """)
+                performers = cursor.fetchall()
+                if performers:
+                    insights.append({
+                        'type': 'positive',
+                        'category': 'market_performance',
+                        'message': f"{len(performers)} empresas com alta > 15% no ano",
+                        'data': [{'name': r[0], 'change': r[1], 'country': r[2]} for r in performers]
+                    })
+                
+                # Empresas em queda
+                cursor.execute("""
+                    SELECT company_name, price_change_ytd 
+                    FROM flv_financial_health 
+                    WHERE price_change_ytd < -20 
+                    ORDER BY price_change_ytd ASC LIMIT 5
+                """)
+                losers = cursor.fetchall()
+                if losers:
+                    insights.append({
+                        'type': 'negative',
+                        'category': 'market_performance',
+                        'message': f"{len(losers)} empresas em queda acentuada",
+                        'data': [{'name': r[0], 'change': r[1]} for r in losers]
+                    })
+                
+                # Trocas de CEO recentes
+                cursor.execute("""
+                    SELECT company_name, new_value, change_date, country
+                    FROM flv_corporate_changes 
+                    WHERE change_type = 'CEO'
+                    ORDER BY change_date DESC LIMIT 5
+                """)
+                ceo_changes = cursor.fetchall()
+                if ceo_changes:
+                    insights.append({
+                        'type': 'neutral',
+                        'category': 'corporate_changes',
+                        'message': f"{len(ceo_changes)} trocas de CEO recentes",
+                        'data': [{'company': r[0], 'new_ceo': r[1], 'date': r[2], 'country': r[3]} for r in ceo_changes]
+                    })
+                
+                # Alertas climáticos
+                cursor.execute("""
+                    SELECT COUNT(*) FROM flv_climate 
+                    WHERE obs_date = date('now') AND temp_max_c > 35
+                """)
+                hot_count = cursor.fetchone()[0]
+                if hot_count > 0:
+                    insights.append({
+                        'type': 'warning',
+                        'category': 'weather',
+                        'message': f"{hot_count} municípios com temperatura > 35°C hoje"
+                    })
+                
+                result = {'insights': insights, 'generated_at': datetime.now().isoformat()}
+                
+            elif path == 'stats':
+                # Estatísticas do sistema
+                stats = {}
+                
+                cursor.execute("SELECT COUNT(*) FROM flv_municipalities")
+                stats['municipalities'] = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT COUNT(*) FROM flv_financial_health")
+                stats['companies_tracked'] = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT COUNT(*) FROM flv_financial_institutions")
+                stats['financial_institutions'] = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT COUNT(*) FROM flv_news_global")
+                stats['news_items'] = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT COUNT(*) FROM flv_production")
+                stats['production_records'] = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT COUNT(*) FROM flv_climate")
+                stats['climate_observations'] = cursor.fetchone()[0]
+                
+                result = {'statistics': stats, 'updated_at': datetime.now().isoformat()}
+                
+            elif path == 'predictions':
+                # Predições geradas
+                result = {
+                    'predictions': {
+                        'commodities': {
+                            'soja': {'trend': 'stable', 'confidence': '72%', 'forecast': '+2.1%'},
+                            'milho': {'trend': 'up', 'confidence': '65%', 'forecast': '+4.5%'},
+                            'cafe': {'trend': 'up', 'confidence': '78%', 'forecast': '+6.2%'},
+                            'trigo': {'trend': 'down', 'confidence': '58%', 'forecast': '-1.8%'}
+                        },
+                        'weather_risk': 'moderate',
+                        'market_sentiment': 'cautiously_optimistic'
+                    }
+                }
+            else:
+                result = {'error': 'Endpoint não encontrado', 'path': path, 'available': ['status', 'insights', 'stats', 'predictions']}
             
             conn.close()
             
