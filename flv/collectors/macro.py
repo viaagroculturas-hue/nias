@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import time
 import urllib.request
+import urllib.parse
 from datetime import datetime, timedelta
 
 
@@ -55,6 +56,40 @@ def _safe_float(x):
         return None
 
 
+def _stooq_latest_close(symbol: str) -> tuple[str | None, float | None]:
+    """
+    Best-effort: consulta Stooq CSV e retorna (YYYY-MM-DD, close).
+    Ex.: brent = 'brn.f', wti = 'cl.f'
+    """
+    try:
+        q = urllib.parse.urlencode({"s": symbol, "f": "sd2t2ohlcv", "h": "1", "e": "csv"})
+        url = f"https://stooq.com/q/l/?{q}"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            raw = resp.read().decode("utf-8", errors="ignore").strip()
+        lines = [l.strip() for l in raw.splitlines() if l.strip()]
+        if len(lines) < 2:
+            return None, None
+        # header: Symbol,Date,Time,Open,High,Low,Close,Volume
+        cols = [c.strip() for c in lines[1].split(",")]
+        if len(cols) < 8:
+            return None, None
+        date = cols[1]
+        close = float(cols[6])
+        return date, close
+    except Exception:
+        return None, None
+
+
+def _pct_change(curr: float | None, prev: float | None) -> float | None:
+    try:
+        if curr is None or prev is None or prev == 0:
+            return None
+        return float((curr - prev) / prev * 100.0)
+    except Exception:
+        return None
+
+
 def coletar_indicadores_macro():
     """
     Coleta indicadores macro e grava em `flv_macro_indicators`.
@@ -62,7 +97,7 @@ def coletar_indicadores_macro():
     Observação: diesel (ANP) nem sempre tem endpoint estável; se indisponível, gravamos nulo,
     mas ainda assim USD/SELIC/IPCA entram como regressors.
     """
-    from flv.db import init_db, upsert_macro_indicators
+    from flv.db import init_db, upsert_macro_indicators, query
 
     # garante schema
     try:
@@ -86,6 +121,21 @@ def coletar_indicadores_macro():
     diesel_brl_l = None
     diesel_change_pct = None
 
+    # Petróleo (energia/frete) — Brent/WTI (best-effort via Stooq)
+    brent_date, brent_usd = _stooq_latest_close("brn.f")
+    wti_date, wti_usd = _stooq_latest_close("cl.f")
+
+    # Change % diário (vs último ponto gravado)
+    last = None
+    try:
+        rows = query("SELECT brent_usd, wti_usd FROM flv_macro_indicators ORDER BY obs_date DESC LIMIT 1")
+        last = rows[0] if rows else None
+    except Exception:
+        last = None
+
+    brent_change_pct = _pct_change(brent_usd, (last or {}).get("brent_usd"))
+    wti_change_pct = _pct_change(wti_usd, (last or {}).get("wti_usd"))
+
     # IPCA YoY: não é trivial via SGS sem outra série; como fallback, gravamos o último MoM
     ipca_yoy_pct = ipca_mom
 
@@ -93,14 +143,19 @@ def coletar_indicadores_macro():
         obs_date=obs_date,
         diesel_brl_l=_safe_float(diesel_brl_l),
         diesel_change_pct=_safe_float(diesel_change_pct),
+        brent_usd=_safe_float(brent_usd),
+        brent_change_pct=_safe_float(brent_change_pct),
+        wti_usd=_safe_float(wti_usd),
+        wti_change_pct=_safe_float(wti_change_pct),
         usd_brl=_safe_float(usd),
         selic_pct=_safe_float(selic),
         ipca_yoy_pct=_safe_float(ipca_yoy_pct),
-        source="BCB/ANP(best-effort)",
+        source="BCB/ANP/Stooq(best-effort)",
     )
 
     print(
-        f"[FLV-Macro] {obs_date} salvo: USD={usd} SELIC={selic} IPCA(proxy)={ipca_yoy_pct} Diesel={diesel_brl_l}"
+        f"[FLV-Macro] {obs_date} salvo: USD={usd} SELIC={selic} IPCA(proxy)={ipca_yoy_pct} "
+        f"Brent={brent_usd} WTI={wti_usd} Diesel={diesel_brl_l}"
     )
     return {
         "obs_date": obs_date,
@@ -109,5 +164,9 @@ def coletar_indicadores_macro():
         "ipca_yoy_pct": ipca_yoy_pct,
         "diesel_brl_l": diesel_brl_l,
         "diesel_change_pct": diesel_change_pct,
+        "brent_usd": brent_usd,
+        "brent_change_pct": brent_change_pct,
+        "wti_usd": wti_usd,
+        "wti_change_pct": wti_change_pct,
     }
 

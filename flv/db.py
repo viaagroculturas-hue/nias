@@ -120,6 +120,10 @@ def upsert_macro_indicators(
     obs_date,
     diesel_brl_l=None,
     diesel_change_pct=None,
+    brent_usd=None,
+    brent_change_pct=None,
+    wti_usd=None,
+    wti_change_pct=None,
     usd_brl=None,
     selic_pct=None,
     ipca_yoy_pct=None,
@@ -127,9 +131,23 @@ def upsert_macro_indicators(
 ):
     conn = get_conn()
     conn.execute(
-        "INSERT OR REPLACE INTO flv_macro_indicators (obs_date,diesel_brl_l,diesel_change_pct,usd_brl,selic_pct,ipca_yoy_pct,source) "
-        "VALUES (?,?,?,?,?,?,?)",
-        (obs_date, diesel_brl_l, diesel_change_pct, usd_brl, selic_pct, ipca_yoy_pct, source)
+        "INSERT OR REPLACE INTO flv_macro_indicators ("
+        "obs_date,diesel_brl_l,diesel_change_pct,brent_usd,brent_change_pct,wti_usd,wti_change_pct,"
+        "usd_brl,selic_pct,ipca_yoy_pct,source"
+        ") VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        (
+            obs_date,
+            diesel_brl_l,
+            diesel_change_pct,
+            brent_usd,
+            brent_change_pct,
+            wti_usd,
+            wti_change_pct,
+            usd_brl,
+            selic_pct,
+            ipca_yoy_pct,
+            source,
+        )
     )
     conn.commit()
 

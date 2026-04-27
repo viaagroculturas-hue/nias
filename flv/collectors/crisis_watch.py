@@ -7,6 +7,7 @@ NIA$ Soberano Digital v5.0
 import json
 import sqlite3
 import os
+import sys
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import urllib.request
@@ -14,7 +15,15 @@ import urllib.parse
 import re
 from dataclasses import dataclass
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nia_flv.db')
+# Garante que o banco seja encontrado independente de onde o script é executado
+if getattr(sys, 'frozen', False):
+    # Executando como executável
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    # Executando como script
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+DB_PATH = os.path.join(BASE_DIR, 'nia_flv.db')
 
 @dataclass
 class JudicialProcess:

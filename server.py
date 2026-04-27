@@ -224,6 +224,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self._serve_produtores_rj()
             return
         # NIA$ Soberano Digital v5.0 - Novos Endpoints
+        if self.path.startswith('/api/warroom/'):
+            self._serve_warroom_api()
+            return
         if self.path.startswith('/api/crisis/'):
             self._serve_crisis_api()
             return
@@ -829,6 +832,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             elif path == 'generate':
                 # Gatilho para geração de relatório (placeholder)
                 result = {'message': 'Geração de relatório iniciada', 'status': 'processing'}
+            elif path == 'cycle15':
+                # Ciclo completo (D-8 + D+7) — quantitativo
+                result = self._build_cycle15_report(params)
             else:
                 result = {'error': 'Endpoint não encontrado', 'path': path}
             
@@ -840,6 +846,193 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
             
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+    def _build_cycle15_report(self, params):
+        """
+        Retorna:
+        - Diagnóstico D-8: causa/efeito quantitativo (8 dias)
+        - Sugestão D+7: projeção baseada em clima + volatilidade de preços (7 dias)
+        """
+        import sqlite3
+        from datetime import datetime, timedelta
+        db_path = os.path.join(DIR, 'nia_flv.db')
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        now = datetime.now()
+        d8 = (now - timedelta(days=8)).strftime('%Y-%m-%d')
+        d7 = (now - timedelta(days=7)).strftime('%Y-%m-%d')
+
+        # 1) Stress: alertas por severidade nos últimos 8 dias
+        cur.execute("""
+            SELECT severity, COUNT(*) as count
+            FROM flv_alerts
+            WHERE created_at >= ?
+            GROUP BY severity
+        """, (d8,))
+        alerts_by_sev = {r['severity']: r['count'] for r in cur.fetchall()}
+        total_alerts_8d = sum(alerts_by_sev.values()) if alerts_by_sev else 0
+
+        # 2) RJ/Falências: entradas recentes
+        cur.execute("""
+            SELECT
+              SUM(CASE WHEN judicial_status='em_recuperacao' AND entry_date >= ? THEN 1 ELSE 0 END) as rj_entered,
+              SUM(CASE WHEN judicial_status='falencia' AND entry_date >= ? THEN 1 ELSE 0 END) as bankrupt_entered
+            FROM flv_producers_rj
+        """, (d8, d8))
+        rj_row = cur.fetchone() or {}
+
+        # 3) Volatilidade de preços (7 dias): proxy por culturas principais
+        cultures = ['tomate', 'cebola', 'soja', 'milho', 'trigo']
+        vol = {}
+        for slug in cultures:
+            cur.execute("""
+                SELECT p.price_avg
+                FROM flv_ceasa_prices p
+                JOIN flv_cultures c ON c.id=p.culture_id
+                WHERE c.slug=? AND p.price_date >= ?
+                ORDER BY p.price_date
+            """, (slug, d7))
+            series = [float(r[0]) for r in cur.fetchall() if r[0] is not None]
+            if len(series) >= 3:
+                mean = sum(series) / len(series)
+                var = sum((x - mean) ** 2 for x in series) / (len(series) - 1)
+                std = var ** 0.5
+                cv = (std / mean * 100.0) if mean > 0 else 0.0
+            else:
+                cv = None
+            vol[slug] = None if cv is None else round(cv, 2)
+
+        # 4) Clima: precipitação 7d média (proxy)
+        cur.execute("""
+            SELECT AVG(precip_mm) as avg_precip, AVG(temp_max_c) as avg_tmax
+            FROM flv_climate
+            WHERE obs_date >= ?
+        """, (d7,))
+        clim = dict(cur.fetchone() or {})
+
+        # 5) Energia/frete: brent/wti change %
+        cur.execute("SELECT obs_date, brent_usd, brent_change_pct, wti_usd, wti_change_pct FROM flv_macro_indicators ORDER BY obs_date DESC LIMIT 1")
+        macro = dict(cur.fetchone() or {})
+
+        conn.close()
+
+        stress_market_score = min(100.0, total_alerts_8d * 6.0 + (alerts_by_sev.get('vermelho', 0) or 0) * 12.0)
+
+        diagnostico_d8 = {
+            "period_start": d8,
+            "period_end": now.strftime('%Y-%m-%d'),
+            "alerts_total": total_alerts_8d,
+            "alerts_by_severity": alerts_by_sev,
+            "companies_rj_entered": int(rj_row.get('rj_entered') or 0),
+            "companies_bankrupt_entered": int(rj_row.get('bankrupt_entered') or 0),
+            "stress_market_score_0_100": round(stress_market_score, 1),
+            "price_volatility_cv_pct_7d": vol,
+            "climate_avg_7d": {
+                "avg_precip_mm": None if clim.get('avg_precip') is None else round(float(clim['avg_precip']), 2),
+                "avg_temp_max_c": None if clim.get('avg_tmax') is None else round(float(clim['avg_tmax']), 2),
+            },
+            "energy_latest": {
+                "brent_usd": macro.get("brent_usd"),
+                "brent_change_pct": macro.get("brent_change_pct"),
+                "wti_usd": macro.get("wti_usd"),
+                "wti_change_pct": macro.get("wti_change_pct"),
+                "obs_date": macro.get("obs_date"),
+            },
+        }
+
+        # Sugestões D+7: regras quantitativas (sem adjetivos)
+        suggestions = []
+        brent_chg = float(macro.get("brent_change_pct") or 0.0)
+        avg_precip = float(clim.get("avg_precip") or 0.0)
+        tmax = float(clim.get("avg_tmax") or 0.0)
+
+        if brent_chg >= 2.0:
+            suggestions.append({
+                "signal": "energia_frete_alta",
+                "threshold": "brent_change_pct>=2.0",
+                "value": round(brent_chg, 2),
+                "action": "Reprecificar frete (7 dias) e reduzir rotas longas com risco rodoviário alto",
+                "confidence_pct": 70,
+            })
+        if tmax >= 34.0:
+            suggestions.append({
+                "signal": "stress_termico",
+                "threshold": "avg_temp_max_c>=34.0",
+                "value": round(tmax, 2),
+                "action": "Aumentar buffer de hortifruti perecível (7 dias) e priorizar corredores curtos",
+                "confidence_pct": 65,
+            })
+        if avg_precip >= 15.0:
+            suggestions.append({
+                "signal": "chuva_acima_media",
+                "threshold": "avg_precip_mm>=15.0",
+                "value": round(avg_precip, 2),
+                "action": "Elevar inspeção de qualidade e ajustar lead-time de coleta (7 dias)",
+                "confidence_pct": 60,
+            })
+
+        # fallback mínimo
+        if not suggestions:
+            suggestions.append({
+                "signal": "baseline",
+                "threshold": "sem gatilhos quantitativos acima",
+                "value": 0,
+                "action": "Manter monitoramento por delta e recalibrar preços diários por CV% (7 dias)",
+                "confidence_pct": 55,
+            })
+
+        return {
+            "generated_at": datetime.now().isoformat(),
+            "diagnostico_d_8": diagnostico_d8,
+            "sugestao_d_plus_7": {
+                "horizon_days": 7,
+                "drivers": ["climate_avg_7d", "price_volatility_cv_pct_7d", "energy_latest"],
+                "suggestions": suggestions[:3],
+            },
+        }
+
+    def _serve_warroom_api(self):
+        """API do War Room (snapshot + deltas)"""
+        import json
+        from urllib.parse import urlparse, parse_qs
+        try:
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/warroom/', '').lstrip('/')
+            params = parse_qs(parsed.query)
+
+            from flv.warroom.engine import WarRoomEngine, run_cycle
+            eng = WarRoomEngine()
+
+            if path == '' or path == 'snapshot':
+                # garante um ciclo antes do snapshot
+                try:
+                    run_cycle(delta_threshold=0.15)
+                except Exception:
+                    pass
+                result = eng.snapshot()
+            elif path == 'deltas':
+                since = params.get('since', ['1970-01-01T00:00:00Z'])[0]
+                limit = int(params.get('limit', [250])[0])
+                result = eng.deltas_since(since, limit=limit)
+            elif path == 'cycle':
+                thr = float(params.get('thr', [0.15])[0])
+                result = run_cycle(delta_threshold=thr)
+            else:
+                result = {'error': 'Endpoint não encontrado', 'path': path}
+
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
         except Exception as e:
             self.send_response(500)
             self._cors()

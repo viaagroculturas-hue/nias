@@ -61,7 +61,9 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
 
     # Get macro indicators (economia/energia) — JOIN por ds
     macro_sql = """
-        SELECT obs_date, diesel_brl_l, diesel_change_pct, usd_brl, selic_pct, ipca_yoy_pct
+        SELECT obs_date, diesel_brl_l, diesel_change_pct,
+               brent_usd, brent_change_pct, wti_usd, wti_change_pct,
+               usd_brl, selic_pct, ipca_yoy_pct
         FROM flv_macro_indicators
         WHERE obs_date >= ?
         ORDER BY obs_date
@@ -110,6 +112,10 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
     last_ipca = 4.0
     last_diesel = 6.0
     last_diesel_chg = 0.0
+    last_brent = 80.0
+    last_brent_chg = 0.0
+    last_wti = 75.0
+    last_wti_chg = 0.0
     last_news_risk = 0.0
     last_oni = 0.0
     last_atl = 0.0
@@ -143,6 +149,10 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
         ipca_yoy_pct = macro.get('ipca_yoy_pct')
         diesel_brl_l = macro.get('diesel_brl_l')
         diesel_change_pct = macro.get('diesel_change_pct')
+        brent_usd = macro.get('brent_usd')
+        brent_change_pct = macro.get('brent_change_pct')
+        wti_usd = macro.get('wti_usd')
+        wti_change_pct = macro.get('wti_change_pct')
 
         if usd_brl is not None:
             last_usd = usd_brl
@@ -154,6 +164,14 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
             last_diesel = diesel_brl_l
         if diesel_change_pct is not None:
             last_diesel_chg = diesel_change_pct
+        if brent_usd is not None:
+            last_brent = brent_usd
+        if brent_change_pct is not None:
+            last_brent_chg = brent_change_pct
+        if wti_usd is not None:
+            last_wti = wti_usd
+        if wti_change_pct is not None:
+            last_wti_chg = wti_change_pct
 
         news_risk = news_map.get(ds)
         if news_risk is not None:
@@ -181,6 +199,10 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
             'ipca_yoy_pct': ipca_yoy_pct if ipca_yoy_pct is not None else last_ipca,
             'diesel_brl_l': diesel_brl_l if diesel_brl_l is not None else last_diesel,
             'diesel_change_pct': diesel_change_pct if diesel_change_pct is not None else last_diesel_chg,
+            'brent_usd': brent_usd if brent_usd is not None else last_brent,
+            'brent_change_pct': brent_change_pct if brent_change_pct is not None else last_brent_chg,
+            'wti_usd': wti_usd if wti_usd is not None else last_wti,
+            'wti_change_pct': wti_change_pct if wti_change_pct is not None else last_wti_chg,
             'news_risk_index': news_risk if news_risk is not None else last_news_risk,
             'oni': oni if oni is not None else last_oni,
             'atl_north_warm_idx': atl if atl is not None else last_atl,
@@ -213,6 +235,10 @@ def build_future_regressors(last_features, horizon=15):
             'ipca_yoy_pct': last.get('ipca_yoy_pct', 4.0),
             'diesel_brl_l': last.get('diesel_brl_l', 6.0),
             'diesel_change_pct': last.get('diesel_change_pct', 0.0),
+            'brent_usd': last.get('brent_usd', 80.0),
+            'brent_change_pct': last.get('brent_change_pct', 0.0),
+            'wti_usd': last.get('wti_usd', 75.0),
+            'wti_change_pct': last.get('wti_change_pct', 0.0),
             'news_risk_index': last.get('news_risk_index', 0.0),
             'oni': last.get('oni', 0.0),
             'atl_north_warm_idx': last.get('atl_north_warm_idx', 0.0),

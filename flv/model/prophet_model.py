@@ -81,6 +81,11 @@ def _run_prophet(features, horizon, culture_slug):
     m.add_regressor('ipca_yoy_pct')
     m.add_regressor('diesel_brl_l')
     m.add_regressor('diesel_change_pct')
+    # Energia global (petróleo) — proxy para frete/choques (Oriente Médio)
+    m.add_regressor('brent_usd')
+    m.add_regressor('brent_change_pct')
+    m.add_regressor('wti_usd')
+    m.add_regressor('wti_change_pct')
     # Notícias + teleconexões (clima global)
     m.add_regressor('news_risk_index')
     m.add_regressor('oni')
@@ -88,6 +93,7 @@ def _run_prophet(features, horizon, culture_slug):
 
     m.fit(df[['ds', 'y', 'precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday',
               'usd_brl', 'selic_pct', 'ipca_yoy_pct', 'diesel_brl_l', 'diesel_change_pct',
+              'brent_usd', 'brent_change_pct', 'wti_usd', 'wti_change_pct',
               'news_risk_index', 'oni', 'atl_north_warm_idx']])
 
     future = m.make_future_dataframe(periods=horizon)
@@ -99,6 +105,7 @@ def _run_prophet(features, horizon, culture_slug):
 
     for col in ['precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday',
                 'usd_brl', 'selic_pct', 'ipca_yoy_pct', 'diesel_brl_l', 'diesel_change_pct',
+                'brent_usd', 'brent_change_pct', 'wti_usd', 'wti_change_pct',
                 'news_risk_index', 'oni', 'atl_north_warm_idx']:
         last_val = df[col].iloc[-1]
         future[col] = future['ds'].apply(

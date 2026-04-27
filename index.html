@@ -2207,6 +2207,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <div style="display:flex;gap:8px;margin-bottom:10px;border-bottom:1px solid #1a1a1a;padding-bottom:8px;">
               <button onclick="SituationRoom.showProductTab('graos')" id="sit-tab-graos" style="background:#ff6b35;border:none;color:#000;font-size:10px;padding:4px 12px;border-radius:3px;cursor:pointer;font-weight:bold;">GRAOS</button>
               <button onclick="SituationRoom.showProductTab('hortifruti')" id="sit-tab-hortifruti" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:10px;padding:4px 12px;border-radius:3px;cursor:pointer;">HORTIFRUTI</button>
+              <button onclick="SituationRoom.showProductTab('financeiro')" id="sit-tab-financeiro" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:10px;padding:4px 12px;border-radius:3px;cursor:pointer;">FINANCEIRO</button>
             </div>
             
             <!-- Graos Content -->
@@ -2271,6 +2272,117 @@ tr:hover td{background:rgba(0,212,255,.04);}
                   <div style="font-size:8px;color:#666;">Pico: Nov-Dez-Jan | Baixa: Mai-Jun</div>
                   <div id="sit-manga-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 68,00/cx</div>
                   <div id="sit-manga-trend" style="font-size:8px;color:#50C878;">▲ +4.5%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Financeiro Content (hidden by default) -->
+          <div id="sit-financeiro-content" style="display:none;height:100%;overflow-y:auto;">
+            <div style="font-size:9px;color:#ff6b35;letter-spacing:2px;margin-bottom:10px;">💹 SAÚDE FINANCEIRA — EMPRESAS</div>
+            
+            <!-- Top Ganhadoras -->
+            <div style="margin-bottom:12px;">
+              <div style="font-size:8px;color:#50C878;margin-bottom:4px;">📈 MAIORES ALTAS (YTD)</div>
+              <div id="sit-top-ganhadoras" style="display:flex;flex-direction:column;gap:4px;">
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:9px;color:#fff;font-weight:bold;">3tentos (TTEN3)</span>
+                    <span style="font-size:9px;color:#50C878;">+42.8%</span>
+                  </div>
+                  <div style="font-size:7px;color:#666;">Brasil • Varejo Insumos</div>
+                </div>
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:9px;color:#fff;font-weight:bold;">SLC Agrícola</span>
+                    <span style="font-size:9px;color:#50C878;">+35.6%</span>
+                  </div>
+                  <div style="font-size:7px;color:#666;">Brasil • Produção</div>
+                </div>
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:9px;color:#fff;font-weight:bold;">Bioceres (BIOX)</span>
+                    <span style="font-size:9px;color:#50C878;">+28.5%</span>
+                  </div>
+                  <div style="font-size:7px;color:#666;">Argentina • Biotecnologia</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Top Perdedoras -->
+            <div style="margin-bottom:12px;">
+              <div style="font-size:8px;color:#ff3d3d;margin-bottom:4px;">📉 MAIORES BAIXAS (YTD)</div>
+              <div id="sit-top-perdedoras" style="display:flex;flex-direction:column;gap:4px;">
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:9px;color:#fff;font-weight:bold;">Agrogalaxy (AGXY3)</span>
+                    <span style="font-size:9px;color:#ff3d3d;">-48.2%</span>
+                  </div>
+                  <div style="font-size:7px;color:#666;">Brasil • Varejo Insumos</div>
+                </div>
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:9px;color:#fff;font-weight:bold;">Lavoro (LVRO)</span>
+                    <span style="font-size:9px;color:#ff3d3d;">-35.2%</span>
+                  </div>
+                  <div style="font-size:7px;color:#666;">Brasil • Distribuição</div>
+                </div>
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:9px;color:#fff;font-weight:bold;">Los Grobo</span>
+                    <span style="font-size:9px;color:#ff3d3d;">-22.4%</span>
+                  </div>
+                  <div style="font-size:7px;color:#666;">Argentina • Trading</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Trocas de CEO -->
+            <div style="margin-bottom:12px;">
+              <div style="font-size:8px;color:#FFD700;margin-bottom:4px;">👔 TROCAS DE CEO RECENTES</div>
+              <div id="sit-trocas-ceo" style="display:flex;flex-direction:column;gap:4px;">
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="font-size:9px;color:#fff;font-weight:bold;">3tentos Agroindustrial</div>
+                  <div style="font-size:8px;color:#888;">Ricardo de Abreu → CEO</div>
+                  <div style="font-size:7px;color:#666;">Jan/2024 • Expansão Nacional</div>
+                </div>
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="font-size:9px;color:#fff;font-weight:bold;">Agrogalaxy</div>
+                  <div style="font-size:8px;color:#888;">Fábio Pires → CEO</div>
+                  <div style="font-size:7px;color:#666;">Nov/2023 • Reestruturação</div>
+                </div>
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="font-size:9px;color:#fff;font-weight:bold;">Bioceres (ARG)</div>
+                  <div style="font-size:8px;color:#888;">Federico Trucco → CEO</div>
+                  <div style="font-size:7px;color:#666;">Jan/2023 • Foco Biotech</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Instituições Financeiras -->
+            <div>
+              <div style="font-size:8px;color:#00d4ff;margin-bottom:4px;">🏦 EXPOSIÇÃO AO AGRONEGÓCIO</div>
+              <div id="sit-bancos-agro" style="display:flex;flex-direction:column;gap:4px;">
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:9px;color:#fff;font-weight:bold;">Banco do Brasil</span>
+                    <span style="font-size:8px;color:#50C878;">R$ 185 bi</span>
+                  </div>
+                  <div style="font-size:7px;color:#666;">Crescimento: +8.5% • Rating: BBB</div>
+                </div>
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:9px;color:#fff;font-weight:bold;">Itaú Unibanco</span>
+                    <span style="font-size:8px;color:#50C878;">R$ 85 bi</span>
+                  </div>
+                  <div style="font-size:7px;color:#666;">Crescimento: +12.5% • Rating: BBB+</div>
+                </div>
+                <div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:9px;color:#fff;font-weight:bold;">Rabobank Brasil</span>
+                    <span style="font-size:8px;color:#50C878;">R$ 25 bi</span>
+                  </div>
+                  <div style="font-size:7px;color:#666;">Crescimento: +18.5% • Rating: A-</div>
                 </div>
               </div>
             </div>
@@ -2374,7 +2486,7 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ═══════════════════════════════════════════════════════════════════
-// SITUATION ROOM MODULE - VERSAO INDEPENDENTE (DADOS EMBUTIDOS)
+// SITUATION ROOM MODULE - VERSAO COM DADOS REAIS (API)
 // ═══════════════════════════════════════════════════════════════════
 const SituationRoom = {
   data: {
@@ -2386,14 +2498,96 @@ const SituationRoom = {
       { company_name: 'Fertilizantes do Interior Ltda', cnpj: '23.456.789/0001-01', city: 'Campinas', state_uf: 'SP', segment: 'Distribuição de Insumos', judicial_status: 'falencia', debts_total: 45000000 }
     ]
   },
+  newsData: [],
+  refreshInterval: null,
   
   init() {
-    console.log('[SituationRoom] Inicializando versao independente...');
+    console.log('[SituationRoom] Inicializando versao com dados reais...');
     this.renderCompanies();
     this.renderAlertBadge();
     this.updateTime();
     this.renderNews();
+    
+    // Buscar dados reais das APIs
+    this.loadRealData();
+    
+    // Atualizar a cada 30 segundos
+    this.refreshInterval = setInterval(() => this.loadRealData(), 30000);
     setInterval(() => this.updateTime(), 60000);
+  },
+  
+  async loadRealData() {
+    try {
+      // Buscar dados de empresas em crise
+      const crisisResponse = await fetch('/api/crisis/summary');
+      if (crisisResponse.ok) {
+        const crisisData = await crisisResponse.json();
+        if (crisisData.recent_entries && crisisData.recent_entries.length > 0) {
+          this.data = crisisData;
+          this.renderCompanies();
+          this.renderAlertBadge();
+          console.log('[SituationRoom] Dados de empresas atualizados:', crisisData.recent_entries.length);
+        }
+      }
+    } catch (e) {
+      console.log('[SituationRoom] Usando dados embutidos (API indisponível)');
+    }
+    
+    // Buscar notícias reais
+    this.loadRealNews();
+  },
+  
+  async loadRealNews() {
+    try {
+      const newsResponse = await fetch('/api/news/feeds?limit=10');
+      if (newsResponse.ok) {
+        const newsData = await newsResponse.json();
+        if (newsData.news && newsData.news.length > 0) {
+          this.newsData = newsData.news;
+          this.renderRealNews();
+          console.log('[SituationRoom] Notícias atualizadas:', newsData.news.length);
+        }
+      }
+    } catch (e) {
+      console.log('[SituationRoom] Usando notícias estáticas (API indisponível)');
+      this.renderNews();
+    }
+  },
+  
+  renderRealNews() {
+    const feedEl = document.getElementById('sit-news-feed');
+    if (!feedEl || this.newsData.length === 0) return;
+    
+    const sourceColors = {
+      'Reuters': '#ff6b35',
+      'Bloomberg': '#50C878',
+      'BBC': '#FFD700',
+      'default': '#ff6b35'
+    };
+    
+    feedEl.innerHTML = this.newsData.slice(0, 5).map(item => {
+      const source = item.source || 'NEWS';
+      const color = sourceColors[source] || sourceColors.default;
+      const timeAgo = this.getTimeAgo(item.published_at);
+      
+      return `<div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;margin-bottom:6px;cursor:pointer;" onclick="window.open('${item.url || '#'}', '_blank')">` +
+        `<div style="font-size:9px;color:${color};font-weight:bold;">${source.toUpperCase()}</div>` +
+        `<div style="font-size:10px;color:#fff;margin-top:2px;line-height:1.3;">${item.title || 'Sem título'}</div>` +
+        `<div style="font-size:8px;color:#666;margin-top:2px;">${timeAgo}</div>` +
+      `</div>`;
+    }).join('');
+  },
+  
+  getTimeAgo(dateStr) {
+    if (!dateStr) return 'Agora';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000 / 60); // minutos
+    
+    if (diff < 1) return 'Agora';
+    if (diff < 60) return `${diff}min atrás`;
+    if (diff < 1440) return `${Math.floor(diff/60)}h atrás`;
+    return `${Math.floor(diff/1440)}d atrás`;
   },
   
   updateTime() {
@@ -2408,6 +2602,7 @@ const SituationRoom = {
     if (badge && this.data.totals) {
       const alerts = (this.data.totals.in_rj || 0) + (this.data.totals.bankrupt || 0);
       badge.textContent = `● ALERTAS: ${alerts}`;
+      badge.style.animation = 'pulse 2s infinite';
     }
   },
   
@@ -2421,7 +2616,7 @@ const SituationRoom = {
     if (this.data.recent_entries && this.data.recent_entries.length > 0) {
       listEl.innerHTML = this.data.recent_entries.map(company => {
         const isFalencia = company.judicial_status === 'falencia';
-        return `<div class="sit-company-item" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;margin-bottom:4px;" onclick="SituationRoom.selectCompany('${company.cnpj}')">` +
+        return `<div class="sit-company-item" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;margin-bottom:4px;transition:all 0.2s;" onmouseover="this.style.borderColor='#ff6b35'" onmouseout="this.style.borderColor='#2a2a2a'" onclick="SituationRoom.selectCompany('${company.cnpj}')">` +
           `<div style="font-size:10px;color:#fff;font-weight:bold;">${company.company_name}</div>` +
           `<div style="font-size:8px;color:#888;">${company.city}/${company.state_uf} • ${company.segment}</div>` +
           `<div style="font-size:8px;color:${isFalencia ? '#ff3d3d' : '#ff6b35'};margin-top:2px;">` +
@@ -2526,19 +2721,29 @@ const SituationRoom = {
   showProductTab(tab) {
     const graos = document.getElementById('sit-graos-content');
     const horti = document.getElementById('sit-hortifruti-content');
+    const financeiro = document.getElementById('sit-financeiro-content');
     const tabGraos = document.getElementById('sit-tab-graos');
     const tabHorti = document.getElementById('sit-tab-hortifruti');
+    const tabFinanceiro = document.getElementById('sit-tab-financeiro');
     
+    // Reset all tabs
+    if (graos) graos.style.display = 'none';
+    if (horti) horti.style.display = 'none';
+    if (financeiro) financeiro.style.display = 'none';
+    if (tabGraos) { tabGraos.style.background = '#1a1a1a'; tabGraos.style.color = '#888'; }
+    if (tabHorti) { tabHorti.style.background = '#1a1a1a'; tabHorti.style.color = '#888'; }
+    if (tabFinanceiro) { tabFinanceiro.style.background = '#1a1a1a'; tabFinanceiro.style.color = '#888'; }
+    
+    // Activate selected tab
     if (tab === 'graos') {
       if (graos) graos.style.display = 'block';
-      if (horti) horti.style.display = 'none';
       if (tabGraos) { tabGraos.style.background = '#ff6b35'; tabGraos.style.color = '#000'; }
-      if (tabHorti) { tabHorti.style.background = '#1a1a1a'; tabHorti.style.color = '#888'; }
-    } else {
-      if (graos) graos.style.display = 'none';
+    } else if (tab === 'hortifruti') {
       if (horti) horti.style.display = 'block';
-      if (tabGraos) { tabGraos.style.background = '#1a1a1a'; tabGraos.style.color = '#888'; }
       if (tabHorti) { tabHorti.style.background = '#ff6b35'; tabHorti.style.color = '#000'; }
+    } else if (tab === 'financeiro') {
+      if (financeiro) financeiro.style.display = 'block';
+      if (tabFinanceiro) { tabFinanceiro.style.background = '#ff6b35'; tabFinanceiro.style.color = '#000'; }
     }
   },
   
@@ -2562,32 +2767,7 @@ const SituationRoom = {
 // ═══════════════════════════════════════════════════════════════════
 // CHAT IA MODULE
 // ═══════════════════════════════════════════════════════════════════
-?days=30`);
-      const data = await response.json();
-      
-      const timelineEl = document.getElementById('sit-admin-timeline');
-      if (!timelineEl) return;
-      
-      const changes = data.changes || [];
-      if (changes.length === 0) {
-        timelineEl.innerHTML = '<div style="font-size:9px;color:#666;">Sem alterações recentes</div>';
-        return;
-      }
-      
-      timelineEl.innerHTML = changes.slice(0, 5).map(change => `
-        <div class="sit-timeline-item" style="display:flex;gap:8px;align-items:flex-start;">
-          <div style="width:8px;height:8px;background:#ff6b35;border-radius:50%;margin-top:3px;flex-shrink:0;"></div>
-          <div>
-            <div style="font-size:9px;color:#fff;">${change.change_type?.toUpperCase() || 'ALTERAÇÃO'}</div>
-            <div style="font-size:8px;color:#666;">${change.change_date || 'N/A'}</div>
-          </div>
-        </div>
-      `).join('');
-    } catch (e) {
-      console.error('[SituationRoom] Erro ao carregar alterações:', e);
-    }
-  },
-  
+
 // ═══════════════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════════════
@@ -2619,7 +2799,19 @@ function showPanel(id) {
     if (id === 'warroom' && !window._warInit) { try { initWarRoom(); } catch(e) { console.error('warroom init error:', e); } }
     if (id === 'warroom') setTimeout(() => { try { WarRoomProtocol.refresh(); } catch(e) { console.error('warroom refresh error:', e); } }, 200);
     if (id === 'chat' && !window._chatInit) { try { initChatIA(); } catch(e) { console.error('chat init error:', e); } }
-    if (id === 'situation') setTimeout(() => { try { SituationRoom.init(); } catch(e) { console.error('SituationRoom init error:', e); } }, 100);
+    if (id === 'situation') {
+      setTimeout(() => {
+        try {
+          const sitPanel = document.getElementById('panel-situation');
+          if (sitPanel) {
+            sitPanel.style.display = 'flex';
+            sitPanel.style.visibility = 'visible';
+            sitPanel.style.opacity = '1';
+          }
+          SituationRoom.init();
+        } catch(e) { console.error('SituationRoom init error:', e); }
+      }, 100);
+    }
   } catch(e) {
     console.error('showPanel error:', e);
   }
@@ -10104,6 +10296,19 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
 // Auto-start API loading after login
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(niasLoadRealData, 2000);
+  
+  // FIX: Move panels inside #main if they're outside
+  const situationPanel = document.getElementById('panel-situation');
+  const chatPanel = document.getElementById('panel-chat');
+  const main = document.getElementById('main');
+  if (situationPanel && main && situationPanel.parentElement !== main) {
+    main.appendChild(situationPanel);
+    console.log('[FIX] panel-situation moved inside #main');
+  }
+  if (chatPanel && main && chatPanel.parentElement !== main) {
+    main.appendChild(chatPanel);
+    console.log('[FIX] panel-chat moved inside #main');
+  }
 });
 </script>
 </body>
