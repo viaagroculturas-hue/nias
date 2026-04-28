@@ -9,7 +9,7 @@ when a production pole falls 15% below its NDVI mean.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 import math
 from statistics import mean, pstdev
@@ -45,7 +45,7 @@ class NDVIComparison:
     def risk_triggered(self) -> bool:
         """Whether current NDVI is at least 15% below the historical mean."""
 
-        return self.delta_pct <= -SUPPLY_RISK_DROP_PCT
+        return self.delta_pct <= -(SUPPLY_RISK_DROP_PCT - 1e-9)
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -170,7 +170,7 @@ def generate_supply_risk_alert(
 
     location = municipality or comparison.pole_id
     product = culture_slug or "hortifruti"
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     return {
         "type": "Risco de Oferta",
         "alert_type": "risco_oferta",
@@ -418,7 +418,7 @@ def _score_component(
 
     vigor_score = _clamp((ndvi_mean - 0.42) / 0.35)
     uniformity_score = _clamp(1.0 - ndvi_std / 0.18)
-    texture_score = _clamp(texture / 0.08)
+    texture_score = _clamp(1.0 - texture / 0.12)
     moisture_score = 0.7
     if swir_values:
         ndmi_values = [(n - s) / max(n + s, NDVI_EPSILON) for n, s in zip(nir_values, swir_values)]
