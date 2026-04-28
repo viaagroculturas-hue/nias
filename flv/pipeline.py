@@ -24,6 +24,8 @@ def run_pipeline():
     try:
         from flv.collectors.satveg import fetch_all as ndvi_fetch
         ndvi_fetch()
+        from core.bio_intelligence import evaluate_db_supply_risk
+        evaluate_db_supply_risk()
     except Exception as e:
         print(f'[FLV-Pipeline] NDVI erro: {e}')
 
