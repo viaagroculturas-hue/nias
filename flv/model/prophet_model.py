@@ -48,7 +48,7 @@ def predict(culture_slug, terminal=None, mun_id=None, horizon=None):
     return result
 
 def _run_prophet(features, horizon, culture_slug):
-    """Run Prophet model with climate regressors."""
+    """Run Prophet model with climate, macro and geo-legal regressors."""
     try:
         from prophet import Prophet
         import numpy as np
@@ -74,6 +74,7 @@ def _run_prophet(features, horizon, culture_slug):
     m.add_regressor('precip_7d')
     m.add_regressor('temp_max_avg')
     m.add_regressor('ndvi')
+    m.add_regressor('ndvi_hydric_stress')
     m.add_regressor('is_holiday')
     # Macro (economia/energia): melhora sensibilidade a choques de custo/logística
     m.add_regressor('usd_brl')
@@ -90,11 +91,25 @@ def _run_prophet(features, horizon, culture_slug):
     m.add_regressor('news_risk_index')
     m.add_regressor('oni')
     m.add_regressor('atl_north_warm_idx')
+    # Geo-vulnerabilidade: NDVI/Open-Meteo cruzados com RJ + Provimento CNJ 216/2026.
+    m.add_regressor('rj_exposure_index')
+    m.add_regressor('cnj216_geo_legal_index')
+    m.add_regressor('ndvi_legal_stress')
+    m.add_regressor('open_meteo_legal_stress')
+    m.add_regressor('geo_vulnerability_index')
+    m.add_regressor('delta_judicial_pressure')
 
-    m.fit(df[['ds', 'y', 'precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday',
+    regressor_cols = ['precip_7d', 'temp_max_avg', 'ndvi', 'ndvi_hydric_stress', 'is_holiday',
               'usd_brl', 'selic_pct', 'ipca_yoy_pct', 'diesel_brl_l', 'diesel_change_pct',
               'brent_usd', 'brent_change_pct', 'wti_usd', 'wti_change_pct',
-              'news_risk_index', 'oni', 'atl_north_warm_idx']])
+              'news_risk_index', 'oni', 'atl_north_warm_idx',
+              'rj_exposure_index', 'cnj216_geo_legal_index', 'ndvi_legal_stress',
+              'open_meteo_legal_stress', 'geo_vulnerability_index', 'delta_judicial_pressure']
+    for col in regressor_cols:
+        if col not in df:
+            df[col] = 0.0
+
+    m.fit(df[['ds', 'y', *regressor_cols]])
 
     future = m.make_future_dataframe(periods=horizon)
 
@@ -103,10 +118,7 @@ def _run_prophet(features, horizon, culture_slug):
     future_regs = build_future_regressors(features, horizon)
     future_map = {r['ds']: r for r in future_regs}
 
-    for col in ['precip_7d', 'temp_max_avg', 'ndvi', 'is_holiday',
-                'usd_brl', 'selic_pct', 'ipca_yoy_pct', 'diesel_brl_l', 'diesel_change_pct',
-                'brent_usd', 'brent_change_pct', 'wti_usd', 'wti_change_pct',
-                'news_risk_index', 'oni', 'atl_north_warm_idx']:
+    for col in regressor_cols:
         last_val = df[col].iloc[-1]
         future[col] = future['ds'].apply(
             lambda d: future_map.get(d.strftime('%Y-%m-%d'), {}).get(col, last_val)
@@ -146,7 +158,7 @@ def _run_prophet(features, horizon, culture_slug):
 
     return {
         'culture': culture_slug,
-        'model': 'prophet-v1',
+        'model': 'prophet-v2-geo-legal',
         'degraded': False,
         'horizon_days': horizon,
         'trend': trend,

@@ -8,11 +8,183 @@ A classe principal GrowthScorer está implementada em growth_radar.py
 """
 
 import json
+import math
 import sqlite3
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from flv.db import DB_PATH
+
+
+def clamp(value: float, low: float = 0.0, high: float = 1.0) -> float:
+    return max(low, min(high, float(value)))
+
+
+def calculate_delta_judicial_weight(
+    ndvi_hydric_stress: float,
+    rj_exposure_index: float,
+    base_weight: float = 0.20,
+) -> Dict[str, float]:
+    """
+    Dynamic Delta Judicial weight for Score Soberano v2.0.
+
+    Severe hydric stress over a production/comarca cluster with high RJ density
+    should dominate the judicial delta instead of behaving like a linear factor.
+    """
+    ndvi_hydric_stress = clamp(ndvi_hydric_stress)
+    rj_exposure_index = clamp(rj_exposure_index)
+    combined_pressure = clamp(ndvi_hydric_stress * rj_exposure_index)
+
+    if ndvi_hydric_stress >= 0.70 and rj_exposure_index >= 0.60:
+        weight = min(0.55, max(base_weight * 2.75, 0.45))
+        trigger_level = 'disparo'
+    elif combined_pressure >= 0.35:
+        weight = min(0.40, base_weight * (1.0 + combined_pressure * 2.0))
+        trigger_level = 'elevado'
+    elif combined_pressure >= 0.15:
+        weight = min(0.30, base_weight * (1.0 + combined_pressure))
+        trigger_level = 'observacao'
+    else:
+        weight = base_weight
+        trigger_level = 'normal'
+
+    return {
+        'weight': round(weight, 4),
+        'pressure': round(combined_pressure, 4),
+        'trigger_level': trigger_level,
+        'ndvi_hydric_stress': round(ndvi_hydric_stress, 4),
+        'rj_exposure_index': round(rj_exposure_index, 4),
+    }
+
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    radius_km = 6371.0
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlambda / 2) ** 2
+    return 2 * radius_km * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _ndvi_stress(ndvi: float) -> float:
+    return clamp((0.45 - float(ndvi or 0.55)) / 0.20)
+
+
+@dataclass
+class DeltaJudicialPressure:
+    """Contexto de Delta Judicial usado pelo Score Soberano v2.0."""
+    pressure: float
+    weight: float
+    trigger_level: str
+    ndvi_hydric_stress: float
+    rj_exposure_index: float
+    rj_count_nearby: int
+    nearest_rj_km: float
+
+
+def assess_delta_judicial_pressure(
+    city: Optional[str] = None,
+    state_uf: Optional[str] = None,
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
+    db_path: str = DB_PATH,
+) -> DeltaJudicialPressure:
+    """
+    Cruza estresse hídrico (NDVI/Open-Meteo proxy) com concentração de RJs.
+
+    Se não houver coordenadas da empresa, usa o município/cidade como proxy da
+    comarca ou do cluster de produção.
+    """
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    state_uf = (state_uf or '').upper() or None
+    if (lat is None or lon is None) and city:
+        cursor.execute(
+            """
+            SELECT lat, lon FROM flv_municipalities
+            WHERE lower(name)=lower(?) AND (? IS NULL OR state_uf=?)
+            LIMIT 1
+            """,
+            (city, state_uf, state_uf),
+        )
+        mun = cursor.fetchone()
+        if mun:
+            lat, lon = mun['lat'], mun['lon']
+
+    try:
+        lat = float(lat) if lat is not None else None
+        lon = float(lon) if lon is not None else None
+    except Exception:
+        lat, lon = None, None
+
+    cursor.execute(
+        """
+        SELECT m.lat, m.lon, n.ndvi_value
+        FROM flv_ndvi n
+        JOIN flv_municipalities m ON m.id = n.mun_id
+        WHERE (? IS NULL OR m.state_uf=?)
+        ORDER BY n.obs_date DESC
+        LIMIT 40
+        """,
+        (state_uf, state_uf),
+    )
+    ndvi_rows = cursor.fetchall()
+    if lat is not None and lon is not None and ndvi_rows:
+        nearest_ndvi = min(
+            ndvi_rows,
+            key=lambda r: _haversine_km(lat, lon, float(r['lat']), float(r['lon'])),
+        )['ndvi_value']
+    elif ndvi_rows:
+        nearest_ndvi = sum(float(r['ndvi_value']) for r in ndvi_rows) / len(ndvi_rows)
+    else:
+        nearest_ndvi = 0.55
+
+    cursor.execute(
+        """
+        SELECT lat, lon, judicial_status
+        FROM flv_producers_rj
+        WHERE status='ativo'
+          AND judicial_status IN ('em_recuperacao', 'falencia')
+          AND (? IS NULL OR state_uf=?)
+          AND lat IS NOT NULL AND lon IS NOT NULL
+        """,
+        (state_uf, state_uf),
+    )
+    rj_rows = cursor.fetchall()
+    conn.close()
+
+    weighted = 0.0
+    nearby = 0
+    nearest = 999.0
+    for r in rj_rows:
+        status_weight = 1.0 if r['judicial_status'] == 'falencia' else 0.85
+        if lat is not None and lon is not None:
+            dist = _haversine_km(lat, lon, float(r['lat']), float(r['lon']))
+            nearest = min(nearest, dist)
+            if dist <= 180:
+                nearby += 1
+            geo_weight = math.exp(-dist / 120.0) if dist <= 350 else 0.0
+        else:
+            dist = 0.0
+            nearest = 0.0
+            nearby += 1
+            geo_weight = 0.50
+        weighted += status_weight * geo_weight
+
+    rj_exposure_index = clamp(weighted / 3.0)
+    ndvi_hydric_stress = _ndvi_stress(nearest_ndvi)
+    weight_ctx = calculate_delta_judicial_weight(ndvi_hydric_stress, rj_exposure_index)
+    return DeltaJudicialPressure(
+        pressure=weight_ctx['pressure'],
+        weight=weight_ctx['weight'],
+        trigger_level=weight_ctx['trigger_level'],
+        ndvi_hydric_stress=weight_ctx['ndvi_hydric_stress'],
+        rj_exposure_index=weight_ctx['rj_exposure_index'],
+        rj_count_nearby=nearby,
+        nearest_rj_km=round(nearest, 2),
+    )
 
 
 @dataclass
