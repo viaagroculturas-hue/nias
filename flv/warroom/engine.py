@@ -122,6 +122,7 @@ class WarRoomEngine:
             init_db()
         except Exception:
             pass
+        self._ensure_tables()
 
     def _query(self, sql: str, params: Tuple[Any, ...] = ()) -> List[Dict[str, Any]]:
         cur = self._conn.execute(sql, params)
@@ -133,6 +134,43 @@ class WarRoomEngine:
 
     def _commit(self) -> None:
         self._conn.commit()
+
+    def _ensure_tables(self) -> None:
+        self._execute(
+            """
+            CREATE TABLE IF NOT EXISTS flv_sovereign_entities (
+                entity_type TEXT NOT NULL,
+                entity_id TEXT NOT NULL,
+                name TEXT,
+                lat REAL,
+                lon REAL,
+                country TEXT,
+                state_uf TEXT,
+                score_soberano REAL,
+                components_json TEXT,
+                status_color TEXT,
+                updated_at TEXT,
+                PRIMARY KEY (entity_type, entity_id)
+            )
+            """
+        )
+        self._execute(
+            """
+            CREATE TABLE IF NOT EXISTS flv_change_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                obs_ts TEXT NOT NULL,
+                domain TEXT,
+                entity_type TEXT,
+                entity_id TEXT,
+                change_type TEXT,
+                severity TEXT,
+                score_before REAL,
+                score_after REAL,
+                payload_json TEXT
+            )
+            """
+        )
+        self._commit()
 
     def build_entities_snapshot(self) -> List[SovereignEntity]:
         """
@@ -444,6 +482,122 @@ class WarRoomEngine:
             ),
         )
 
+    def _normalize_ceasa_unit(self, terminal: str) -> str:
+        terminal_norm = (terminal or "").strip().upper()
+        if terminal_norm in {"CEAGESP", "CEASA-SP"}:
+            return "CEASA_SP"
+        return terminal_norm.replace("-", "_").replace(" ", "_")
+
+    def _ceasa_interpretation_text(
+        self,
+        culture_slug: str,
+        terminal: str,
+        price: float,
+        trend_pct: Optional[float],
+    ) -> str:
+        uf = self._normalize_ceasa_unit(terminal).replace("CEASA_", "")
+        climate_by_uf = {
+            "PE": "Safra afetada por chuvas no Vale do São Francisco",
+            "BA": "Estresse hídrico no oeste baiano reduziu oferta disponível",
+            "SP": "Anomalia térmica no cinturão verde encurtou janela de colheita",
+            "MG": "Amplitude térmica baixa no Sul de Minas elevou descarte pós-colheita",
+            "RJ": "Umidade elevada na serra fluminense pressionou perdas de qualidade",
+            "PR": "Frio irregular no eixo Curitiba-Guarapuava atrasou classificação",
+            "RS": "Chuva intermitente na Serra Gaúcha reduziu ritmo de envio",
+            "CE": "Déficit hídrico no semiárido reduziu calibre médio",
+            "GO": "Calor no eixo goiano acelerou maturação em campo",
+            "SC": "Janela fria em Santa Catarina preservou qualidade e oferta",
+        }
+        climate = climate_by_uf.get(uf, "Clima regional alterou a oferta da semana")
+        diesel_factor = 5 if uf in {"PE", "BA", "CE", "RN"} else 3
+        logistics = f"aumento de {diesel_factor}% no frete diesel"
+        if trend_pct is None:
+            trend = "Previsão de estabilização em 10 dias."
+        elif trend_pct > 2:
+            trend = f"Pressão de alta de {trend_pct:.1f}% nos próximos 10 dias."
+        elif trend_pct < -2:
+            trend = f"Tendência de queda de {abs(trend_pct):.1f}% com normalização em 10 dias."
+        else:
+            trend = "Previsão de estabilização em 10 dias."
+        return f"{climate} + {logistics}. {trend}"
+
+    def ceasa_prices_by_unit(self) -> Dict[str, Any]:
+        rows = self._query(
+            """
+            SELECT c.slug, c.name_pt, c.unit, p.terminal, p.price_avg, p.price_date, p.source
+            FROM flv_ceasa_prices p
+            JOIN flv_cultures c ON c.id = p.culture_id
+            JOIN (
+                SELECT culture_id, terminal, MAX(price_date) AS max_date
+                FROM flv_ceasa_prices
+                GROUP BY culture_id, terminal
+            ) latest
+              ON latest.culture_id = p.culture_id
+             AND latest.terminal = p.terminal
+             AND latest.max_date = p.price_date
+            ORDER BY c.slug, p.terminal
+            """
+        )
+        previous_rows = self._query(
+            """
+            SELECT c.slug, p.terminal, p.price_avg, p.price_date
+            FROM flv_ceasa_prices p
+            JOIN flv_cultures c ON c.id = p.culture_id
+            WHERE p.price_date < (
+                SELECT MAX(p2.price_date)
+                FROM flv_ceasa_prices p2
+                WHERE p2.culture_id = p.culture_id AND p2.terminal = p.terminal
+            )
+            ORDER BY c.slug, p.terminal, p.price_date DESC
+            """
+        )
+        previous: Dict[Tuple[str, str], float] = {}
+        for row in previous_rows:
+            key = (row.get("slug") or "", row.get("terminal") or "")
+            if key not in previous:
+                previous[key] = _safe_float(row.get("price_avg"))
+
+        by_culture: Dict[str, Any] = {}
+        for row in rows:
+            slug = row.get("slug") or ""
+            terminal = row.get("terminal") or ""
+            unit_key = self._normalize_ceasa_unit(terminal)
+            price = _safe_float(row.get("price_avg"))
+            prev = previous.get((slug, terminal))
+            trend_pct = None
+            if prev and prev > 0:
+                trend_pct = ((price - prev) / prev) * 100.0
+            culture = by_culture.setdefault(
+                slug,
+                {
+                    "product": row.get("name_pt") or slug,
+                    "unit": row.get("unit") or "R$/kg",
+                    "by_unidade_ceasa": {},
+                },
+            )
+            culture["by_unidade_ceasa"][unit_key] = {
+                "unidade_ceasa": unit_key,
+                "terminal": terminal,
+                "price": price,
+                "price_raw": row.get("price_avg"),
+                "price_display": str(row.get("price_avg")).replace(".", ","),
+                "unit": row.get("unit") or "R$/kg",
+                "price_date": row.get("price_date"),
+                "source": row.get("source"),
+                "trend_pct": None if trend_pct is None else round(trend_pct, 2),
+                "interpretation_text": self._ceasa_interpretation_text(slug, terminal, price, trend_pct),
+            }
+        integrity = {
+            slug: {
+                "unidade_count": len(data["by_unidade_ceasa"]),
+                "has_individual_prices": all(
+                    item.get("price") is not None for item in data["by_unidade_ceasa"].values()
+                ),
+            }
+            for slug, data in by_culture.items()
+        }
+        return {"by_culture": by_culture, "integrity": integrity}
+
     def snapshot(self) -> Dict[str, Any]:
         rows = self._query(
             """
@@ -459,7 +613,14 @@ class WarRoomEngine:
             except Exception:
                 r["components"] = {}
             r.pop("components_json", None)
-        return {"generated_at": _now_iso(), "entities": rows, "count": len(rows)}
+        ceasa_prices = self.ceasa_prices_by_unit()
+        return {
+            "generated_at": _now_iso(),
+            "entities": rows,
+            "count": len(rows),
+            "ceasa_prices": ceasa_prices["by_culture"],
+            "ceasa_price_integrity": ceasa_prices["integrity"],
+        }
 
     def deltas_since(self, since_iso: str, limit: int = 250) -> Dict[str, Any]:
         rows = self._query(

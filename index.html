@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="s_panels.js"></script>
 <style>
 :root {
   --bg:#050e1a;--bg2:#091422;--bg3:#0d1f33;--border:#0e2d4a;
@@ -453,7 +454,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .horti-badge.danger{background:rgba(255,61,61,.08);border:1px solid var(--danger);color:var(--danger);}
 .horti-grid{display:flex;overflow-x:auto;gap:0;}
 .horti-grid::-webkit-scrollbar{height:3px;}
-.horti-card{min-width:148px;flex-shrink:0;border-right:1px solid var(--border);padding:8px 10px;position:relative;overflow:hidden;cursor:default;transition:background .2s;}
+.horti-card{min-width:148px;flex-shrink:0;border-right:1px solid var(--border);padding:8px 10px;position:relative;overflow:hidden;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s;}
 .horti-card:hover{background:rgba(0,212,255,.04);}
 .horti-card:last-child{border-right:none;}
 .horti-spark{position:absolute;top:0;left:0;width:100%;height:36px;opacity:.18;pointer-events:none;}
@@ -461,7 +462,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .horti-name{font-size:10px;font-weight:bold;color:var(--accent);letter-spacing:1px;position:relative;z-index:1;}
 .horti-region{font-size:9px;color:var(--text2);margin-bottom:4px;position:relative;z-index:1;}
 .horti-vol{font-size:14px;font-weight:bold;color:var(--text);position:relative;z-index:1;}
-.horti-price{font-size:11px;color:var(--accent2);font-weight:bold;position:relative;z-index:1;transition:color .3s;}
+.horti-price{font-size:11px;color:var(--accent2);font-weight:bold;position:relative;z-index:1;transition:color .3s,opacity .25s ease,transform .25s ease;}
 .horti-delta{font-size:9px;margin-top:2px;position:relative;z-index:1;}
 .horti-delta.danger{color:var(--danger);}
 .horti-delta.ok{color:var(--accent2);}
@@ -474,6 +475,11 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .horti-subregion{font-size:9px;color:var(--text2);line-height:1.4;position:relative;z-index:1;}
 .horti-card-mesa{border-top:2px solid var(--accent);}
 .horti-card-ind{border-top:2px solid var(--accent3);}
+.horti-interpretation{position:absolute;left:8px;right:8px;bottom:7px;max-height:86px;overflow:hidden;padding:6px 7px;border:1px solid rgba(0,212,255,.35);border-radius:4px;background:rgba(5,18,34,.94);color:var(--text);font-size:9px;line-height:1.45;opacity:0;transform:translateY(6px);transition:opacity .25s ease,transform .25s ease;z-index:4;pointer-events:none;}
+.horti-card.interpretation-mode{background:rgba(0,48,96,.34);border-color:rgba(0,212,255,.72);box-shadow:inset 0 0 0 1px rgba(0,212,255,.28),0 0 16px rgba(0,80,160,.28);animation:interpretationPulse 1.6s ease-in-out infinite;}
+.horti-card.interpretation-mode .horti-price,.horti-card.interpretation-mode .horti-delta,.horti-card.interpretation-mode .horti-ndvi,.horti-card.interpretation-mode .horti-status,.horti-card.interpretation-mode .brix-panel,.horti-card.interpretation-mode [id^="hsrc-"]{opacity:0;transform:translateY(-4px);}
+.horti-card.interpretation-mode .horti-interpretation{opacity:1;transform:translateY(0);}
+@keyframes interpretationPulse{0%,100%{box-shadow:inset 0 0 0 1px rgba(0,212,255,.22),0 0 10px rgba(0,80,160,.18);}50%{box-shadow:inset 0 0 0 1px rgba(0,212,255,.65),0 0 20px rgba(0,100,180,.4);}}
 
 /* ── NDVI PHENOLOGY ENGINE ── */
 .ndvi-tag{font-size:9px;padding:2px 6px;border-radius:2px;display:inline-block;margin-top:2px;font-weight:bold;letter-spacing:.5px;}
@@ -3832,6 +3838,17 @@ const CEASA_BASE = [
   {ceasa:'CEASA-SC (São José)',region:'São José, SC', lat:-27.6,  lng:-48.6},
 ];
 
+const CEASA_UNIT_ALIASES = {
+  'CEAGESP': 'CEASA_SP',
+  'CEASA-SP': 'CEASA_SP',
+  'CEASA SP': 'CEASA_SP',
+};
+
+function _normalizeCeasaUnit(raw) {
+  const base = String(raw || '').split('(')[0].trim().toUpperCase();
+  return CEASA_UNIT_ALIASES[base] || base.replace(/-/g, '_').replace(/\s+/g, '_');
+}
+
 const CEASA_PRODUCTS = [
   {name:'🍅 Tomate Mesa',   unit:'cx', basePrice:88.5,  freteBase:14.2, origin:'Caçador-SC / Itapeva-SP'},
   {name:'🫑 Pimentão',      unit:'cx', basePrice:42.0,  freteBase:18.5, origin:'Araguari-MG / Mogi das Cruzes-SP'},
@@ -3852,22 +3869,43 @@ let _ceasaInterval = null;
 
 function _buildCeasaRows() {
   _ceasaRows = [];
+  const realByCulture = window.NiasCeasaSnapshot?.byCulture || {};
   CEASA_PRODUCTS.forEach(prod => {
+    const slug = prod.slug || _slugFromCeasaProduct(prod.name);
+    const realCulture = realByCulture[slug] || {};
     CEASA_BASE.forEach(ceasa => {
+      const unidadeCeasa = _normalizeCeasaUnit(ceasa.ceasa);
+      const realQuote = realCulture.by_unidade_ceasa?.[unidadeCeasa];
       const distFactor = 0.7 + Math.random() * 0.6;
       const satFactor = (logState?.br163 != null) ? Math.min(100, Math.max(0, logState.br163)) / 100 : 0.5;
       const frete = +(prod.freteBase * distFactor * (1 + satFactor * 0.3)).toFixed(2);
-      const priceVar = (Math.random() - 0.45) * 0.12;
-      const price = +(prod.basePrice * (1 + priceVar)).toFixed(2);
+      const price = realQuote ? +realQuote.price : +(prod.basePrice * (1 + (Math.random() - 0.45) * 0.12)).toFixed(2);
+      const unit = realQuote?.unit || prod.unit;
       const margin = +(price - frete).toFixed(2);
       _ceasaRows.push({
         ceasa: ceasa.ceasa, region: ceasa.region, lat: ceasa.lat, lng: ceasa.lng,
-        product: prod.name, unit: prod.unit, origin: prod.origin,
-        price, frete, margin
+        product: prod.name, unit, origin: prod.origin, unidade_ceasa: unidadeCeasa,
+        price, frete, margin, interpretation_text: realQuote?.interpretation_text || ''
       });
     });
   });
   _ceasaRows.sort((a, b) => b.margin - a.margin);
+}
+
+function _slugFromCeasaProduct(name) {
+  const n = String(name || '').toLowerCase();
+  if (n.includes('tomate')) return 'tomate';
+  if (n.includes('piment')) return 'pimentao';
+  if (n.includes('cebola')) return 'cebola';
+  if (n.includes('batata')) return 'batata';
+  if (n.includes('laranja')) return 'laranja';
+  if (n.includes('alface') || n.includes('folha')) return 'folhosas';
+  if (n.includes('cenoura')) return 'cenoura';
+  if (n.includes('banana')) return 'banana';
+  if (n.includes('manga')) return 'manga';
+  if (n.includes('uva')) return 'uva';
+  if (n.includes('melão') || n.includes('melao')) return 'melao';
+  return 'tomate';
 }
 
 function _getStatusBadge(row, rank) {
@@ -5099,6 +5137,7 @@ setTimeout(initHortiSparks, 200);
 
 function updateHorti() {
   Object.entries(hortiState).forEach(([k, h]) => {
+    if (window.isInterpretationActive && window.isInterpretationActive('hc-' + k)) return;
     // price fluctuation
     const pChange = (Math.random()-.48) * h.price * 0.008;
     h.price = Math.max(h.price * 0.9, Math.min(h.price * 1.1, h.price + pChange));
@@ -5110,7 +5149,7 @@ function updateHorti() {
 
     // update DOM price
     const priceEl = document.getElementById('hp-' + k);
-    if (priceEl) {
+  if (priceEl && !priceEl.closest('.horti-card')?.classList.contains('interpretation-mode')) {
       const fmt = h.price >= 10 ? h.price.toFixed(2).replace('.',',') : h.price.toFixed(2).replace('.',',');
       priceEl.textContent = 'R$ ' + fmt + '/' + h.unit;
       priceEl.style.color = h.dir > 0 ? 'var(--accent2)' : 'var(--danger)';
@@ -5289,7 +5328,7 @@ function updateBrix() {
   const brixFactor = Math.max(0.85, Math.min(1.15, brixState.brix / brixState.brixTarget));
   const adjPrice = (148.0 * brixFactor).toFixed(0);
   const hpInd = document.getElementById('hp-tomate-ind');
-  if (hpInd) hpInd.textContent = `R$ ${adjPrice}/t`;
+  if (hpInd && !hpInd.closest('.horti-card')?.classList.contains('interpretation-mode')) hpInd.textContent = `R$ ${adjPrice}/t`;
 }
 setInterval(updateBrix, 4500);
 
@@ -9452,7 +9491,14 @@ window.Predictix = {
     this.CEASAS.forEach(c => {
       const vol = Math.round(c.vol * (0.7 + Math.random()*0.3));
       const marker = L.circleMarker([c.lat, c.lon], { radius:7, color:'#50C878', fillColor:'#0a1a0a', fillOpacity:0.9, weight:2 });
-      marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>🏪 ${c.name}</b><br>Vol. semanal: ${vol.toLocaleString()} t<br>Região: ${c.region}</div>`, {direction:'top'});
+      const unit = _normalizeCeasaUnit(c.name);
+      const quote = window.NiasCeasaSnapshot?.byCulture?.tomate?.by_unidade_ceasa?.[unit];
+      const priceLine = quote ? `<br>Tomate: R$ ${Number(quote.price).toFixed(2)} · ${quote.unidade_ceasa}` : '';
+      marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>🏪 ${c.name}</b><br>Vol. semanal: ${vol.toLocaleString()} t<br>Região: ${c.region}${priceLine}</div>`, {direction:'top'});
+      marker.on('click', () => {
+        if (typeof window.setHortiCeasaUnit === 'function') window.setHortiCeasaUnit(unit);
+        if (unit === 'CEASA_PE' && typeof window.toggleInterpretation === 'function') window.toggleInterpretation('hc-tomate-mesa');
+      });
       this._portMarkers.addLayer(marker);
     });
   },
@@ -10189,35 +10235,42 @@ async function niasLoadRealData() {
     await NiasClimate.run();
   }
 
-  // ── HORTIFRUTI — Atualizar preços com dados reais ──────────────
-  // Fetch CEAGESP live prices (priority source)
+  // ── HORTIFRUTI — Atualizar preços com dados reais por unidade ───
+  let warroomSnapshot = {};
+  try {
+    warroomSnapshot = await fetch('/api/warroom/snapshot').then(r => r.ok ? r.json() : {}).catch(() => ({}));
+    window.NiasCeasaSnapshot = { byCulture: warroomSnapshot.ceasa_prices || {}, generatedAt: warroomSnapshot.generated_at || null };
+  } catch(e) {
+    window.NiasCeasaSnapshot = window.NiasCeasaSnapshot || { byCulture: {} };
+  }
+  // Fetch CEAGESP live prices only as fallback when the War Room snapshot has no CEASA unit.
   let ceagespData = {};
   try {
     const cr = await fetch('/api/ceagesp').then(r => r.ok ? r.json() : {}).catch(() => ({}));
     ceagespData = cr;
   } catch(e) {}
-  _updateHortiPrices(prices, conab, ceagespData);
+  _updateHortiPrices(prices, conab, ceagespData, warroomSnapshot);
 
   // ── Schedule refresh every 15 minutes ───────────────────────────
   setTimeout(niasLoadRealData, 900000);
 }
 
 // Atualiza cards de hortifruti na Visao Geral com dados reais
-function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
+function _updateHortiPrices(cepeaPrices, conabData, ceagespData, warroomSnapshot) {
   const flvRef = typeof FLVModule !== 'undefined' ? FLVModule._REF : {};
   const ceagespProds = ceagespData && ceagespData.products ? ceagespData.products : {};
   const ceagespDate = ceagespData && ceagespData.meta ? ceagespData.meta.date : '';
 
   const hortiMap = {
-    'tomate-mesa': { slug:'tomate', unit:'kg', conab:'TOMATE', cepea:'tomate', elPrice:'hp-tomate-mesa', elDelta:'hd-tomate-mesa', elSrc:'hsrc-tomate-mesa', elStatus:'hst-tomate-mesa' },
-    'tomate-ind':  { slug:'tomate', unit:'t',  conab:'EXTRATO DE TOMATE', cepea:null, elPrice:'hp-tomate-ind', elDelta:'hd-tomate-ind', elSrc:'hsrc-tomate-ind', elStatus:'hst-tomate-ind' },
-    'pimentao':    { slug:'pimentao', unit:'kg', conab:'PIMENTAO', cepea:null, elPrice:'hp-pimentao', elDelta:'hd-pimentao', elSrc:'hsrc-pimentao', elStatus:'hst-pimentao' },
-    'alface':      { slug:'folhosas', unit:'kg', conab:'ALFACE', cepea:null, elPrice:'hp-alface', elDelta:'hd-alface', elSrc:'hsrc-alface', elStatus:'hst-alface' },
-    'laranja':     { slug:'laranja', unit:'cx', conab:'LARANJA', cepea:'laranja', elPrice:'hp-laranja', elDelta:'hd-laranja', elSrc:'hsrc-laranja', elStatus:'hst-laranja' },
-    'batata':      { slug:'batata', unit:'sc', conab:'BATATA INGLESA', cepea:'batata', elPrice:'hp-batata', elDelta:'hd-batata', elSrc:'hsrc-batata', elStatus:'hst-batata' },
-    'cebola':      { slug:'cebola', unit:'kg', conab:'CEBOLA', cepea:null, elPrice:'hp-cebola', elDelta:'hd-cebola', elSrc:'hsrc-cebola', elStatus:'hst-cebola' },
-    'manga':       { slug:'manga', unit:'kg', conab:'MANGA', cepea:null, elPrice:'hp-manga', elDelta:'hd-manga', elSrc:'hsrc-manga', elStatus:'hst-manga' },
-    'uva':         { slug:'uva', unit:'kg', conab:'UVA', cepea:null, elPrice:'hp-uva', elDelta:'hd-uva', elSrc:'hsrc-uva', elStatus:'hst-uva' },
+    'tomate-mesa': { slug:'tomate', unit:'kg', preferredUnit:'CEASA_PE', conab:'TOMATE', cepea:'tomate', elPrice:'hp-tomate-mesa', elDelta:'hd-tomate-mesa', elSrc:'hsrc-tomate-mesa', elStatus:'hst-tomate-mesa' },
+    'tomate-ind':  { slug:'tomate', unit:'t',  preferredUnit:'CEASA_PE', conab:'EXTRATO DE TOMATE', cepea:null, elPrice:'hp-tomate-ind', elDelta:'hd-tomate-ind', elSrc:'hsrc-tomate-ind', elStatus:'hst-tomate-ind' },
+    'pimentao':    { slug:'pimentao', unit:'kg', preferredUnit:'CEASA_SP', conab:'PIMENTAO', cepea:null, elPrice:'hp-pimentao', elDelta:'hd-pimentao', elSrc:'hsrc-pimentao', elStatus:'hst-pimentao' },
+    'alface':      { slug:'folhosas', unit:'kg', preferredUnit:'CEASA_SP', conab:'ALFACE', cepea:null, elPrice:'hp-alface', elDelta:'hd-alface', elSrc:'hsrc-alface', elStatus:'hst-alface' },
+    'laranja':     { slug:'laranja', unit:'cx', preferredUnit:'CEASA_SP', conab:'LARANJA', cepea:'laranja', elPrice:'hp-laranja', elDelta:'hd-laranja', elSrc:'hsrc-laranja', elStatus:'hst-laranja' },
+    'batata':      { slug:'batata', unit:'sc', preferredUnit:'CEASA_MG', conab:'BATATA INGLESA', cepea:'batata', elPrice:'hp-batata', elDelta:'hd-batata', elSrc:'hsrc-batata', elStatus:'hst-batata' },
+    'cebola':      { slug:'cebola', unit:'kg', preferredUnit:'CEASA_BA', conab:'CEBOLA', cepea:null, elPrice:'hp-cebola', elDelta:'hd-cebola', elSrc:'hsrc-cebola', elStatus:'hst-cebola' },
+    'manga':       { slug:'manga', unit:'kg', preferredUnit:'CEASA_PE', conab:'MANGA', cepea:null, elPrice:'hp-manga', elDelta:'hd-manga', elSrc:'hsrc-manga', elStatus:'hst-manga' },
+    'uva':         { slug:'uva', unit:'kg', preferredUnit:'CEASA_PE', conab:'UVA', cepea:null, elPrice:'hp-uva', elDelta:'hd-uva', elSrc:'hsrc-uva', elStatus:'hst-uva' },
   };
 
   for (const [key, cfg] of Object.entries(hortiMap)) {
@@ -10227,11 +10280,22 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
     const statusEl = document.getElementById(cfg.elStatus);
     if (!priceEl) continue;
 
-    // Resolve price from best source (CEAGESP > CEPEA > CONAB > FLV ref)
-    let price = null, source = '', change = null;
+    const card = document.getElementById('hc-' + key);
+    const snapshot = window.NiasCeasaSnapshot?.byCulture || {};
+    const ceasaQuotes = snapshot[cfg.slug]?.by_unidade_ceasa || {};
+    const selectedUnit = window.NiasSelectedCeasaUnit || cfg.preferredUnit;
+    const unitKey = ceasaQuotes[selectedUnit] ? selectedUnit : ceasaQuotes[cfg.preferredUnit] ? cfg.preferredUnit : Object.keys(ceasaQuotes)[0];
+    const unitQuote = unitKey ? ceasaQuotes[unitKey] : null;
+    let price = null, source = '', change = null, interpretationText = '';
 
-    // 0. CEAGESP LIVE (best source — daily hortifruti)
-    if (ceagespProds[cfg.slug]) {
+    if (unitQuote) {
+      price = Number(unitQuote.price);
+      change = Number(unitQuote.trend_pct || 0);
+      source = `${unitQuote.unidade_ceasa} · ${unitQuote.price_date || ''} · ${unitQuote.source || 'War Room'}`;
+      interpretationText = unitQuote.interpretation_text || '';
+    }
+    // CEAGESP LIVE fallback when War Room lacks the selected CEASA unit.
+    if (!price && ceagespProds[cfg.slug]) {
       const cp = ceagespProds[cfg.slug];
       price = cp.price_avg;
       source = `CEAGESP · ${ceagespDate || cp.date || ''} · ${cp.name || ''}`;
@@ -10252,14 +10316,20 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
     // 3. FLV ref
     if (!price && flvRef[cfg.slug]) { price = flvRef[cfg.slug]; source = 'CEAGESP ref.'; }
 
-    if (price) {
-      priceEl.textContent = `R$ ${price.toFixed(2)}/${cfg.unit}`;
+    if (card && interpretationText) {
+      card.dataset.interpretationText = interpretationText;
+      card.dataset.unidadeCeasa = unitKey || '';
+      card.dataset.priceRaw = String(price);
+    }
+    if (price && !window.isInterpretationActive?.('hc-' + key)) {
+      const displayPrice = unitQuote?.price_display || price.toFixed(2);
+      priceEl.textContent = `R$ ${displayPrice}/${cfg.unit}`;
       priceEl.classList.add('val-flash');
       setTimeout(() => priceEl.classList.remove('val-flash'), 500);
     }
     if (srcEl) {
       srcEl.textContent = `Fonte: ${source}`;
-      srcEl.style.color = source.includes('CEPEA') ? 'var(--accent2)' : source.includes('CONAB') ? 'var(--accent)' : 'var(--text2)';
+      srcEl.style.color = source.includes('CEASA_') ? 'var(--accent2)' : source.includes('CEPEA') ? 'var(--accent2)' : source.includes('CONAB') ? 'var(--accent)' : 'var(--text2)';
     }
 
     // Fetch prediction for trend
@@ -10274,7 +10344,7 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
           // Synthetic trend
           pred = typeof FLVModule !== 'undefined' ? FLVModule._syntheticPrediction(cfg.slug, {series:[{price: flvRef[cfg.slug]||5}]}) : null;
         }
-        if (pred && deltaEl) {
+        if (pred && deltaEl && !window.isInterpretationActive?.(deltaEl.id.replace('hd-', 'hc-'))) {
           const trendPct = pred.trend_pct || (change || 0);
           const trend = pred.trend || 'estavel';
           const arrow = trendPct > 0 ? '▲' : trendPct < 0 ? '▼' : '—';
