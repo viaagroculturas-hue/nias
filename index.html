@@ -10137,64 +10137,6 @@ window.Predictix = {
       }
     }, 1000);
   },
-
-  async _injectClimaLayer() {
-    this._climaActive = true;
-    document.getElementById('px-clima-pending').style.display = 'none';
-    this._layers.clima = true;
-    const btn = document.getElementById('px-layer-clima');
-    if (btn) { btn.style.borderColor = '#EF4444'; btn.style.color = '#EF4444'; }
-
-    // Fetch weather for key route points
-    const points = [
-      {lat:-12.5,lon:-55.7,name:'Sinop-MT (BR-163)'},
-      {lat:-15.9,lon:-49.3,name:'Goiânia-GO (BR-153)'},
-      {lat:-24.0,lon:-49.0,name:'Curitiba-PR (BR-277)'},
-      {lat:-22.9,lon:-47.1,name:'Campinas-SP'},
-      {lat:-8.2,lon:-35.6,name:'Gravatá-PE'},
-    ];
-
-    this._climaLayer.clearLayers();
-    for (const p of points) {
-      try {
-        const data = await fetch(`/proxy/api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&daily=precipitation_sum,temperature_2m_min&timezone=America/Sao_Paulo&forecast_days=3`).then(r=>r.json()).catch(()=>null);
-        if (!data || !data.daily) continue;
-        const precip = (data.daily.precipitation_sum || []).reduce((a,b)=>a+b, 0);
-        const tempMin = Math.min(...(data.daily.temperature_2m_min || [30]));
-        let alert = null;
-        if (precip > 30) alert = {type:'chuva', msg:`Precipitação ${precip.toFixed(0)}mm em 3d`, color:'#3B82F6'};
-        else if (tempMin < 5) alert = {type:'geada', msg:`Geada: min ${tempMin.toFixed(1)}°C`, color:'#A855F7'};
-        if (alert) {
-          const circle = L.circle([p.lat, p.lon], {
-            radius: precip > 50 ? 120000 : 80000,
-            color: alert.color, fillColor: alert.color, fillOpacity: 0.12, weight: 1,
-            dashArray: '6,4'
-          });
-          circle.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b style="color:${alert.color}">${alert.type.toUpperCase()}</b><br>${p.name}<br>${alert.msg}<br><b style="color:#EF4444">Risco de atraso 48h</b></div>`, {sticky:true});
-          this._climaLayer.addLayer(circle);
-        }
-        // Always add a small precipitation indicator
-        if (precip > 5) {
-          L.circleMarker([p.lat, p.lon], {
-            radius:4, color:'#3B82F6', fillColor:'#3B82F6', fillOpacity:0.5, weight:0
-          }).bindTooltip(`${p.name}: ${precip.toFixed(1)}mm/3d`).addTo(this._climaLayer);
-        }
-      } catch(e) {}
-    }
-    this._climaLayer.addTo(this._map);
-
-    // Add risk annotation on BR-163 if Sinop has rain
-    const sinopWeather = await fetch('/proxy/api.open-meteo.com/v1/forecast?latitude=-12.5&longitude=-55.7&daily=precipitation_sum&timezone=America/Sao_Paulo&forecast_days=7').then(r=>r.json()).catch(()=>null);
-    if (sinopWeather?.daily?.precipitation_sum) {
-      const total = sinopWeather.daily.precipitation_sum.reduce((a,b)=>a+b,0);
-      if (total > 20) {
-        const popup = L.popup({closeButton:false, autoClose:false, closeOnClick:false, className:'px-risk-popup'})
-          .setLatLng([-12.5, -55.7])
-          .setContent(`<div style="font-family:monospace;font-size:10px;background:#111;color:#EF4444;padding:6px 10px;border:1px solid #EF4444;border-radius:4px;"><b>⚠ BR-163</b><br>Precip. ${total.toFixed(0)}mm/7d em Sinop-MT<br>Risco atraso 48h → Miritituba<br><b>RECALCULE MARGEM</b></div>`)
-          .openOn(this._map);
-      }
-    }
-  },
 };
 
 // ── DASHBOARD WIRING — conecta APIs aos painéis ───────────────────
