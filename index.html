@@ -49,6 +49,50 @@
 .px-arb-route{font-size:9px;color:#888;margin-top:2px;}
 @keyframes px-pulse-buy{0%,100%{box-shadow:0 0 4px #3B82F6;}50%{box-shadow:0 0 14px #3B82F6,0 0 24px rgba(59,130,246,.3);}}
 @keyframes px-pulse-sell{0%,100%{box-shadow:0 0 4px #EF4444;}50%{box-shadow:0 0 14px #EF4444,0 0 24px rgba(239,68,68,.3);}}
+.px-dashboard-shell{flex:1;display:grid;grid-template-columns:300px minmax(360px,1fr) 380px;overflow:hidden;background:#080808;}
+.px-dossier{border-right:1px solid #1a1a1a;background:linear-gradient(180deg,#0f1115,#090909);display:flex;flex-direction:column;overflow:hidden;}
+.px-dossier-head,.px-window-head{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid #1a1a1a;color:#FFD700;font-size:9px;letter-spacing:2px;flex-shrink:0;}
+.px-dossier-body{flex:1;overflow-y:auto;padding:10px;}
+.px-dossier-card{background:#111;border:1px solid #242424;border-radius:6px;padding:10px;margin-bottom:8px;}
+.px-dossier-label{font-size:8px;color:#777;letter-spacing:1px;margin-bottom:4px;}
+.px-dossier-value{font-size:12px;color:#eee;font-weight:bold;line-height:1.35;}
+.px-score-row{display:flex;align-items:center;gap:10px;}
+.px-score-main{font-size:34px;font-weight:bold;font-family:monospace;color:#33ABFF;text-shadow:0 0 14px rgba(51,171,255,.28);}
+.px-score-bar{height:5px;background:#1c1c1c;border-radius:3px;overflow:hidden;margin-top:6px;}
+.px-score-fill{height:100%;background:linear-gradient(90deg,#EF4444,#FFD700,#33ABFF,#50C878);border-radius:3px;transition:width .5s;}
+.px-history-grid{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;height:62px;align-items:end;}
+.px-history-bar{min-height:7px;border-radius:2px 2px 0 0;background:#333;}
+.px-map-stage{position:relative;min-width:0;}
+.px-map-legend{position:absolute;left:12px;bottom:12px;z-index:900;background:rgba(8,8,8,.88);border:1px solid #242424;border-radius:6px;padding:8px 10px;font-size:9px;color:#aaa;backdrop-filter:blur(6px);}
+.px-legend-row{display:flex;align-items:center;gap:6px;margin:3px 0;}
+.px-legend-line{width:26px;height:3px;border-radius:3px;box-shadow:0 0 10px currentColor;}
+.px-impact{border-left:1px solid #1a1a1a;background:#0d0d0d;display:grid;grid-template-rows:minmax(150px,1fr) minmax(210px,1.35fr) minmax(190px,1.15fr);overflow:hidden;}
+.px-window{min-height:0;display:flex;flex-direction:column;border-bottom:1px solid #1a1a1a;overflow:hidden;}
+.px-window:last-child{border-bottom:none;}
+.px-window-body{flex:1;overflow-y:auto;padding:8px 10px;}
+.px-feed-item,.px-gondola-row{padding:7px 0;border-bottom:1px solid #1b1b1b;font-size:10px;line-height:1.45;color:#cfcfcf;}
+.px-feed-item:last-child,.px-gondola-row:last-child{border-bottom:none;}
+.px-feed-meta{display:flex;justify-content:space-between;color:#666;font-size:8px;margin-top:3px;}
+.px-signal{font-size:8px;padding:1px 5px;border-radius:2px;border:1px solid currentColor;}
+.px-signal.red{color:#EF4444;background:rgba(239,68,68,.08);}
+.px-signal.blue{color:#33ABFF;background:rgba(51,171,255,.08);}
+.px-signal.green{color:#50C878;background:rgba(80,200,120,.08);}
+.px-log-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.px-mini-metric{background:#111;border:1px solid #242424;border-radius:5px;padding:7px;}
+.px-mini-val{font-size:15px;font-weight:bold;color:#FFD700;}
+.px-mini-lbl{font-size:8px;color:#777;letter-spacing:1px;margin-top:2px;}
+.px-sat-strip{display:flex;gap:6px;margin:8px 0;}
+.px-sat-dot{flex:1;height:24px;border:1px solid #242424;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#33ABFF;background:rgba(51,171,255,.05);}
+.px-gondola-price{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.px-store{color:#aaa;font-size:9px;}
+.px-price{font-size:14px;font-weight:bold;color:#50C878;}
+.px-delta{font-size:9px;}
+.px-flow-rj,.px-flow-diamond,.px-flow-active{stroke-dasharray:10 8;animation:px-flow-dash 1.8s linear infinite,px-flow-glow 1.8s ease-in-out infinite;}
+.px-flow-rj{filter:drop-shadow(0 0 6px rgba(239,68,68,.7));}
+.px-flow-diamond{filter:drop-shadow(0 0 7px rgba(51,171,255,.75));}
+.px-flow-active{filter:drop-shadow(0 0 6px rgba(80,200,120,.7));}
+@keyframes px-flow-dash{to{stroke-dashoffset:-36;}}
+@keyframes px-flow-glow{0%,100%{stroke-opacity:.55;}50%{stroke-opacity:1;}}
 /* ── SIDEBAR GROUPS ── */
 .nav-group{width:100%;margin-bottom:2px;}
 .nav-group-header{width:100%;display:flex;align-items:center;gap:6px;padding:4px 8px;border:none;background:none;color:var(--text2);font-family:var(--font);font-size:8px;letter-spacing:1.5px;cursor:pointer;transition:color .2s;text-align:left;}
@@ -2084,32 +2128,89 @@ tr:hover td{background:rgba(0,212,255,.04);}
         <button id="px-btn-produtores-rj" onclick="Predictix.toggleProdutoresRJ()" style="background:rgba(255,107,53,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">⚖️ EM RJ</button>
       </div>
       <!-- MAIN CONTENT -->
-      <div style="flex:1;display:flex;overflow:hidden;">
-        <!-- MAP -->
-        <div style="flex:1;position:relative;">
+      <div class="px-dashboard-shell">
+        <!-- LEFT: DOSSIER DINAMICO -->
+        <aside class="px-dossier">
+          <div class="px-dossier-head"><span>◧</span> DOSSIER LATERAL — RISCO 2026</div>
+          <div class="px-dossier-body">
+            <div class="px-dossier-card">
+              <div class="px-dossier-label">SITUACAO JURIDICA</div>
+              <div id="px-dossier-legal" class="px-dossier-value">Recuperacao judicial monitorada · 4 varas ativas</div>
+              <div id="px-dossier-legal-meta" style="font-size:9px;color:#777;margin-top:5px;">RJ/RJ: inadimplencia setorial em 18,4%</div>
+            </div>
+            <div class="px-dossier-card">
+              <div class="px-dossier-label">SCORE FINANCEIRO 2026</div>
+              <div class="px-score-row">
+                <div id="px-dossier-score" class="px-score-main">742</div>
+                <div style="flex:1;">
+                  <div id="px-dossier-rating" style="font-size:10px;color:#33ABFF;font-weight:bold;">AZUL DIAMANTE · ESCALAVEL</div>
+                  <div class="px-score-bar"><div id="px-dossier-score-fill" class="px-score-fill" style="width:74%;"></div></div>
+                  <div id="px-dossier-score-note" style="font-size:8px;color:#777;margin-top:4px;">Liquidez 1,42 · margem EBITDA +8,1 p.p.</div>
+                </div>
+              </div>
+            </div>
+            <div class="px-dossier-card">
+              <div class="px-dossier-label">HISTORICO ADMINISTRATIVO · 24 MESES</div>
+              <div id="px-dossier-history" class="px-history-grid"></div>
+              <div id="px-dossier-history-note" style="font-size:8px;color:#777;margin-top:6px;">Governanca: 3 alteracoes relevantes no periodo</div>
+            </div>
+            <div class="px-dossier-card">
+              <div class="px-dossier-label">LEGENDA DE FLUXOS</div>
+              <div class="px-legend-row"><span class="px-legend-line" style="color:#EF4444;background:#EF4444;"></span><span>Vermelho: inadimplencia/RJ</span></div>
+              <div class="px-legend-row"><span class="px-legend-line" style="color:#33ABFF;background:#33ABFF;"></span><span>Azul Diamante: crescimento/scalability</span></div>
+              <div class="px-legend-row"><span class="px-legend-line" style="color:#50C878;background:#50C878;"></span><span>Verde: fluxo ativo</span></div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- CENTER: MAPA DE FLUXOS -->
+        <section class="px-map-stage">
           <div id="px-map" style="position:absolute;inset:0;background:#0a0a0a;"></div>
+          <div class="px-map-legend">
+            <div style="color:#FFD700;letter-spacing:1px;margin-bottom:5px;">MAPA DE FLUXOS · PRODUTOR → COMPRADOR</div>
+            <div class="px-legend-row"><span class="px-legend-line" style="color:#EF4444;background:#EF4444;"></span><span>Inadimplencia/RJ</span></div>
+            <div class="px-legend-row"><span class="px-legend-line" style="color:#33ABFF;background:#33ABFF;"></span><span>Diamante · scalability</span></div>
+            <div class="px-legend-row"><span class="px-legend-line" style="color:#50C878;background:#50C878;"></span><span>Fluxo ativo</span></div>
+          </div>
           <!-- 30s climate overlay pending -->
           <div id="px-clima-pending" style="display:none;position:absolute;top:10px;right:10px;z-index:900;background:rgba(10,10,10,.92);border:1px dashed rgba(239,68,68,.3);border-radius:6px;padding:10px 14px;color:#EF4444;font-family:monospace;font-size:11px;backdrop-filter:blur(4px);">
             <div style="font-size:9px;letter-spacing:1px;color:#666;margin-bottom:4px;">CAMADA CLIMATICA</div>
             Ativando em <strong id="px-clima-timer">30</strong>s
           </div>
-        </div>
-        <!-- RIGHT PANEL: Terminal de Filas Preditivo + Arbitragem Detalhada -->
-        <div style="width:380px;border-left:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;background:#0d0d0d;">
-          <div style="padding:6px 12px;border-bottom:1px solid #1a1a1a;font-size:9px;color:#FFD700;letter-spacing:2px;">TERMINAL DE FILAS PREDITIVO</div>
-          <div id="px-port-panel" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;">
-            <div id="px-port-santos" class="px-port-card"></div>
-            <div id="px-port-paranagua" class="px-port-card"></div>
-            <div id="px-port-suape" class="px-port-card"></div>
-          </div>
-          <div style="border-top:1px solid #1a1a1a;padding:6px 12px;font-size:9px;color:#FFD700;letter-spacing:2px;">OPORTUNIDADES DE ARBITRAGEM</div>
-          <div id="px-arb-list" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;"></div>
-          <!-- DETALHAMENTO DA OPORTUNIDADE SELECIONADA -->
-          <div id="px-arb-detail" style="border-top:2px solid #FFD700;background:rgba(10,10,10,.95);padding:10px;overflow-y:auto;max-height:300px;display:none;">
-            <div style="font-size:10px;color:#FFD700;letter-spacing:1px;margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:4px;">📊 ANÁLISE DA OPORTUNIDADE</div>
-            <div id="px-arb-detail-content"></div>
-          </div>
-        </div>
+        </section>
+
+        <!-- RIGHT: JANELAS DE IMPACTO -->
+        <aside class="px-impact">
+          <section class="px-window">
+            <div class="px-window-head"><span class="pulse" style="width:6px;height:6px;background:#EF4444;"></span> TOPO · FEED SOCIAL PRODUTORES</div>
+            <div id="px-social-feed" class="px-window-body"></div>
+          </section>
+          <section class="px-window">
+            <div class="px-window-head">MEIO · PORTOS + SATELITE</div>
+            <div class="px-window-body">
+              <div class="px-log-grid">
+                <div class="px-mini-metric"><div id="px-log-port-kpi" class="px-mini-val">—</div><div class="px-mini-lbl">PORTO CRITICO</div></div>
+                <div class="px-mini-metric"><div id="px-log-sat-kpi" class="px-mini-val" style="color:#33ABFF;">SAR</div><div class="px-mini-lbl">SATELITE ATIVO</div></div>
+              </div>
+              <div class="px-sat-strip">
+                <div class="px-sat-dot">Sentinel-1</div><div class="px-sat-dot">Sentinel-2</div><div class="px-sat-dot">Planet 3m</div>
+              </div>
+              <div id="px-port-panel">
+                <div id="px-port-santos" class="px-port-card"></div>
+                <div id="px-port-paranagua" class="px-port-card"></div>
+                <div id="px-port-suape" class="px-port-card"></div>
+              </div>
+            </div>
+          </section>
+          <section class="px-window">
+            <div class="px-window-head">BASE · SCAN PRECO GONDOLAS</div>
+            <div id="px-gondola-scan" class="px-window-body"></div>
+          </section>
+          <section style="display:none;">
+            <div id="px-arb-list"></div>
+            <div id="px-arb-detail"><div id="px-arb-detail-content"></div></div>
+          </section>
+        </aside>
       </div>
     </div>
 
@@ -9380,7 +9481,89 @@ window.Predictix = {
     this._renderRodovias();
     this._renderPorts();
     this._renderArbitrage();
+    this._renderDossier();
+    this._renderImpactWindows();
     this._renderKPIs();
+  },
+
+  _flowSignal(seed, margin) {
+    const s = (seed || '').toLowerCase();
+    if (s.includes('ceasa-rj') || s.includes('rj') || s.includes('recuperacao')) {
+      return { key:'rj', color:'#EF4444', className:'px-flow-rj', label:'INADIMPLENCIA/RJ' };
+    }
+    if ((margin || 0) >= 35 || s.includes('ceagesp') || s.includes('santos')) {
+      return { key:'diamond', color:'#33ABFF', className:'px-flow-diamond', label:'AZUL DIAMANTE · SCALABILITY' };
+    }
+    return { key:'active', color:'#50C878', className:'px-flow-active', label:'FLUXO ATIVO' };
+  },
+
+  _renderDossier() {
+    const opps = this.ARBITRAGE_DB[this._culture] || [];
+    const margins = opps.map(o => ((o.sellPrice - o.buyPrice - o.frete) / o.buyPrice * 100));
+    const best = margins.length ? Math.max(...margins) : 0;
+    const rjExposure = opps.filter(o => (o.sell || '').toLowerCase().includes('rj')).length;
+    const score = Math.max(420, Math.min(910, Math.round(650 + best * 3 - rjExposure * 38 + this._horizon * 2)));
+    const rating = rjExposure ? 'ALERTA RJ · CREDITO VIGIADO' : best >= 35 ? 'AZUL DIAMANTE · ESCALAVEL' : 'VERDE · FLUXO ATIVO';
+    const ratingColor = rjExposure ? '#EF4444' : best >= 35 ? '#33ABFF' : '#50C878';
+    const legal = rjExposure
+      ? `Recuperacao judicial em compradores RJ · ${rjExposure} rota(s) expostas`
+      : 'Sem evento judicial critico nas rotas priorizadas';
+
+    const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    setText('px-dossier-legal', legal);
+    setText('px-dossier-legal-meta', rjExposure ? 'Status: inadimplencia/RJ · monitoramento diario' : 'Status: certidoes e protestos sem degradacao relevante');
+    setText('px-dossier-score', score);
+    setText('px-dossier-rating', rating);
+    setText('px-dossier-score-note', `Margem maxima ${best.toFixed(1)}% · ${opps.length} conexoes produtor-comprador`);
+
+    const fill = document.getElementById('px-dossier-score-fill');
+    if (fill) fill.style.width = Math.max(8, Math.min(100, score / 10)) + '%';
+    const scoreEl = document.getElementById('px-dossier-score');
+    const ratingEl = document.getElementById('px-dossier-rating');
+    if (scoreEl) scoreEl.style.color = ratingColor;
+    if (ratingEl) ratingEl.style.color = ratingColor;
+
+    const hist = document.getElementById('px-dossier-history');
+    if (hist) {
+      hist.innerHTML = '';
+      for (let i = 0; i < 24; i++) {
+        const wave = Math.sin((i + this._culture.length) * 0.65) * 16;
+        const h = Math.max(16, Math.min(96, 45 + wave + (score - 650) / 8));
+        const color = i > 19 && rjExposure ? '#EF4444' : h > 68 ? '#33ABFF' : h > 48 ? '#50C878' : '#F59E0B';
+        const bar = document.createElement('div');
+        bar.className = 'px-history-bar';
+        bar.style.height = h + '%';
+        bar.style.background = color;
+        bar.title = `M-${23 - i}: score administrativo ${Math.round(h)}`;
+        hist.appendChild(bar);
+      }
+    }
+    setText('px-dossier-history-note', `Historico administrativo minimo 24 meses · ${rjExposure ? '3 alertas de governanca' : 'governanca estavel'}`);
+  },
+
+  _renderImpactWindows() {
+    const social = document.getElementById('px-social-feed');
+    if (social) {
+      const feeds = [
+        { tag:'red', who:'Produtor RJ · tomate', msg:'Relata atraso de pagamento e renegociacao por chuva no cinturao verde.', meta:'clima + credito · agora' },
+        { tag:'green', who:'Cooperativa GO', msg:'Colheita em ritmo normal; oferta spot liberada para CEAGESP e DF.', meta:'fluxo ativo · 18 min' },
+        { tag:'blue', who:'Vale Sao Francisco', msg:'Manga premium com demanda de exportacao e escala logistica para Suape.', meta:'scalability · 42 min' },
+        { tag:'red', who:'Grupo folhosas SP/MG', msg:'Alerta de pragas em folhas sensiveis apos umidade acima da media.', meta:'pragas · 1h' },
+      ];
+      social.innerHTML = feeds.map(f => `<div class="px-feed-item"><div style="display:flex;justify-content:space-between;gap:8px;"><strong>${f.who}</strong><span class="px-signal ${f.tag}">${f.tag === 'red' ? 'RISCO' : f.tag === 'blue' ? 'DIAMANTE' : 'ATIVO'}</span></div><div>${f.msg}</div><div class="px-feed-meta"><span>${f.meta}</span><span>social agro</span></div></div>`).join('');
+    }
+
+    const gondola = document.getElementById('px-gondola-scan');
+    if (gondola) {
+      const base = { tomate:7.89, banana:5.19, laranja:4.79, cebola:4.49, manga:8.99, uva:16.9, batata:5.59, mamao:6.29, melao:5.99, cenoura:4.99 };
+      const p = base[this._culture] || 6.49;
+      const rows = [
+        { store:'Atacadao', zone:'RJ/SP', price:p * 0.96, delta:+2.4, tag:'red' },
+        { store:'Assai', zone:'Sudeste', price:p * 1.03, delta:+1.1, tag:'green' },
+        { store:'Cencosud', zone:'NE/SE', price:p * 1.08, delta:+4.8, tag:'blue' },
+      ];
+      gondola.innerHTML = rows.map(r => `<div class="px-gondola-row"><div class="px-gondola-price"><div><strong>${r.store}</strong><div class="px-store">${r.zone} · scan gondola real</div></div><div style="text-align:right;"><div class="px-price">R$ ${r.price.toFixed(2)}/kg</div><div class="px-delta" style="color:${r.delta > 3 ? '#EF4444' : '#50C878'};">${r.delta > 0 ? '+' : ''}${r.delta.toFixed(1)}% 24h</div></div></div><div class="px-feed-meta"><span>${this._culture.toUpperCase()}</span><span class="px-signal ${r.tag}">${r.tag === 'blue' ? 'SCALA' : r.tag === 'red' ? 'RJ' : 'ATIVO'}</span></div></div>`).join('');
+    }
   },
 
   _renderFlowLines() {
@@ -9389,18 +9572,23 @@ window.Predictix = {
     const h = this._horizon;
     this.ROUTES.forEach(r => {
       const riskAdj = Math.min(1, r.risk + (h > 7 ? 0.15 : 0) + (h > 12 ? 0.2 : 0));
-      const color = riskAdj > 0.3 ? '#EF4444' : riskAdj > 0.15 ? '#F59E0B' : '#50C878';
+      const signal = riskAdj > 0.3
+        ? { color:'#EF4444', className:'px-flow-rj', label:'INADIMPLENCIA/RJ' }
+        : riskAdj > 0.15
+          ? { color:'#33ABFF', className:'px-flow-diamond', label:'AZUL DIAMANTE · SCALABILITY' }
+          : { color:'#50C878', className:'px-flow-active', label:'FLUXO ATIVO' };
+      const color = signal.color;
       const weight = riskAdj > 0.3 ? 3 : 2;
-      const dash = riskAdj > 0.3 ? '8,6' : riskAdj > 0.15 ? '12,4' : '';
+      const dash = '10,8';
       const mid = [(r.from[0]+r.to[0])/2 + (Math.random()-.5)*1.5, (r.from[1]+r.to[1])/2 + (Math.random()-.5)*1.5];
       const line = L.polyline([r.from, mid, r.to], {
-        color, weight, opacity:0.7, dashArray:dash, smoothFactor:2
+        color, weight, opacity:0.85, dashArray:dash, smoothFactor:2, className:signal.className
       });
-      const statusTxt = riskAdj > 0.3 ? 'PARALISAÇÃO/RISCO ALTO' : riskAdj > 0.15 ? 'GARGALO IMINENTE' : 'FLUXO NORMAL';
+      const statusTxt = riskAdj > 0.3 ? 'PARALISACAO/RISCO ALTO' : riskAdj > 0.15 ? 'CRESCIMENTO ESCALAVEL' : 'FLUXO NORMAL';
       line.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>${r.name}</b><br>${r.road}<br>Status: <b style="color:${color}">${statusTxt}</b><br>Risco: ${(riskAdj*100).toFixed(0)}%${h>0?'<br>Horizonte: T+'+h+'d':''}</div>`, {sticky:true});
       this._flowLayer.addLayer(line);
       // Arrow marker at midpoint
-      L.circleMarker(mid, {radius:3, color, fillColor:color, fillOpacity:0.8, weight:0}).addTo(this._flowLayer);
+      L.circleMarker(mid, {radius:3, color, fillColor:color, fillOpacity:0.8, weight:0}).bindTooltip(signal.label).addTo(this._flowLayer);
     });
   },
 
@@ -9470,12 +9658,14 @@ window.Predictix = {
   _renderPorts() {
     this._portMarkers.clearLayers();
     const h = this._horizon;
+    let criticalPort = { name:'NORMAL', utilization:0, color:'#50C878' };
     // Portos maritimos
     this.PORTS.forEach(p => {
       const volume = Math.round(p.cap * (0.6 + Math.random()*0.4) * (1 + h*0.02));
       const utilization = Math.min(100, Math.round(volume / p.cap * 100));
       const waitHours = Math.round(12 + utilization * 0.5 + (h > 7 ? 24 : 0));
       const color = utilization > 90 ? '#EF4444' : utilization > 70 ? '#F59E0B' : '#50C878';
+      if (utilization > criticalPort.utilization) criticalPort = { name:p.name.split(' ')[0], utilization, color };
       const marker = L.circleMarker([p.lat, p.lon], { radius:10, color:'#FFD700', fillColor:'#111', fillOpacity:0.9, weight:2 });
       marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>⚓ ${p.name}</b><br>Volume: ${volume.toLocaleString()} t<br>Utilização: <b style="color:${color}">${utilization}%</b><br>Espera: <b>${waitHours}h</b></div>`, {direction:'left'});
       this._portMarkers.addLayer(marker);
@@ -9495,6 +9685,12 @@ window.Predictix = {
       marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>🏪 ${c.name}</b><br>Vol. semanal: ${vol.toLocaleString()} t<br>Região: ${c.region}</div>`, {direction:'top'});
       this._portMarkers.addLayer(marker);
     });
+    const portKpi = document.getElementById('px-log-port-kpi');
+    if (portKpi) {
+      portKpi.textContent = criticalPort.name;
+      portKpi.style.color = criticalPort.color;
+      portKpi.title = `${criticalPort.utilization}% de utilizacao preditiva`;
+    }
   },
 
   _renderArbitrage() {
@@ -9527,11 +9723,13 @@ window.Predictix = {
       });
       sellM.bindTooltip(`<b style="color:#EF4444">VENDA</b><br>${o.sell}<br>R$ ${o.sellPrice}/un`, {direction:'top'});
       this._arbLayer.addLayer(sellM);
-      // Flow line connecting buy → sell
-      const flowColor = profitable ? '#FFD700' : '#555';
+      // Flow line connecting buy -> sell
+      const signal = this._flowSignal(o.sell, margin);
+      const flowColor = profitable ? signal.color : '#555';
       const flow = L.polyline([[o.buyLat, o.buyLon], [o.sellLat, o.sellLon]], {
-        color:flowColor, weight:profitable?2.5:1, dashArray:'10,6', opacity:0.7
+        color:flowColor, weight:profitable?3:1, dashArray:'10,8', opacity:0.82, className:profitable ? signal.className : ''
       });
+      flow.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>${signal.label}</b><br>${o.buy} -> ${o.sell}<br>Margem: ${margin.toFixed(1)}%</div>`, {sticky:true});
       flow.on('click', () => this._showInsight(o, margin));
       this._arbLayer.addLayer(flow);
       // Sidebar card
