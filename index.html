@@ -77,7 +77,6 @@
 .px-time-console{left:50%;bottom:14px;transform:translateX(-50%);width:min(760px,calc(100% - 36px));padding:10px 14px;}
 .px-time-row{display:flex;align-items:center;gap:12px;}
 .px-time-label{min-width:120px;color:#f4c542;font-size:12px;font-family:var(--font);font-weight:bold;letter-spacing:1px;}
-#px-horizon-bottom{flex:1;accent-color:#f4c542;}
 .px-time-presets{display:flex;gap:6px;margin-top:8px;justify-content:center;}
 .px-time-presets button{background:#0f1318;border:1px solid #39424d;color:#cdd3da;font-family:var(--font);font-size:9px;padding:3px 8px;border-radius:3px;cursor:pointer;}
 .px-time-presets button.active,.px-time-presets button:hover{border-color:#f4c542;color:#f4c542;background:rgba(244,197,66,.12);}
@@ -9391,7 +9390,6 @@ window.Predictix = {
     }
     setTimeout(() => this._map.invalidateSize(), 200);
     this._render();
-    this._startClimaCountdown();
   },
 
   async _loadRodovias() {
@@ -10134,7 +10132,8 @@ window.Predictix = {
       document.getElementById('px-clima-timer').textContent = remaining;
       if (remaining <= 0) {
         clearInterval(this._climaTimer);
-        this._injectClimaLayer();
+        this._climaActive = true;
+        pending.style.display = 'none';
       }
     }, 1000);
   },
