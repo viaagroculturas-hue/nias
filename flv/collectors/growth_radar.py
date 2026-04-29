@@ -5,11 +5,13 @@ NIA$ Soberano Digital v5.0
 """
 
 import json
+import math
 import sqlite3
 import os
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from dataclasses import dataclass
+from flv.model.growth_scorer import calculate_delta_judicial_weight
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nia_flv.db')
 
@@ -65,19 +67,34 @@ class GrowthScorer:
         conn.row_factory = sqlite3.Row
         return conn
     
-    def calculate_growth_score(self, metrics: GrowthMetrics) -> Dict:
+    def calculate_growth_score(
+        self,
+        metrics: GrowthMetrics,
+        delta_judicial_pressure: float = 0.0,
+        delta_judicial_weight: Optional[Dict[str, float]] = None,
+    ) -> Dict:
         """
         Calcula score de crescimento baseado em múltiplas métricas.
         Retorna score normalizado e análise.
         """
+        delta_weight = delta_judicial_weight or calculate_delta_judicial_weight(
+            delta_judicial_pressure,
+            delta_judicial_pressure,
+        )
+
         # Pesos para cada métrica
         weights = {
             'revenue_12m': 0.35,
             'revenue_24m': 0.25,
             'employees': 0.15,
             'stores': 0.15,
-            'expansion': 0.10
+            'expansion': 0.10,
+            'delta_judicial': delta_weight['weight']
         }
+        base_weight_total = sum(v for k, v in weights.items() if k != 'delta_judicial')
+        scale = (1.0 - weights['delta_judicial']) / base_weight_total if base_weight_total else 1.0
+        for key in ('revenue_12m', 'revenue_24m', 'employees', 'stores', 'expansion'):
+            weights[key] *= scale
         
         # Normaliza crescimento de receita (cap em 100% = 1.0)
         rev_12m_normalized = min(metrics.revenue_growth_12m, 1.0)
@@ -98,7 +115,8 @@ class GrowthScorer:
             rev_24m_normalized * weights['revenue_24m'] +
             emp_normalized * weights['employees'] +
             store_normalized * weights['stores'] +
-            expansion_normalized * weights['expansion']
+            expansion_normalized * weights['expansion'] +
+            delta_weight['pressure'] * weights['delta_judicial']
         ) * 1000  # Escala 0-1000
         
         # Classificação
@@ -124,14 +142,17 @@ class GrowthScorer:
                 'revenue_24m': round(rev_24m_normalized * weights['revenue_24m'] * 1000, 2),
                 'employees': round(emp_normalized * weights['employees'] * 1000, 2),
                 'stores': round(store_normalized * weights['stores'] * 1000, 2),
-                'expansion': round(expansion_normalized * weights['expansion'] * 1000, 2)
+                'expansion': round(expansion_normalized * weights['expansion'] * 1000, 2),
+                'delta_judicial': round(delta_weight['pressure'] * weights['delta_judicial'] * 1000, 2)
             },
+            'delta_judicial_weight': delta_weight,
             'raw_metrics': {
                 'revenue_growth_12m': metrics.revenue_growth_12m,
                 'revenue_growth_24m': metrics.revenue_growth_24m,
                 'employee_growth_pct': metrics.employee_growth_pct,
                 'store_growth_pct': metrics.store_growth_pct,
-                'market_expansion_count': metrics.market_expansion_count
+                'market_expansion_count': metrics.market_expansion_count,
+                'delta_judicial_pressure': delta_judicial_pressure
             }
         }
     
@@ -359,7 +380,17 @@ class GrowthRadar:
                 market_expansion_count=len(json.loads(company['market_expansion'] or '[]'))
             )
             
-            company['growth_score'] = self.scorer.calculate_growth_score(metrics)
+            delta_ctx = self.scorer.assess_delta_judicial_pressure(
+                city=company.get('city'),
+                state_uf=company.get('state_uf'),
+                lat=company.get('lat'),
+                lon=company.get('lon'),
+            )
+            company['growth_score'] = self.scorer.calculate_growth_score(
+                metrics,
+                delta_judicial_pressure=delta_ctx.pressure,
+            )
+            company['delta_judicial'] = delta_ctx.__dict__
             
             # Verifica risco de overtrading
             alert = self.scorer.detect_overtrading_risk(
