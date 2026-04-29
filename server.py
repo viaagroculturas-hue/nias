@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 # ═══════════════════════════════════════════════════════════════════
 # SISTEMA AUTÔNOMO NIA$ v6.0
 # ═══════════════════════════════════════════════════════════════════
-AUTONOMOUS_MODE = True  # Ativar modo autônomo
+AUTONOMOUS_MODE = os.environ.get('AUTONOMOUS_MODE', 'true').lower() in {'1', 'true', 'yes', 'on'}
 autonomous_thread = None
 
 def start_autonomous_system():
@@ -47,6 +47,14 @@ except ImportError:
 
 PORT = int(os.environ.get('PORT', 8080))
 DIR = os.path.dirname(os.path.abspath(__file__))
+NIA_DB_PATH = os.environ.get('NIA_DB_PATH') or os.path.join(DIR, 'nia_flv.db')
+ALLOWED_CORS_ORIGINS = {
+    'https://nias.onrender.com',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+}
 
 _cepea_cache = {}
 _cepea_ttl = 900
@@ -375,7 +383,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         import sqlite3
         import os
         
-        db_path = os.path.join(os.path.dirname(__file__), 'nia_flv.db')
+        db_path = NIA_DB_PATH
         result = {'data': [], 'meta': {'total': 0, 'states': []}}
         
         try:
@@ -445,7 +453,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         import sqlite3
         import os
         
-        db_path = os.path.join(os.path.dirname(__file__), 'nia_flv.db')
+        db_path = NIA_DB_PATH
         result = {'data': [], 'meta': {'total': 0, 'cities': [], 'statuses': []}}
         
         try:
@@ -511,7 +519,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(result, ensure_ascii=False).encode())
 
     def _cors(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
+        origin = self.headers.get('Origin')
+        allowed_origin = origin if origin in ALLOWED_CORS_ORIGINS else 'https://nias.onrender.com'
+        self.send_header('Access-Control-Allow-Origin', allowed_origin)
+        self.send_header('Vary', 'Origin')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
@@ -630,7 +641,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     # Lista todos
                     import sqlite3
-                    conn = sqlite3.connect(os.path.join(DIR, 'nia_flv.db'))
+                    conn = sqlite3.connect(NIA_DB_PATH)
                     conn.row_factory = sqlite3.Row
                     cursor = conn.cursor()
                     cursor.execute("SELECT * FROM flv_distributors WHERE status='ativo' ORDER BY annual_revenue DESC")
@@ -671,7 +682,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/dossier', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = os.path.join(DIR, 'nia_flv.db')
+            db_path = NIA_DB_PATH
             result = {}
             
             if path.startswith('company/'):
@@ -752,7 +763,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/news', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = os.path.join(DIR, 'nia_flv.db')
+            db_path = NIA_DB_PATH
             result = {}
             
             conn = sqlite3.connect(db_path)
@@ -832,7 +843,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/reports', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = os.path.join(DIR, 'nia_flv.db')
+            db_path = NIA_DB_PATH
             result = {}
             
             conn = sqlite3.connect(db_path)
@@ -904,7 +915,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/autonomous', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = os.path.join(DIR, 'nia_flv.db')
+            db_path = NIA_DB_PATH
             result = {}
             
             conn = sqlite3.connect(db_path)
@@ -1161,7 +1172,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         """
         import sqlite3
         from datetime import datetime, timedelta
-        db_path = os.path.join(DIR, 'nia_flv.db')
+        db_path = NIA_DB_PATH
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()

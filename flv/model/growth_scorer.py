@@ -9,12 +9,10 @@ A classe principal GrowthScorer está implementada em growth_radar.py
 
 import json
 import sqlite3
-import os
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
-
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nia_flv.db')
+from flv.db import DB_PATH
 
 
 @dataclass
