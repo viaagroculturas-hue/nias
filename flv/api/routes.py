@@ -16,6 +16,9 @@ def handle_flv(handler, path):
         elif route.startswith('/api/flv/predictions/'):
             slug = route.split('/api/flv/predictions/')[-1].split('?')[0]
             data = _get_predictions(slug, params)
+        elif route.startswith('/api/flv/predict-dossier/'):
+            slug = route.split('/api/flv/predict-dossier/')[-1].split('?')[0]
+            data = _get_predict_dossier(slug, params)
         elif route == '/api/flv/alerts':
             data = _get_alerts(params)
         elif route.startswith('/api/flv/heatmap'):
@@ -117,6 +120,61 @@ def _get_predictions(slug, params):
     horizon = int(params.get('horizon', '15'))
     from flv.model.prophet_model import predict
     return predict(slug, terminal or None, horizon=horizon)
+
+def _get_predict_dossier(slug, params):
+    """Dossiê lateral em 3 janelas: Mídia + Feed Premium + Predictix."""
+    terminal = params.get('terminal', '')
+    horizon = int(params.get('horizon', '15'))
+    limit = int(params.get('limit', '6'))
+
+    from flv.db import query
+    from flv.model.prophet_model import predict
+    from flv.model.explainer import coletar_gatilhos_premium
+
+    like = f"%{slug}%"
+    midia = query(
+        """
+        SELECT source, category, title, summary, url, published_at, sentiment, sentiment_score, relevance_score
+        FROM flv_news_global
+        WHERE lower(source) NOT IN ('reuters', 'bloomberg')
+          AND (
+            lower(title) LIKE lower(?)
+            OR lower(COALESCE(summary, '')) LIKE lower(?)
+            OR lower(COALESCE(related_commodities, '')) LIKE lower(?)
+            OR category IN ('commodities', 'clima', 'geopolitica', 'logistica', 'economia', 'producao', 'mercado')
+          )
+        ORDER BY published_at DESC, COALESCE(relevance_score, ABS(COALESCE(sentiment_score, 0))) DESC
+        LIMIT ?
+        """,
+        (like, like, like, limit),
+    )
+    feed_premium = coletar_gatilhos_premium(slug, limit=limit)
+    predictix = predict(slug, terminal or None, horizon=horizon)
+
+    return {
+        'culture': slug,
+        'terminal': terminal or 'all',
+        'generated_at': datetime.now().isoformat(),
+        'windows': {
+            'midia': {
+                'label': 'Mídia',
+                'items': midia,
+                'count': len(midia),
+            },
+            'feed_premium': {
+                'label': 'Feed Premium',
+                'sources': ['Reuters', 'Bloomberg'],
+                'items': feed_premium,
+                'count': len(feed_premium),
+            },
+            'predictix': {
+                'label': 'Predictix',
+                'prediction': predictix,
+                'report': predictix.get('report'),
+                'horizon_days': predictix.get('horizon_days'),
+            },
+        },
+    }
 
 def _get_alerts(params):
     from flv.db import query
