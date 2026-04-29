@@ -13,8 +13,7 @@ import urllib.parse
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
-
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nia_flv.db')
+from flv.db import DB_PATH
 
 
 class JudicialScraper:

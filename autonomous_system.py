@@ -6,6 +6,7 @@ Sistema de auto-aprendizado e evolução contínua
 
 import sqlite3
 import json
+import os
 import time
 import threading
 import schedule
@@ -28,7 +29,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-DB_PATH = 'nia_flv.db'
+DB_PATH = os.environ.get('NIA_DB_PATH', 'nia_flv.db')
 
 class AutonomousDataCollector:
     """Coletor autônomo de dados de múltiplas fontes"""
