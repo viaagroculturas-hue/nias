@@ -17,7 +17,20 @@ import json
 import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+SCORE_SOBERANO_WEIGHTS = {
+    "Volume_Operacional": 0.35,
+    "Importancia_Geografica": 0.35,
+    "Risco_Insumo": 0.20,
+    "Growth_Potential": 0.10,
+}
+SCORE_SOBERANO_ALIASES = {
+    "Geografia": "Importancia_Geografica",
+    "Growth": "Growth_Potential",
+}
+CRITICAL_RISK_THRESHOLD = 8.5
+CRITICAL_RISK_ALERT_TYPE = "Risco Crítico"
 
 
 def _now_iso() -> str:
@@ -68,20 +81,28 @@ def compute_score_soberano_v2(components: Dict[str, float]) -> float:
             (Risco_Insumo*0.2) + (Growth_Potential*0.1)
     Cada componente deve estar em 0..10.
     """
-    vo = _safe_float(components.get("Volume_Operacional"))
-    ig = _safe_float(components.get("Importancia_Geografica"))
-    ri = _safe_float(components.get("Risco_Insumo"))
-    gp = _safe_float(components.get("Growth_Potential"))
-    score = vo * 0.35 + ig * 0.35 + ri * 0.2 + gp * 0.1
+    normalized_components = dict(components)
+    for alias, canonical in SCORE_SOBERANO_ALIASES.items():
+        if canonical not in normalized_components and alias in normalized_components:
+            normalized_components[canonical] = normalized_components[alias]
+
+    score = sum(
+        _safe_float(normalized_components.get(component)) * weight
+        for component, weight in SCORE_SOBERANO_WEIGHTS.items()
+    )
     return float(_clamp(score, 0.0, 10.0))
 
 
 def classify_score_color(score: float) -> str:
-    if score > 8.5:
+    if score > CRITICAL_RISK_THRESHOLD:
         return "vermelho"
     if score < 3.0:
         return "azul"
     return "neutro"
+
+
+def is_critical_risk_score(score: float) -> bool:
+    return _safe_float(score) > CRITICAL_RISK_THRESHOLD
 
 
 @dataclass
@@ -111,6 +132,23 @@ class SovereignEntity:
             "status_color": self.status_color,
             "updated_at": datetime.now().isoformat(),
         }
+
+
+def build_critical_risk_alert(ent: SovereignEntity, change_type: str, score_before: Optional[float]) -> Dict[str, Any]:
+    """Monta alerta de relatório quando um delta coloca a entidade em risco crítico."""
+    return {
+        "type": CRITICAL_RISK_ALERT_TYPE,
+        "severity": "vermelho",
+        "entity_type": ent.entity_type,
+        "entity_id": ent.entity_id,
+        "entity_name": ent.name,
+        "change_type": change_type,
+        "score_before": score_before,
+        "score_after": ent.score,
+        "threshold": CRITICAL_RISK_THRESHOLD,
+        "message": f"Risco Crítico: {ent.name} atingiu Score Soberano {ent.score:.2f} (> {CRITICAL_RISK_THRESHOLD:.1f})",
+        "components": ent.components,
+    }
 
 
 class WarRoomEngine:
@@ -333,6 +371,7 @@ class WarRoomEngine:
         created = 0
         updated = 0
         deltas = 0
+        critical_alerts: List[Dict[str, Any]] = []
 
         # Map do estado atual persistido
         existing = self._query(
@@ -380,6 +419,11 @@ class WarRoomEngine:
 
             if prev is None:
                 created += 1
+                payload = {"name": ent.name, "components": ent.components}
+                if is_critical_risk_score(ent.score):
+                    alert = build_critical_risk_alert(ent, "insert", None)
+                    payload["alert"] = alert
+                    critical_alerts.append(alert)
                 self._log_change(
                     obs_ts=obs_ts,
                     domain="score",
@@ -389,7 +433,7 @@ class WarRoomEngine:
                     severity=ent.status_color if ent.status_color in {"vermelho", "azul"} else "amarelo",
                     score_before=None,
                     score_after=ent.score,
-                    payload={"name": ent.name, "components": ent.components},
+                    payload=payload,
                 )
                 deltas += 1
             else:
@@ -397,6 +441,11 @@ class WarRoomEngine:
                 score_diff = abs(ent.score - (_safe_float(prev_score) if prev_score is not None else 0.0))
                 color_changed = prev_color != ent.status_color
                 if score_diff >= delta_threshold or color_changed:
+                    payload = {"name": ent.name, "components": ent.components, "score_diff": round(score_diff, 3)}
+                    if is_critical_risk_score(ent.score):
+                        alert = build_critical_risk_alert(ent, "update", prev_score)
+                        payload["alert"] = alert
+                        critical_alerts.append(alert)
                     self._log_change(
                         obs_ts=obs_ts,
                         domain="score",
@@ -406,12 +455,20 @@ class WarRoomEngine:
                         severity=ent.status_color if ent.status_color in {"vermelho", "azul"} else "amarelo",
                         score_before=prev_score,
                         score_after=ent.score,
-                        payload={"name": ent.name, "components": ent.components, "score_diff": round(score_diff, 3)},
+                        payload=payload,
                     )
                     deltas += 1
 
         self._commit()
-        return {"obs_ts": obs_ts, "created": created, "updated": updated, "deltas": deltas, "entities": len(entities)}
+        return {
+            "obs_ts": obs_ts,
+            "created": created,
+            "updated": updated,
+            "deltas": deltas,
+            "entities": len(entities),
+            "critical_risk_alerts": critical_alerts,
+            "critical_risk_alerts_count": len(critical_alerts),
+        }
 
     def _log_change(
         self,
@@ -531,7 +588,69 @@ class WarRoomEngine:
                 r["payload"] = {}
             r.pop("payload_json", None)
         latest = rows[-1]["obs_ts"] if rows else since_iso
-        return {"since": since_iso, "latest": latest, "deltas": rows, "count": len(rows)}
+        critical_alerts = [
+            r["payload"]["alert"]
+            for r in rows
+            if isinstance(r.get("payload"), dict)
+            and (r.get("payload") or {}).get("alert", {}).get("type") == CRITICAL_RISK_ALERT_TYPE
+        ]
+        return {
+            "since": since_iso,
+            "latest": latest,
+            "deltas": rows,
+            "count": len(rows),
+            "critical_risk_alerts": critical_alerts,
+            "critical_risk_alerts_count": len(critical_alerts),
+        }
+
+    def critical_risk_alerts(self, since_iso: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        params: Tuple[Any, ...]
+        where = "domain = 'score' AND score_after > ?"
+        params = (CRITICAL_RISK_THRESHOLD,)
+        if since_iso:
+            where += " AND obs_ts > ?"
+            params = (CRITICAL_RISK_THRESHOLD, since_iso)
+
+        rows = self._query(
+            f"""
+            SELECT obs_ts, entity_type, entity_id, change_type, score_before, score_after, payload_json
+            FROM flv_change_log
+            WHERE {where}
+            ORDER BY obs_ts DESC
+            LIMIT ?
+            """,
+            params + (limit,),
+        )
+
+        alerts: List[Dict[str, Any]] = []
+        for r in rows:
+            try:
+                payload = json.loads(r.get("payload_json") or "{}")
+            except Exception:
+                payload = {}
+            alert = payload.get("alert") if isinstance(payload, dict) else None
+            if not alert:
+                alert = {
+                    "type": CRITICAL_RISK_ALERT_TYPE,
+                    "severity": "vermelho",
+                    "entity_type": r.get("entity_type"),
+                    "entity_id": r.get("entity_id"),
+                    "entity_name": payload.get("name") if isinstance(payload, dict) else None,
+                    "change_type": r.get("change_type"),
+                    "score_before": r.get("score_before"),
+                    "score_after": r.get("score_after"),
+                    "threshold": CRITICAL_RISK_THRESHOLD,
+                    "message": (
+                        f"Risco Crítico: entidade {r.get('entity_id')} atingiu Score Soberano "
+                        f"{_safe_float(r.get('score_after')):.2f} (> {CRITICAL_RISK_THRESHOLD:.1f})"
+                    ),
+                    "components": payload.get("components", {}) if isinstance(payload, dict) else {},
+                }
+            alert["obs_ts"] = r.get("obs_ts")
+            alerts.append(alert)
+
+        alerts.reverse()
+        return alerts
 
 
 def run_cycle(delta_threshold: float = 0.15) -> Dict[str, Any]:
