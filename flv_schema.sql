@@ -360,6 +360,39 @@ CREATE INDEX IF NOT EXISTS idx_supply_supplier ON flv_supply_chain(supplier_cnpj
 CREATE INDEX IF NOT EXISTS idx_supply_client ON flv_supply_chain(client_cnpj);
 CREATE INDEX IF NOT EXISTS idx_supply_risk ON flv_supply_chain(supply_risk_score);
 
+-- Snapshot operacional do War Room
+CREATE TABLE IF NOT EXISTS flv_sovereign_entities (
+    entity_type      TEXT NOT NULL,
+    entity_id        TEXT NOT NULL,
+    name             TEXT NOT NULL,
+    lat              REAL,
+    lon              REAL,
+    country          TEXT,
+    state_uf         TEXT,
+    score_soberano   REAL NOT NULL,
+    components_json  TEXT,
+    status_color     TEXT,
+    updated_at       TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (entity_type, entity_id)
+);
+
+CREATE TABLE IF NOT EXISTS flv_change_log (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    obs_ts          TEXT NOT NULL,
+    domain          TEXT NOT NULL,
+    entity_type     TEXT,
+    entity_id       TEXT,
+    change_type     TEXT NOT NULL,
+    severity        TEXT,
+    score_before    REAL,
+    score_after     REAL,
+    payload_json    TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_sovereign_entities_score ON flv_sovereign_entities(score_soberano);
+CREATE INDEX IF NOT EXISTS idx_change_log_obs ON flv_change_log(obs_ts);
+CREATE INDEX IF NOT EXISTS idx_change_log_entity ON flv_change_log(entity_type, entity_id);
+
 -- Tabela de Feeds de Notícias Globais (News Pulse)
 CREATE TABLE IF NOT EXISTS flv_news_global (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
