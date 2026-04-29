@@ -3333,6 +3333,9 @@ const prices = {
 const tickerIds = { soja:'tp-soja', milho:'tp-milho', boi:'tp-boi', acucar:'tp-acucar', cafe:'tp-cafe', algodao:'tp-algodao', usd:'tp-usd', tomate:'tp-tomate' };
 function updatePrices() {
   const tomato = getCeasaPrice('tomate');
+  if (!tomato) {
+    loadWarroomSnapshotPrices().then(() => updatePrices()).catch(() => {});
+  }
   if (tomato) {
     const el = document.getElementById('tp-tomate');
     if (el) {
@@ -10410,6 +10413,11 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
 
 // Auto-start API loading after login
 document.addEventListener('DOMContentLoaded', () => {
+  loadWarroomSnapshotPrices(true).then(() => {
+    renderOverviewCeasaPrices();
+    updatePrices();
+    updateHorti();
+  }).catch(e => console.warn('CEASA snapshot preload error:', e));
   setTimeout(niasLoadRealData, 2000);
   
   // FIX: Move panels inside #main if they're outside
