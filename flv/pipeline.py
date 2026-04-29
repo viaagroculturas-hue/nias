@@ -69,5 +69,12 @@ def run_pipeline():
     except Exception as e:
         print(f'[FLV-Pipeline] Prophet erro: {e}')
 
+    # 7. Feedback loop: compara previsao x preco real e ajusta pesos do modelo
+    try:
+        from learning.feedback_loop import run_daily_feedback
+        run_daily_feedback(lookback_days=1)
+    except Exception as e:
+        print(f'[FLV-Pipeline] FeedbackLoop erro: {e}')
+
     elapsed = time.time() - t0
     print(f'[FLV-Pipeline] Ciclo completo em {elapsed:.1f}s')
