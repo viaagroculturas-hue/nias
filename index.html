@@ -339,6 +339,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .odi-low{background:rgba(0,255,136,.15);color:#00ff88;}
 @keyframes climatePulse{0%,100%{opacity:1}50%{opacity:.5}}
 @keyframes sonar-expand{0%{transform:scale(.4);opacity:.5;}100%{transform:scale(2.5);opacity:0;}}
+.leaflet-overlay-pane .mercosul-flow{animation:mercosul-dash 1.8s linear infinite;filter:drop-shadow(0 0 6px rgba(0,212,255,.65));}
+.leaflet-overlay-pane .mercosul-flow-glow{filter:drop-shadow(0 0 12px rgba(0,255,136,.55));}
+.sa-risk-tip{background:rgba(5,14,26,.94);border:1px solid rgba(125,211,252,.45);box-shadow:0 0 16px rgba(0,212,255,.18);color:#dff7ff;font-family:var(--font);font-size:11px;}
+@keyframes mercosul-dash{to{stroke-dashoffset:-34;}}
 .map-controls{position:absolute;top:10px;right:10px;z-index:999;background:rgba(5,14,26,.92);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;min-width:190px;}
 .map-ctrl-title{color:var(--accent);font-size:10px;letter-spacing:2px;margin-bottom:3px;}
 .layer-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;}
@@ -1115,12 +1119,21 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <div class="layer-toggle"><input type="checkbox" id="l9" checked onchange="toggleLayer('tomate-ind',this)"><label for="l9" style="color:var(--accent3)">🍅 Tomate Indústria</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l10" onchange="toggleLayer('planet',this)"><label for="l10" style="color:#7ec850">🛰 Planet (3m)</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l11" checked onchange="toggleLayer('country-borders',this)"><label for="l11" style="color:#00d4ff">🌎 Contornos Países</label></div>
+          <div class="layer-toggle"><input type="checkbox" id="l12" checked onchange="toggleLayer('admin-risk',this)"><label for="l12" style="color:#d9e2ec">▧ Divisões/Risco</label></div>
+          <div class="layer-toggle"><input type="checkbox" id="l13" checked onchange="toggleLayer('mercosul-flows',this)"><label for="l13" style="color:#00ff88">↔ Fluxos Mercosul</label></div>
+          <div class="layer-toggle"><input type="checkbox" id="l14" checked onchange="toggleLayer('focus-mask',this)"><label for="l14" style="color:#8b949e">◐ Foco Sul-Americano</label></div>
           <div style="margin-top:6px;">
             <div class="map-ctrl-title">LEGENDA NDVI</div>
             <div class="legend-item"><div class="legend-dot" style="background:#00a550"></div><span class="legend-label">&gt; 0.70 — Saúde plena</span></div>
             <div class="legend-item"><div class="legend-dot" style="background:#7ec850"></div><span class="legend-label">0.50–0.70 — Normal</span></div>
             <div class="legend-item"><div class="legend-dot" style="background:#ffc107"></div><span class="legend-label">0.30–0.50 — Atenção</span></div>
             <div class="legend-item"><div class="legend-dot" style="background:#ff3d3d"></div><span class="legend-label">&lt; 0.30 — Crítico</span></div>
+          </div>
+          <div style="margin-top:6px;">
+            <div class="map-ctrl-title">RISCO FINANCEIRO</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#0f5132"></div><span class="legend-label">Baixa exposição</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div><span class="legend-label">Dreno de capital</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ff1744"></div><span class="legend-label">Safra + inadimplência</span></div>
           </div>
         </div>
         <div class="map-sat-bar" style="position:absolute;top:44px;left:10px;z-index:1100;">
@@ -3367,8 +3380,15 @@ const mapLayerObjs = {};
 let leafletMap;
 function initMap() {
   window._mapInit = true;
-  leafletMap = L.map('map', { center: [-10, -60], zoom: 3, zoomControl: true });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB', maxZoom: 18 }).addTo(leafletMap);
+  leafletMap = L.map('map', {
+    center: [-10, -60],
+    zoom: 3,
+    minZoom: 3,
+    zoomControl: true,
+    maxBounds: [[14, -92], [-58, -31]],
+    maxBoundsViscosity: 0.85
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB · foco América do Sul', maxZoom: 18 }).addTo(leafletMap);
 
   // ── CONTORNOS DOS PAÍSES DA AMÉRICA DO SUL ──
   const southAmericaCountries = [
@@ -3390,14 +3410,70 @@ function initMap() {
   mapLayerObjs['country-borders'] = L.layerGroup(
     southAmericaCountries.map(c => 
       L.polygon(c.coords, { 
-        color: c.color, 
-        fillColor: c.color, 
-        fillOpacity: 0.05, 
-        weight: 2,
-        dashArray: '5,5'
+        color: '#1f3f5f',
+        fillColor: c.color,
+        fillOpacity: 0.04,
+        weight: 1.5,
+        opacity: 0.95
       }).bindTooltip(`<b>${c.name}</b>`, { permanent: false, direction: 'center' })
     )
   ).addTo(leafletMap);
+
+  mapLayerObjs['focus-mask'] = L.layerGroup([
+    L.rectangle([[85,-180],[14,180]], { color:'#020617', weight:0, fillColor:'#020617', fillOpacity:.66, interactive:false }),
+    L.rectangle([[-58,-180],[-85,180]], { color:'#020617', weight:0, fillColor:'#020617', fillOpacity:.66, interactive:false }),
+    L.rectangle([[14,-180],[-58,-92]], { color:'#020617', weight:0, fillColor:'#020617', fillOpacity:.66, interactive:false }),
+    L.rectangle([[14,-31],[-58,180]], { color:'#020617', weight:0, fillColor:'#020617', fillOpacity:.66, interactive:false })
+  ]).addTo(leafletMap);
+
+  const debtBettingScore = d => Math.round((d.debt * 0.42) + (d.betting * 0.34) + (d.harvestLoss * 0.24));
+  const riskColor = score => score >= 82 ? '#ff1744' : score >= 58 ? '#f59e0b' : '#0f5132';
+  const riskStatus = score => score >= 82 ? 'Perda de safra + alta inadimplência' : score >= 58 ? 'Alerta de dreno de capital' : 'Baixa exposição financeira';
+  const southAmericaAdminDivisions = [
+    { id:'BR-SP', name:'São Paulo', ceasa:'CEAGESP-SP', risk:74, debt:62, betting:71, harvestLoss:18, ll:[[-24.9,-49.4],[-21.2,-49.4],[-20.6,-45.2],[-22.0,-44.0],[-24.3,-45.0],[-25.2,-47.8]] },
+    { id:'BR-PR', name:'Paraná', ceasa:'CEASA-PR', risk:47, debt:34, betting:41, harvestLoss:12, ll:[[-26.5,-54.6],[-22.8,-54.0],[-22.5,-48.7],[-25.3,-48.1],[-26.8,-51.2]] },
+    { id:'BR-RS', name:'Rio Grande do Sul', ceasa:'CEASA-RS', risk:88, debt:82, betting:67, harvestLoss:61, ll:[[-33.7,-57.8],[-29.0,-57.0],[-27.1,-52.0],[-28.9,-49.8],[-32.3,-51.2],[-34.0,-53.6]] },
+    { id:'BR-MT', name:'Mato Grosso', ceasa:'CEASA-MT', risk:42, debt:38, betting:29, harvestLoss:16, ll:[[-18.2,-61.8],[-8.2,-61.2],[-7.6,-52.2],[-14.2,-50.5],[-17.8,-53.8]] },
+    { id:'BR-MS', name:'Mato Grosso do Sul', ceasa:'CEASA-MS', risk:63, debt:54, betting:59, harvestLoss:24, ll:[[-24.2,-58.5],[-19.0,-58.0],[-17.0,-53.5],[-20.8,-51.1],[-24.4,-54.0]] },
+    { id:'BR-GO', name:'Goiás', ceasa:'CEASA-GO', risk:56, debt:48, betting:54, harvestLoss:20, ll:[[-19.5,-53.2],[-13.0,-53.1],[-12.4,-47.0],[-16.3,-45.8],[-19.7,-48.4]] },
+    { id:'BR-BA', name:'Bahia', ceasa:'CEASA-BA', risk:86, debt:79, betting:64, harvestLoss:58, ll:[[-17.4,-46.5],[-9.0,-46.2],[-8.5,-38.2],[-13.2,-37.4],[-18.0,-39.8]] },
+    { id:'AR-SFE', name:'Santa Fe / Rosário', ceasa:'Mercado Concentrador Rosario', risk:52, debt:45, betting:38, harvestLoss:22, ll:[[-34.2,-62.8],[-28.0,-62.4],[-27.8,-59.0],[-32.0,-59.2],[-34.7,-60.3]] },
+    { id:'AR-CBA', name:'Córdoba', ceasa:'Mercado de Abasto Córdoba', risk:69, debt:61, betting:57, harvestLoss:34, ll:[[-35.0,-65.2],[-29.4,-65.2],[-29.0,-61.8],[-34.2,-62.0]] },
+    { id:'PY-ASU', name:'Central / Assunção', ceasa:'DAMAG-Asunción', risk:65, debt:55, betting:61, harvestLoss:19, ll:[[-26.3,-58.8],[-24.4,-58.7],[-24.2,-56.3],[-26.6,-56.1]] },
+    { id:'CL-RM', name:'Região Metropolitana', ceasa:'Lo Valledor-Santiago', risk:76, debt:63, betting:69, harvestLoss:31, ll:[[-34.4,-71.4],[-32.6,-71.2],[-32.5,-69.5],[-34.5,-69.4]] },
+    { id:'UY-MVD', name:'Montevidéu / Canelones', ceasa:'UAM Montevideo', risk:39, debt:31, betting:27, harvestLoss:10, ll:[[-35.0,-57.8],[-33.6,-57.6],[-33.6,-54.6],[-35.0,-54.8]] },
+    { id:'BO-SCZ', name:'Santa Cruz', ceasa:'Mercado Abasto Santa Cruz', risk:58, debt:49, betting:42, harvestLoss:27, ll:[[-20.1,-64.2],[-15.0,-64.0],[-14.3,-59.8],[-18.2,-58.8],[-20.4,-61.2]] }
+  ];
+  const adminRiskGeoJson = {
+    type: 'FeatureCollection',
+    features: southAmericaAdminDivisions.map(d => ({
+      type: 'Feature',
+      properties: { ...d, risk: debtBettingScore(d) },
+      geometry: { type: 'Polygon', coordinates: [d.ll.map(([lat,lng]) => [lng, lat])] }
+    }))
+  };
+  mapLayerObjs['admin-risk'] = L.geoJSON(adminRiskGeoJson, {
+    style: feature => ({
+      color: '#2f4f6f',
+      weight: 1.5,
+      opacity: 0.96,
+      fillColor: riskColor(feature.properties.risk),
+      fillOpacity: 0.38
+    }),
+    onEachFeature: (feature, layer) => {
+      const p = feature.properties;
+      const tooltip = `<div><b>${p.name}</b><br>ID: ${p.id}<br>CEASA: ${p.ceasa}<br>Score: ${p.risk}/100 · ${riskStatus(p.risk)}</div>`;
+      layer.bindTooltip(tooltip, { sticky:true, className:'sa-risk-tip' });
+      layer.bindPopup(`<div style="font-family:monospace;font-size:12px;color:#050e1a"><b>${p.name}</b><br>ID: ${p.id}<br>CEASA: ${p.ceasa}<br>Endividamento: ${p.debt}%<br>Apostas/Turismo: ${p.betting}%<br>Perda de safra: ${p.harvestLoss}%</div>`);
+      layer.on({
+        mouseover: e => {
+          e.target.setStyle({ fillOpacity: 0.72, weight:2.4, color:'#8fb3d9' });
+          e.target.bringToFront();
+        },
+        mouseout: e => mapLayerObjs['admin-risk'].resetStyle(e.target)
+      });
+    }
+  }).addTo(leafletMap);
 
   const addZones = (key, zones) => {
     mapLayerObjs[key] = L.layerGroup(zones.map(z =>
@@ -3505,6 +3581,26 @@ function initMap() {
     L.polyline([[-12.5,-55.9],[-15.5,-54.5],[-17.5,-53.0],[-20.5,-51.5],[-23.95,-46.33]], { color:'#ffc107', weight:1.5, opacity:.6, dashArray:'4,4' })
       .bindPopup('<div style="font-family:monospace;font-size:12px;color:#050e1a">Corredor Santos</div>'),
   ]).addTo(leafletMap);
+
+  const addMercosulFlows = () => {
+    const flows = [
+      { from:[-32.95,-60.65], to:[-23.55,-46.63], label:'Rosário (ARG) ↔ São Paulo (BR)', volume:4.8, goods:'Grãos + hortifrúti' },
+      { from:[-23.55,-46.63], to:[-25.28,-57.63], label:'São Paulo (BR) ↔ Assunção (PY)', volume:2.6, goods:'Hortifrúti refrigerado' },
+      { from:[-25.28,-57.63], to:[-33.45,-70.66], label:'Assunção (PY) ↔ Santiago (CHL)', volume:1.9, goods:'Grãos + frutas secas' },
+      { from:[-33.45,-70.66], to:[-32.95,-60.65], label:'Santiago (CHL) ↔ Rosário (ARG)', volume:3.2, goods:'Frutas + insumos' },
+    ];
+    mapLayerObjs['mercosul-flows'] = L.layerGroup();
+    flows.forEach(f => {
+      const weight = 1.5 + f.volume;
+      const glow = L.polyline([f.from, f.to], { color:'#00ff88', weight:weight + 4, opacity:.16, className:'mercosul-flow-glow', interactive:false });
+      const line = L.polyline([f.from, f.to], { color:'#00d4ff', weight, opacity:.88, dashArray:'14 10', className:'mercosul-flow' });
+      line.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>${f.label}</b><br>Volume: ${f.volume.toFixed(1)} Mt<br>${f.goods}</div>`, { sticky:true, className:'sa-risk-tip' });
+      glow.addTo(mapLayerObjs['mercosul-flows']);
+      line.addTo(mapLayerObjs['mercosul-flows']);
+    });
+    mapLayerObjs['mercosul-flows'].addTo(leafletMap);
+  };
+  addMercosulFlows();
   setTimeout(() => leafletMap && leafletMap.invalidateSize(), 120);
 }
 

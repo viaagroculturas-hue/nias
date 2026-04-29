@@ -109,6 +109,9 @@ def test_layer_checkboxes(html_content):
         ("toggleLayer('tomate-ind'", "Camada Tomate Ind"),
         ("toggleLayer('planet'", "Camada Planet"),
         ("toggleLayer('country-borders'", "Camada Contornos"),
+        ("toggleLayer('admin-risk'", "Camada Divisões/Risco"),
+        ("toggleLayer('mercosul-flows'", "Camada Fluxos Mercosul"),
+        ("toggleLayer('focus-mask'", "Camada Foco Sul-Americano"),
         ("bcToggleLayer('sonar-poi'", "BC Camada Sonar"),
         ("bcToggleLayer('portos'", "BC Camada Portos"),
         ("bcToggleLayer('planet'", "BC Camada Planet"),
@@ -167,11 +170,24 @@ def test_map_config(html_content):
         print("  ⚠️  Zoom pode não estar configurado para visão continental")
     
     # Verificar contornos dos países
-    if "southAmericaCountries" in html_content:
+    if "southAmericaCountries" in html_content and "southAmericaAdminDivisions" in html_content:
         print("  ✅ Contornos dos países definidos")
     else:
-        print("  ❌ Contornos dos países não encontrados")
+        print("  ❌ Contornos/divisões dos países não encontrados")
         all_ok = False
+
+    checks = [
+        ("weight: 1.5", "Borda administrativa 1.5 configurada"),
+        ("fillOpacity:0.72", "Hover aumenta fillOpacity"),
+        ("betting:", "Score de endividamento/apostas presente"),
+        ("addMercosulFlows", "Fluxos Mercosul configurados"),
+    ]
+    for needle, desc in checks:
+        if needle in html_content:
+            print(f"  ✅ {desc}")
+        else:
+            print(f"  ❌ {desc}")
+            all_ok = False
     
     return all_ok
 
