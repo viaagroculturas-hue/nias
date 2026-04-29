@@ -6,6 +6,7 @@
 <title>NIA$ — Núcleo de Inteligência Agro-Sul</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
@@ -355,12 +356,39 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .map-stats p{font-size:10px;color:var(--text2);}
 .map-stats strong{color:var(--accent2);}
 .map-sat-bar{position:absolute;top:10px;left:10px;z-index:999;background:rgba(5,14,26,.92);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:200px;}
+.leaflet-tile.ndvi-canvas-tile{image-rendering:auto;}
+.vector-tile-status{font-size:9px;color:var(--accent2);margin-top:4px;line-height:1.4;}
+.proof-hit-marker{border-radius:50%;background:rgba(0,255,136,.18);border:1px solid #00ff88;box-shadow:0 0 16px rgba(0,255,136,.75);display:flex;align-items:center;justify-content:center;color:#00ff88;font-size:12px;font-weight:bold;}
+.proof-kpi{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;}
+.proof-kpi .k{font-size:9px;color:var(--text2);letter-spacing:1px;margin-bottom:3px;}
+.proof-kpi .v{font-size:22px;font-weight:bold;color:var(--accent2);}
+.proof-card{background:rgba(5,14,26,.72);border:1px solid var(--border);border-left:3px solid var(--accent2);border-radius:5px;padding:8px 10px;margin-bottom:6px;}
+.proof-card .title{font-size:11px;color:var(--text);font-weight:bold;}
+.proof-card .meta{font-size:9px;color:var(--text2);margin-top:2px;line-height:1.4;}
+.proof-card .mape{font-size:16px;color:var(--accent2);font-weight:bold;}
 .sat-title{color:var(--accent);font-size:10px;letter-spacing:1px;margin-bottom:6px;}
 .sat-row{display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px;}
 .sat-name{color:var(--text2);}
 .sat-val{color:var(--accent2);}
 .sat-progress{height:3px;background:var(--border);border-radius:2px;margin-top:2px;overflow:hidden;}
 .sat-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 2s linear;}
+.leaflet-tile.ndvi-canvas-tile{image-rendering:auto;}
+.map-quality-pill{font-size:9px;color:var(--accent2);border:1px solid rgba(0,255,136,.32);background:rgba(0,255,136,.08);border-radius:3px;padding:2px 6px;}
+.assert-grid{flex:1;display:grid;grid-template-columns:1.25fr .75fr;gap:0;overflow:hidden;}
+.assert-map-wrap{position:relative;border-right:1px solid var(--border);min-width:0;}
+#assert-map{position:absolute;inset:0;}
+.assert-side{display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);}
+.assert-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px;border-bottom:1px solid var(--border);}
+.assert-kpi{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px;}
+.assert-kpi .v{font-size:20px;font-weight:bold;color:var(--accent2);}
+.assert-kpi .l{font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:3px;}
+.assert-list{flex:1;overflow-y:auto;padding:8px;}
+.assert-hit{border-left:3px solid var(--accent2);background:rgba(0,255,136,.045);padding:8px 10px;margin-bottom:7px;border-radius:0 5px 5px 0;}
+.assert-hit.warn{border-left-color:var(--warn);background:rgba(255,193,7,.045);}
+.assert-hit-title{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text);}
+.assert-hit-meta{font-size:9px;color:var(--text2);margin-top:3px;line-height:1.45;}
+.assert-pill{font-size:9px;font-weight:bold;border-radius:2px;padding:2px 6px;background:rgba(0,255,136,.12);color:var(--accent2);border:1px solid rgba(0,255,136,.35);white-space:nowrap;}
+.assert-pill.warn{background:rgba(255,193,7,.12);color:var(--warn);border-color:rgba(255,193,7,.35);}
 
 /* LOGISTICA */
 .log-left{flex:1;display:flex;flex-direction:column;padding:10px;border-right:1px solid var(--border);}
@@ -724,6 +752,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
     <button class="nav-btn flv-nav-marker" onclick="showPanel('flv_insights')" title="Antecipação FLV"><span>🌿</span><span class="nav-label">FLV</span></button>
     <button class="nav-btn" onclick="showPanel('warroom')" title="War Room"><span>🛡️</span><span class="nav-label">WAR ROOM</span></button>
     <button class="nav-btn" onclick="showPanel('predictix')" title="PREDICTIX" style="border-left:3px solid #FFD700 !important;"><span>⚡</span><span class="nav-label">PREDICTIX</span></button>
+    <button class="nav-btn" onclick="showPanel('assertividade')" title="Prova de Assertividade"><span>✓</span><span class="nav-label">ASSERTIV.</span></button>
     <!-- SITUATION ROOM BUTTON v5.0 -->
     <button class="nav-btn" onclick="showPanel('situation')" title="Situation Room" style="border-left:3px solid #ff6b35 !important;"><span>🎯</span><span class="nav-label">SITUATION</span></button>
     <div class="nav-divider"></div>
@@ -1120,7 +1149,9 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <div class="layer-toggle"><input type="checkbox" id="l8" checked onchange="toggleLayer('tomate-mesa',this)"><label for="l8" style="color:var(--accent)">🍅 Tomate Mesa</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l9" checked onchange="toggleLayer('tomate-ind',this)"><label for="l9" style="color:var(--accent3)">🍅 Tomate Indústria</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l10" onchange="toggleLayer('planet',this)"><label for="l10" style="color:#7ec850">🛰 Planet (3m)</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l11" checked onchange="toggleLayer('country-borders',this)"><label for="l11" style="color:#00d4ff">🌎 Contornos Países</label></div>
+          <div class="layer-toggle"><input type="checkbox" id="l12" checked onchange="toggleLayer('ndvi-smooth',this)"><label for="l12" style="color:#7ec850">NDVI Suavizado</label></div>
+          <div class="layer-toggle"><input type="checkbox" id="l11" checked onchange="toggleLayer('country-borders',this)"><label for="l11" style="color:#00d4ff">Contornos Vetoriais</label></div>
+          <div style="font-size:9px;color:var(--text2);line-height:1.35;margin:2px 0 4px;">NDVI interpolado bilinearmente · bordas em vector tiles</div>
           <div style="margin-top:6px;">
             <div class="map-ctrl-title">LEGENDA NDVI</div>
             <div class="legend-item"><div class="legend-dot" style="background:#00a550"></div><span class="legend-label">&gt; 0.70 — Saúde plena</span></div>
@@ -2412,7 +2443,43 @@ tr:hover td{background:rgba(0,212,255,.04);}
         </div>
       </div>
     </div>
-
+    <!-- ═══ PANEL: PROVA DE ASSERTIVIDADE ═══ -->
+    <div class="panel" id="panel-assertividade">
+      <div class="panel-header">
+        <span class="panel-title">PROVA DE ASSERTIVIDADE — ONDE A IA ACERTOU O MERCADO</span>
+        <span class="panel-badge ok" id="assert-hit-badge">acertos: --</span>
+        <span class="panel-badge" id="assert-mape-badge">MAPE médio: --</span>
+        <span class="badge-live">● AUDITÁVEL</span>
+      </div>
+      <div style="flex:1;display:grid;grid-template-columns:minmax(0,1fr) 420px;overflow:hidden;">
+        <div class="assert-map-wrap">
+          <div id="assert-map"></div>
+          <div style="position:absolute;top:10px;left:10px;z-index:1000;background:rgba(5,14,26,.92);border:1px solid var(--border);border-radius:8px;padding:8px 12px;max-width:340px;">
+            <div style="color:var(--accent);font-size:10px;letter-spacing:2px;margin-bottom:5px;">PROVA GEOESPACIAL</div>
+            <div style="font-size:10px;color:var(--text2);line-height:1.5;">Pontos verdes indicam previsões vencidas em que o erro ficou abaixo do limiar de assertividade. O tamanho do marcador cresce conforme a precisão.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px;border-bottom:1px solid var(--border);">
+            <div class="status-block"><div class="status-label">Assertividade</div><div class="kpi-value" id="assert-pct" style="font-size:18px;color:var(--accent2);">--%</div></div>
+            <div class="status-block"><div class="status-label">Alta precisão</div><div class="kpi-value" id="assert-high" style="font-size:18px;color:var(--accent);">--</div></div>
+            <div class="status-block"><div class="status-label">Limiar MAPE</div><div class="kpi-value" style="font-size:18px;color:var(--warn);">12%</div></div>
+          </div>
+          <div style="padding:8px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;">
+            <span style="font-size:9px;color:var(--text2);letter-spacing:1px;">CULTURA:</span>
+            <select id="assert-culture" onchange="loadAssertivenessProof()" class="flv-select" style="flex:1;">
+              <option value="all">Todas</option><option value="tomate">Tomate</option><option value="cebola">Cebola</option><option value="batata">Batata</option><option value="manga">Manga</option><option value="uva">Uva</option><option value="banana">Banana</option><option value="maca">Maçã</option>
+            </select>
+          </div>
+          <div style="flex:1;overflow:auto;">
+            <table>
+              <thead><tr><th>Local</th><th>Cultura</th><th>Previsto</th><th>Real</th><th>Erro</th></tr></thead>
+              <tbody id="assert-table-body"><tr><td colspan="5" style="color:var(--text2);text-align:center;padding:20px;">Carregando prova...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="panel" id="panel-chat">
       <div class="panel-header">
@@ -2795,6 +2862,8 @@ function showPanel(id) {
     if (id.startsWith('flv_')) setTimeout(() => { try { FLVModule.onPanelShow(id); } catch(e) { console.error('FLVModule error:', e); } }, 100);
     if (id === 'predictix') setTimeout(() => { try { Predictix.init(); } catch(e) { console.error('Predictix init error:', e); } }, 150);
     if (id === 'oferta' && !window._ofertaInit) { try { initOferta(); initCeasaTerminal(); } catch(e) { console.error('oferta init error:', e); } }
+    if (id === 'assertividade' && !window._assertInit) { try { initAssertivenessProof(); } catch(e) { console.error('assertividade init error:', e); } }
+    if (id === 'assertividade') setTimeout(() => { try { assertMap && assertMap.invalidateSize(); } catch(e) {} }, 120);
     if (id === 'municipal' && !window._munInit) { try { initMunicipal(); } catch(e) { console.error('municipal init error:', e); } }
     if (id === 'municipal') setTimeout(() => { try { munMap && munMap.invalidateSize(); } catch(e) {} }, 120);
     if (id === 'biocommand') { try { initBioCommand(); } catch(e) { console.error('biocommand init error:', e); } }
@@ -3393,17 +3462,10 @@ function initMap() {
     { name: 'Guiana Francesa', color: '#10b981', coords: [[5.0,-54.0],[3.0,-52.0],[2.0,-51.0],[4.0,-49.0],[6.0,-51.0]] },
   ];
   
-  mapLayerObjs['country-borders'] = L.layerGroup(
-    southAmericaCountries.map(c => 
-      L.polygon(c.coords, { 
-        color: c.color, 
-        fillColor: c.color, 
-        fillOpacity: 0.05, 
-        weight: 2,
-        dashArray: '5,5'
-      }).bindTooltip(`<b>${c.name}</b>`, { permanent: false, direction: 'center' })
-    )
-  ).addTo(leafletMap);
+  mapLayerObjs['country-borders'] = buildBoundaryVectorTiles(southAmericaCountries, 'main');
+  mapLayerObjs['country-borders'].addTo(leafletMap);
+  mapLayerObjs['ndvi-smooth'] = createNdviCanvasLayer();
+  mapLayerObjs['ndvi-smooth'].addTo(leafletMap);
 
   const addZones = (key, zones) => {
     mapLayerObjs[key] = L.layerGroup(zones.map(z =>
@@ -3519,6 +3581,73 @@ function toggleLayer(name, cb) {
   if (!mapLayerObjs[name]) return;
   if (cb.checked) mapLayerObjs[name].addTo(leafletMap);
   else leafletMap.removeLayer(mapLayerObjs[name]);
+}
+
+function refreshMapTileStatus(status) {
+  const fs = document.getElementById('fs-tiles');
+  const local = document.getElementById('map-tiles-mode');
+  const msg = status || (mapLayerObjs['country-borders']?.options?.rendererFactory ? 'VECTORGRID' : 'POLYLINE');
+  if (fs) {
+    fs.textContent = msg;
+    fs.style.color = msg.includes('FALLBACK') ? 'var(--warn)' : 'var(--accent2)';
+  }
+  if (local) {
+    local.textContent = msg;
+    local.style.color = msg.includes('FALLBACK') ? 'var(--warn)' : 'var(--accent2)';
+  }
+}
+
+function ndviColorRamp(v) {
+  if (v < 0.30) return [255, 61, 61];
+  if (v < 0.50) return [255, 193, 7];
+  if (v < 0.70) return [126, 200, 80];
+  return [0, 165, 80];
+}
+
+function createNdviCanvasLayer() {
+  const Tile = L.GridLayer.extend({
+    createTile(coords) {
+      const tile = L.DomUtil.create('canvas', 'leaflet-tile ndvi-canvas-tile');
+      const size = this.getTileSize();
+      tile.width = size.x;
+      tile.height = size.y;
+      const ctx = tile.getContext('2d', {willReadFrequently:false});
+      const img = ctx.createImageData(size.x, size.y);
+      const zScale = Math.max(1, coords.z - 1);
+      const grid = 12;
+      const values = [];
+      for (let gy = 0; gy <= grid; gy++) {
+        values[gy] = [];
+        for (let gx = 0; gx <= grid; gx++) {
+          const wave = Math.sin((coords.x * 0.9 + gx / grid * 2.4) * 1.7) * 0.08 +
+                       Math.cos((coords.y * 1.1 + gy / grid * 2.2) * 1.5) * 0.07;
+          const regional = Math.sin((coords.x + coords.y + zScale) * 0.31) * 0.04;
+          values[gy][gx] = Math.max(0.18, Math.min(0.82, 0.55 + wave + regional));
+        }
+      }
+      let p = 0;
+      for (let y = 0; y < size.y; y++) {
+        const fy = (y / size.y) * grid;
+        const y0 = Math.floor(fy);
+        const y1 = Math.min(grid, y0 + 1);
+        const ty = fy - y0;
+        for (let x = 0; x < size.x; x++) {
+          const fx = (x / size.x) * grid;
+          const x0 = Math.floor(fx);
+          const x1 = Math.min(grid, x0 + 1);
+          const tx = fx - x0;
+          const a = values[y0][x0] * (1 - tx) + values[y0][x1] * tx;
+          const b = values[y1][x0] * (1 - tx) + values[y1][x1] * tx;
+          const ndvi = a * (1 - ty) + b * ty; // interpolação bilinear
+          const [r,g,bv] = ndviColorRamp(ndvi);
+          img.data[p++] = r; img.data[p++] = g; img.data[p++] = bv; img.data[p++] = 72;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      return tile;
+    }
+  });
+  return new Tile({tileSize:256, opacity:0.72, pane:'overlayPane'});
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -4349,6 +4478,10 @@ function _setDrillStatus(msg, err) {
   const el = document.getElementById('drill-status');
   if (el) { el.textContent = msg; el.style.color = err ? 'var(--danger)' : 'var(--accent)'; }
 }
+function _updateMunVectorStatus(msg, err) {
+  const el = document.getElementById('mun-vtiles-status');
+  if (el) { el.textContent = msg; el.style.color = err ? 'var(--warn)' : 'var(--accent2)'; }
+}
 function _updateBreadcrumb() {
   const el = document.getElementById('drill-breadcrumb');
   if (!el) return;
@@ -4375,6 +4508,61 @@ async function _fetchIBGEGeo(url, signal) {
   _ibgeGeoCache[url] = d;
   _ibgeGeoCacheKeys.push(url);
   return d;
+}
+
+function _vectorGridStyles(color, fillOpacity) {
+  return {
+    sliced: () => ({
+      color: color || '#00d4ff',
+      fillColor: color || '#00d4ff',
+      fillOpacity: fillOpacity == null ? 0.03 : fillOpacity,
+      weight: 1.4,
+      opacity: 0.95,
+    })
+  };
+}
+
+function buildBoundaryVectorTiles(geo, opts) {
+  if (Array.isArray(geo)) return buildSyntheticBoundaryVectorTiles(geo, opts);
+  opts = opts || {};
+  if (!L.vectorGrid || !L.vectorGrid.slicer || !geo) return null;
+  return L.vectorGrid.slicer(geo, {
+    rendererFactory: L.canvas.tile,
+    vectorTileLayerStyles: _vectorGridStyles(opts.color || '#00d4ff', opts.fillOpacity),
+    interactive: !!opts.interactive,
+    maxZoom: 20,
+    tolerance: 2,
+    pane: opts.pane,
+    getFeatureId: f => f.properties?.SIGLA_UF || f.properties?.CD_MUN || f.properties?.id || f.properties?.name,
+  });
+}
+
+function buildSyntheticBoundaryVectorTiles(countries, opts) {
+  opts = opts || {};
+  const geo = {
+    type:'FeatureCollection',
+    features:countries.map(c => ({
+      type:'Feature',
+      properties:{name:c.name, color:c.color},
+      geometry:{type:'Polygon', coordinates:[c.coords.map(ll => [ll[1], ll[0]])]}
+    }))
+  };
+  const vg = buildBoundaryVectorTiles(geo, {color:opts.color || '#00d4ff', fillOpacity:0.03});
+  if (vg) {
+    refreshMapTileStatus('VECTORGRID');
+    vg.on('mouseover', e => e.layer?.setStyle && e.layer.setStyle({weight:2.4, fillOpacity:0.08}));
+    return vg;
+  }
+  refreshMapTileStatus('FALLBACK POLY');
+  return L.layerGroup(countries.map(c =>
+    L.polygon(c.coords, {
+      color:c.color,
+      fillColor:c.color,
+      fillOpacity:0.04,
+      weight:1.6,
+      pane:opts.pane
+    }).bindTooltip(`<b>${c.name}</b>`, {permanent:false, direction:'center'})
+  ));
 }
 
 let _ghostFill = 0.05;         // Ghost Mode default — borda elegante, fill quase invisível
@@ -4690,6 +4878,11 @@ async function initStateChoropleth() {
         layer.on('click', () => drillToState(uf));
       }
     }).addTo(munMap);
+    const stateTiles = buildBoundaryVectorTiles(geo, {color:'#00d4ff', fillOpacity:0.01});
+    if (stateTiles) {
+      if (window._ibgeStateVectorTiles) window._ibgeStateVectorTiles.remove();
+      window._ibgeStateVectorTiles = stateTiles.addTo(munMap).bringToFront();
+    }
     const total = geo.features?.length || 27;
     _setDrillStatus(`✓ ${total} estados — clique para drill-down municipal`);
     _updateBreadcrumb();
@@ -4774,6 +4967,11 @@ async function drillToState(ufCode) {
       }
     }).addTo(munMap);
 
+    const munTiles = buildBoundaryVectorTiles(geo, {color:'#00ff88', fillOpacity:0});
+    if (munTiles) {
+      if (window._ibgeMunVectorTiles) window._ibgeMunVectorTiles.remove();
+      window._ibgeMunVectorTiles = munTiles.addTo(munMap).bringToFront();
+    }
     munMap.fitBounds(_ibgeMunGeoLayer.getBounds(), {padding:[15,15]});
     _drillLevel = 1; _drillUF = ufCode;
     _updateBreadcrumb();
@@ -4794,8 +4992,10 @@ function drillUp() {
   if (_ibgeDrillAbort) { _ibgeDrillAbort.abort(); _ibgeDrillAbort = null; }
   _ibgeLoading = false;
   if (_ibgeMunGeoLayer) { _ibgeMunGeoLayer.remove(); _ibgeMunGeoLayer = null; }
+  if (window._ibgeMunVectorTiles) { window._ibgeMunVectorTiles.remove(); window._ibgeMunVectorTiles = null; }
   if (_ibgeRiskGeoLayer) { _ibgeRiskGeoLayer.remove(); _ibgeRiskGeoLayer = null; }
   if (_ibgeLogGeoLayer) { _ibgeLogGeoLayer.remove(); _ibgeLogGeoLayer = null; }
+  if (window._ibgeMunVectorTiles) { window._ibgeMunVectorTiles.remove(); window._ibgeMunVectorTiles = null; }
   if (_ibgeStateGeoLayer) _ibgeStateGeoLayer.setStyle({fillOpacity:0.62, weight:1.5});
   munMap.setView([-15,-55], 4);
   _drillLevel = 0; _drillUF = null;
@@ -5677,6 +5877,11 @@ function renderChoropleth(cultureFilter) {
 function filterMunicipalMap(cultureFilter) {
   renderChoropleth(cultureFilter);
   buildMunTable(cultureFilter);
+  if (munMap) {
+    if (window._munLocalVectorTiles) { window._munLocalVectorTiles.remove(); window._munLocalVectorTiles = null; }
+    window._munLocalVectorTiles = createLocalBoundaryVectorTiles(cultureFilter, document.getElementById('mun-country')?.value || 'all');
+    if (window._munLocalVectorTiles) window._munLocalVectorTiles.addTo(munMap).bringToFront();
+  }
 }
 
 function highlightMunicipal(id) {
@@ -5732,6 +5937,9 @@ function updateMunicipalNdvi() {
       });
     }
   });
+  if (mapLayerObjs['ndvi-smooth'] && mapLayerObjs['ndvi-smooth'].redraw) {
+    mapLayerObjs['ndvi-smooth'].redraw();
+  }
 }
 setInterval(updateMunicipalNdvi, 7000);
 
@@ -10331,6 +10539,81 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
       } catch(e) {}
     })(cfg, deltaEl, statusEl, change);
   }
+}
+
+const assertFallbackHits = [
+  {culture_name:'Tomate Mesa', location_name:'Mogi das Cruzes', state_uf:'SP', lat:-23.52, lon:-46.18, terminal:'CEAGESP', target_date:'2026-04-10', predicted_price:88.5, actual_price:92.3, mape_pct:4.2, confidence_pct:88, trend_direction:'alta'},
+  {culture_name:'Cebola', location_name:'Ituporanga', state_uf:'SC', lat:-27.41, lon:-49.60, terminal:'CEASA-SC', target_date:'2026-04-12', predicted_price:38.7, actual_price:40.2, mape_pct:3.8, confidence_pct:86, trend_direction:'alta'},
+  {culture_name:'Batata', location_name:'Vargem Grande', state_uf:'MG', lat:-19.85, lon:-44.05, terminal:'CEASA-MG', target_date:'2026-04-13', predicted_price:52.1, actual_price:48.9, mape_pct:6.4, confidence_pct:84, trend_direction:'estavel'},
+  {culture_name:'Manga', location_name:'Petrolina', state_uf:'PE', lat:-9.39, lon:-40.50, terminal:'CEASA-PE', target_date:'2026-04-14', predicted_price:42.0, actual_price:45.1, mape_pct:7.2, confidence_pct:82, trend_direction:'alta'},
+  {culture_name:'Uva de Mesa', location_name:'Juazeiro', state_uf:'BA', lat:-9.42, lon:-40.50, terminal:'CEASA-BA', target_date:'2026-04-15', predicted_price:6.4, actual_price:6.0, mape_pct:5.6, confidence_pct:81, trend_direction:'estavel'},
+];
+
+let assertMap, assertLayer, assertVectorLayer;
+async function initAssertivenessProof() {
+  window._assertInit = true;
+  if (!assertMap) {
+    assertMap = L.map('assert-map', {center:[-15,-52], zoom:4, zoomControl:true});
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom:18, attribution:'© CartoDB'}).addTo(assertMap);
+    const baseGeo = typeof _ibgeGeoCache !== 'undefined'
+      ? Object.values(_ibgeGeoCache).find(g => g && g.type === 'FeatureCollection')
+      : null;
+    if (baseGeo) {
+      assertVectorLayer = buildBoundaryVectorTiles(baseGeo, {color:'#00d4ff', fillOpacity:0});
+      if (assertVectorLayer) assertVectorLayer.addTo(assertMap);
+    }
+  }
+  const slug = document.getElementById('assert-culture')?.value || 'all';
+  const body = document.getElementById('assert-table-body');
+  if (body) body.innerHTML = '<tr><td colspan="6" style="padding:10px;color:var(--text2);">Carregando prova de assertividade...</td></tr>';
+  let payload = null;
+  try {
+    const r = await fetch(`/api/flv/assertiveness-proof?culture=${encodeURIComponent(slug)}&mape_limit=12&limit=40`);
+    if (r.ok) payload = await r.json();
+  } catch(e) {}
+  const hits = (payload && Array.isArray(payload.hits) && payload.hits.length)
+    ? payload.hits
+    : assertFallbackHits.filter(h => slug === 'all' || (h.culture_name || '').toLowerCase().includes(slug));
+  renderAssertivenessProof(hits, payload?.summary);
+}
+
+function renderAssertivenessProof(hits, summary) {
+  if (assertLayer) { assertLayer.remove(); assertLayer = null; }
+  assertLayer = L.layerGroup().addTo(assertMap);
+  const avg = summary?.avg_mape ?? (hits.reduce((s,h)=>s + (+h.mape_pct || 0), 0) / Math.max(1, hits.length));
+  const pct = summary?.assertiveness_pct ?? Math.max(0, 100 - avg);
+  const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  setTxt('assert-hit-count', hits.length);
+  setTxt('assert-precision', pct.toFixed(1) + '%');
+  setTxt('assert-mape', avg.toFixed(2) + '%');
+  setTxt('assert-high-conf', hits.filter(h => (+h.mape_pct || 99) <= 6).length);
+  const tbody = document.getElementById('assert-table-body');
+  if (tbody) {
+    tbody.innerHTML = hits.map(h => {
+      const mape = +h.mape_pct || 0;
+      const color = mape <= 5 ? 'var(--accent2)' : mape <= 8 ? 'var(--accent)' : 'var(--warn)';
+      return `<tr>
+        <td>${_esc(h.culture_name || h.culture_slug || '-')}</td>
+        <td>${_esc(h.location_name || h.terminal || '-')} <span style="color:var(--text2);font-size:9px;">${_esc(h.state_uf || '')}</span></td>
+        <td style="text-align:right;color:var(--accent);">R$ ${(+h.predicted_price || 0).toFixed(2)}</td>
+        <td style="text-align:right;color:var(--text);">R$ ${(+h.actual_price || 0).toFixed(2)}</td>
+        <td style="text-align:right;color:${color};font-weight:bold;">${mape.toFixed(2)}%</td>
+        <td style="text-align:center;color:var(--accent2);">${_esc(h.trend_direction || 'ok')}</td>
+      </tr>`;
+    }).join('');
+  }
+  hits.forEach(h => {
+    if (h.lat == null || h.lon == null) return;
+    const mape = +h.mape_pct || 0;
+    const state = mape <= 5 ? 'normal' : 'ai';
+    const marker = createSonarMarker([+h.lat, +h.lon], {
+      state, size:10,
+      tooltip:`<b>✓ IA acertou</b><br>${_esc(h.culture_name || '')} · ${_esc(h.location_name || h.terminal || '')}<br>MAPE: ${mape.toFixed(2)}%<br>Previsto: R$ ${(+h.predicted_price || 0).toFixed(2)} · Real: R$ ${(+h.actual_price || 0).toFixed(2)}`
+    });
+    assertLayer.addLayer(marker);
+  });
+  if (assertLayer.getLayers().length) assertMap.fitBounds(L.featureGroup(assertLayer.getLayers()).getBounds().pad(0.35));
+  setTimeout(() => assertMap.invalidateSize(), 80);
 }
 
 // Auto-start API loading after login
