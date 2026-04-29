@@ -2534,14 +2534,15 @@ function getCeasaTrendLabel(price) {
   return { text:'➡️ Estável', color:'var(--warn)' };
 }
 
+const CEASA_PRICE_OVERVIEW_IDS = {
+  tomate: ['hp-tomate-mesa', 'hp-tomate-ind'],
+  cebola: ['hp-cebola'],
+  batata: ['hp-batata'],
+  laranja: ['hp-laranja'],
+};
+
 function renderOverviewCeasaPrices(prices = NIA_DATA.prices || {}) {
-  const bindings = {
-    tomate: ['hp-tomate-mesa', 'hp-tomate-ind'],
-    cebola: ['hp-cebola'],
-    batata: ['hp-batata'],
-    laranja: ['hp-laranja'],
-  };
-  Object.entries(bindings).forEach(([slug, ids]) => {
+  Object.entries(CEASA_PRICE_OVERVIEW_IDS).forEach(([slug, ids]) => {
     const item = prices[slug];
     if (!item) return;
     ids.forEach(id => {
@@ -2549,6 +2550,14 @@ function renderOverviewCeasaPrices(prices = NIA_DATA.prices || {}) {
       if (el) el.textContent = formatPrice(item.price_avg, item.unit);
     });
   });
+}
+
+function getCeasaSlugForHortiCard(cardId) {
+  if (cardId === 'tomate-mesa' || cardId === 'tomate-ind') return 'tomate';
+  if (cardId === 'cebola') return 'cebola';
+  if (cardId === 'batata') return 'batata';
+  if (cardId === 'laranja') return 'laranja';
+  return null;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -3323,7 +3332,16 @@ const prices = {
 };
 const tickerIds = { soja:'tp-soja', milho:'tp-milho', boi:'tp-boi', acucar:'tp-acucar', cafe:'tp-cafe', algodao:'tp-algodao', usd:'tp-usd', tomate:'tp-tomate' };
 function updatePrices() {
+  const tomato = getCeasaPrice('tomate');
+  if (tomato) {
+    const el = document.getElementById('tp-tomate');
+    if (el) {
+      el.textContent = formatPrice(tomato.price_avg, tomato.unit) + ' ▲';
+      el.className = 'tick-val tick-up';
+    }
+  }
   for (const [key, p] of Object.entries(prices)) {
+    if (key === 'tomate' && tomato) continue;
     const change = (Math.random()-.48) * 0.12;
     p.val = Math.max(0.1, p.val + change);
     p.dir = change > 0 ? 1 : -1;
@@ -5194,6 +5212,8 @@ setTimeout(initHortiSparks, 200);
 
 function updateHorti() {
   Object.entries(hortiState).forEach(([k, h]) => {
+    const ceasaSlug = getCeasaSlugForHortiCard(k);
+    const ceasaPrice = ceasaSlug ? getCeasaPrice(ceasaSlug) : null;
     // price fluctuation
     const pChange = (Math.random()-.48) * h.price * 0.008;
     h.price = Math.max(h.price * 0.9, Math.min(h.price * 1.1, h.price + pChange));
@@ -5206,9 +5226,14 @@ function updateHorti() {
     // update DOM price
     const priceEl = document.getElementById('hp-' + k);
     if (priceEl) {
-      const fmt = h.price >= 10 ? h.price.toFixed(2).replace('.',',') : h.price.toFixed(2).replace('.',',');
-      priceEl.textContent = 'R$ ' + fmt + '/' + h.unit;
-      priceEl.style.color = h.dir > 0 ? 'var(--accent2)' : 'var(--danger)';
+      if (ceasaPrice) {
+        priceEl.textContent = formatPrice(ceasaPrice.price_avg, ceasaPrice.unit);
+        priceEl.style.color = 'var(--accent2)';
+      } else {
+        const fmt = h.price >= 10 ? h.price.toFixed(2).replace('.',',') : h.price.toFixed(2).replace('.',',');
+        priceEl.textContent = 'R$ ' + fmt + '/' + h.unit;
+        priceEl.style.color = h.dir > 0 ? 'var(--accent2)' : 'var(--danger)';
+      }
     }
 
     // update ndvi
