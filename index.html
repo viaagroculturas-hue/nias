@@ -2522,6 +2522,23 @@ function getCeasaTrendLabel(price) {
   return { text:'➡️ Estável', color:'var(--warn)' };
 }
 
+function renderOverviewCeasaPrices(prices = NIA_DATA.prices || {}) {
+  const bindings = {
+    tomate: ['hp-tomate-mesa', 'hp-tomate-ind'],
+    cebola: ['hp-cebola'],
+    batata: ['hp-batata'],
+    laranja: ['hp-laranja'],
+  };
+  Object.entries(bindings).forEach(([slug, ids]) => {
+    const item = prices[slug];
+    if (!item) return;
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = formatPrice(item.price_avg, item.unit);
+    });
+  });
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // SITUATION ROOM MODULE - VERSAO COM DADOS REAIS (API)
 // ═══════════════════════════════════════════════════════════════════
@@ -2566,7 +2583,7 @@ const SituationRoom = {
         console.log('[SituationRoom] Dados de empresas atualizados:', crisisData.recent_entries.length);
       }
       if (snapshot) {
-        this.renderCeasaPrices(snapshot.ceasa_prices);
+        this.renderCeasaPrices();
       }
     } catch (e) {
       console.log('[SituationRoom] Usando dados embutidos (API indisponível)');
@@ -2596,6 +2613,7 @@ const SituationRoom = {
         trendEl.style.color = item.trend === 'baixa' ? '#50C878' : item.trend === 'alta' ? '#ff6b35' : '#FFD700';
       }
     });
+    renderOverviewCeasaPrices(prices);
   },
   
   async loadRealNews() {
@@ -10309,34 +10327,43 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
     'manga':       { slug:'manga', elPrice:'hp-manga', elDelta:'hd-manga', elSrc:'hsrc-manga', elStatus:'hst-manga' },
     'uva':         { slug:'uva', elPrice:'hp-uva', elDelta:'hd-uva', elSrc:'hsrc-uva', elStatus:'hst-uva' },
   };
+  const apply = () => {
+    Object.values(hortiMap).forEach(cfg => {
+      const item = getCeasaPrice(cfg.slug);
+      const priceEl = document.getElementById(cfg.elPrice);
+      const deltaEl = document.getElementById(cfg.elDelta);
+      const srcEl = document.getElementById(cfg.elSrc);
+      const statusEl = document.getElementById(cfg.elStatus);
+      if (!item || !priceEl) return;
 
-  Object.values(hortiMap).forEach(cfg => {
-    const item = getCeasaPrice(cfg.slug);
-    const priceEl = document.getElementById(cfg.elPrice);
-    const deltaEl = document.getElementById(cfg.elDelta);
-    const srcEl = document.getElementById(cfg.elSrc);
-    const statusEl = document.getElementById(cfg.elStatus);
-    if (!item || !priceEl) return;
+      priceEl.textContent = formatPrice(item.price_avg, item.unit);
+      priceEl.classList.add('val-flash');
+      setTimeout(() => priceEl.classList.remove('val-flash'), 500);
 
-    priceEl.textContent = formatPrice(item.price_avg, item.unit);
-    priceEl.classList.add('val-flash');
-    setTimeout(() => priceEl.classList.remove('val-flash'), 500);
-
-    const stalePrefix = item.freshness === 'yesterday' ? '⚠ ' : '';
-    const trend = getCeasaTrendLabel(item);
-    if (deltaEl) {
-      deltaEl.textContent = `${stalePrefix}${trend.text}${item.alert ? ' · ' + item.alert : ''}`;
-      deltaEl.className = 'horti-delta ' + (item.trend === 'alta' ? 'danger' : item.trend === 'baixa' ? 'ok' : '');
-    }
-    if (statusEl) {
-      statusEl.textContent = `${stalePrefix}${trend.text.replace(/[📈📉➡️]/g, '').trim().toUpperCase()}`;
-      statusEl.className = 'horti-status ' + (item.trend === 'alta' ? 'danger' : 'ok');
-    }
-    if (srcEl) {
-      srcEl.textContent = `Fonte: ${item.source} · ${item.price_date}${item.alert ? ' · ' + item.alert : ''}`;
-      srcEl.style.color = item.alert ? 'var(--warn)' : 'var(--accent2)';
-    }
-  });
+      const stalePrefix = item.freshness === 'yesterday' ? '⚠ ' : '';
+      const trend = getCeasaTrendLabel(item);
+      if (deltaEl) {
+        deltaEl.textContent = `${stalePrefix}${trend.text}${item.alert ? ' · ' + item.alert : ''}`;
+        deltaEl.className = 'horti-delta ' + (item.trend === 'alta' ? 'danger' : item.trend === 'baixa' ? 'ok' : '');
+      }
+      if (statusEl) {
+        statusEl.textContent = `${stalePrefix}${trend.text.replace(/[📈📉➡️]/g, '').trim().toUpperCase()}`;
+        statusEl.className = 'horti-status ' + (item.trend === 'alta' ? 'danger' : 'ok');
+      }
+      if (srcEl) {
+        srcEl.textContent = `Fonte: ${item.source} · ${item.price_date}${item.alert ? ' · ' + item.alert : ''}`;
+        srcEl.style.color = item.alert ? 'var(--warn)' : 'var(--accent2)';
+      }
+    });
+  };
+  if (!NIA_DATA.prices._loadedAt) {
+    loadWarroomSnapshotPrices().then(() => {
+      apply();
+      renderOverviewCeasaPrices();
+    }).catch(apply);
+  } else {
+    apply();
+  }
 }
 
 // Auto-start API loading after login
