@@ -49,6 +49,54 @@
 .px-arb-route{font-size:9px;color:#888;margin-top:2px;}
 @keyframes px-pulse-buy{0%,100%{box-shadow:0 0 4px #3B82F6;}50%{box-shadow:0 0 14px #3B82F6,0 0 24px rgba(59,130,246,.3);}}
 @keyframes px-pulse-sell{0%,100%{box-shadow:0 0 4px #EF4444;}50%{box-shadow:0 0 14px #EF4444,0 0 24px rgba(239,68,68,.3);}}
+.px-terminal{background:#101318 !important;color:#d6d9df;}
+.px-command-header{height:44px;background:#161a20;border-bottom:1px solid #303741;display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;}
+.px-command-title{color:#f4c542;font-size:13px;font-weight:bold;letter-spacing:3px;font-family:var(--font);}
+.px-command-subtitle{color:#8b949e;font-size:10px;letter-spacing:2px;}
+.px-kpi-grid{margin-left:auto;display:flex;gap:14px;align-items:center;}
+.px-kpi{text-align:center;min-width:72px;}
+.px-kpi .val{font-size:14px;font-weight:bold;font-family:var(--font);}
+.px-kpi .lbl{font-size:8px;color:#7a828c;letter-spacing:1px;margin-top:1px;}
+.px-separator{width:1px;height:24px;background:#303741;}
+.px-control-strip{height:38px;background:#15191f;border-bottom:1px solid #303741;display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;}
+.px-label{font-size:9px;color:#f4c542;letter-spacing:1px;}
+.px-muted{font-size:9px;color:#8b949e;letter-spacing:1px;}
+.px-select{background:#0f1318;border:1px solid #39424d;color:#e6edf3;font-family:var(--font);font-size:10px;padding:2px 8px;border-radius:3px;outline:none;}
+.px-layer-btn{background:rgba(139,148,158,.08);border:1px solid #4b5563;color:#9aa4af;font-family:var(--font);font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .15s;}
+.px-layer-btn:hover{border-color:#f4c542;color:#f4c542;}
+.px-map-shell{flex:1;position:relative;background:#c7d0d8;}
+#px-map{position:absolute;inset:0;background:#c7d0d8;}
+.px-map-overlay{position:absolute;z-index:900;background:rgba(18,22,28,.92);border:1px solid #303741;border-radius:4px;backdrop-filter:blur(4px);box-shadow:0 10px 24px rgba(0,0,0,.22);}
+.px-map-legend{top:12px;left:12px;width:230px;padding:10px 12px;}
+.px-map-legend-title{font-size:10px;color:#f4c542;letter-spacing:1.6px;margin-bottom:8px;}
+.px-legend-row{display:flex;align-items:center;gap:8px;font-size:10px;color:#cdd3da;margin:5px 0;}
+.px-legend-line{width:30px;height:4px;border-radius:3px;}
+.px-legend-line.green{background:#15803d;box-shadow:0 0 8px rgba(21,128,61,.28);}
+.px-legend-line.yellow{background:#d97706;box-shadow:0 0 8px rgba(217,119,6,.28);}
+.px-legend-line.red{background:#b91c1c;box-shadow:0 0 8px rgba(185,28,28,.35);}
+.px-time-console{left:50%;bottom:14px;transform:translateX(-50%);width:min(760px,calc(100% - 36px));padding:10px 14px;}
+.px-time-row{display:flex;align-items:center;gap:12px;}
+.px-time-label{min-width:120px;color:#f4c542;font-size:12px;font-family:var(--font);font-weight:bold;letter-spacing:1px;}
+#px-horizon-bottom{flex:1;accent-color:#f4c542;}
+.px-time-presets{display:flex;gap:6px;margin-top:8px;justify-content:center;}
+.px-time-presets button{background:#0f1318;border:1px solid #39424d;color:#cdd3da;font-family:var(--font);font-size:9px;padding:3px 8px;border-radius:3px;cursor:pointer;}
+.px-time-presets button.active,.px-time-presets button:hover{border-color:#f4c542;color:#f4c542;background:rgba(244,197,66,.12);}
+.px-timeline-copy{font-size:9px;color:#8b949e;text-align:right;}
+.px-side-panel{width:380px;border-left:1px solid #303741;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;background:#15191f;}
+.px-panel-section-title{padding:7px 12px;border-bottom:1px solid #303741;font-size:9px;color:#f4c542;letter-spacing:2px;}
+.px-flow-normal{stroke-dasharray:1 14;animation:px-flow 1.4s linear infinite;}
+.px-flow-warning{stroke-dasharray:10 8;animation:px-flow 1.0s linear infinite;}
+.px-flow-stopped{stroke-dasharray:2 7;animation:px-stall 1.1s ease-in-out infinite;}
+.px-rail-line{stroke-dasharray:12 7;}
+.px-road-line{stroke-dasharray:5 6;}
+.px-ref-line{stroke-dasharray:2 8;}
+@keyframes px-flow{to{stroke-dashoffset:-60;}}
+@keyframes px-stall{0%,100%{opacity:.95;}50%{opacity:.42;}}
+.px-node-icon{width:14px;height:14px;border:2px solid #f4c542;background:#15191f;transform:rotate(45deg);box-shadow:0 0 0 2px rgba(18,22,28,.8);}
+.px-node-icon.origin{border-color:#2563eb;background:#dbeafe;}
+.px-node-icon.port{border-color:#f4c542;background:#161a20;}
+.px-node-icon.risk{border-color:#b91c1c;background:#fee2e2;}
+.px-node-label{background:rgba(18,22,28,.9);border:1px solid #303741;color:#e6edf3;padding:2px 5px;border-radius:3px;font-size:9px;font-family:var(--font);}
 /* ── SIDEBAR GROUPS ── */
 .nav-group{width:100%;margin-bottom:2px;}
 .nav-group-header{width:100%;display:flex;align-items:center;gap:6px;padding:4px 8px;border:none;background:none;color:var(--text2);font-family:var(--font);font-size:8px;letter-spacing:1.5px;cursor:pointer;transition:color .2s;text-align:left;}
@@ -2034,25 +2082,25 @@ tr:hover td{background:rgba(0,212,255,.04);}
     </div>
 
     <!-- ═══ PANEL: PREDICTIX ARBITRAGE TERMINAL ═══ -->
-    <div class="panel" id="panel-predictix" style="background:#0a0a0a;">
+    <div class="panel px-terminal" id="panel-predictix">
       <!-- HEADER -->
-      <div style="height:42px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;">
-        <span style="color:#FFD700;font-size:13px;font-weight:bold;letter-spacing:3px;font-family:'Courier New',monospace;">PREDICTIX</span>
-        <span style="color:#555;font-size:10px;letter-spacing:2px;">TERMINAL DE ARBITRAGEM AGRICOLA</span>
-        <div style="margin-left:auto;display:flex;gap:14px;align-items:center;">
-          <div style="text-align:center;"><div id="px-kpi-vol" style="font-size:14px;font-weight:bold;color:#FFD700;font-family:monospace;">—</div><div style="font-size:8px;color:#666;letter-spacing:1px;">VOL. FRETE IVF</div></div>
-          <div style="width:1px;height:24px;background:#222;"></div>
-          <div style="text-align:center;"><div id="px-kpi-eta" style="font-size:14px;font-weight:bold;color:#EF4444;font-family:monospace;">—</div><div style="font-size:8px;color:#666;letter-spacing:1px;">RISCO MULTA ETA</div></div>
-          <div style="width:1px;height:24px;background:#222;"></div>
-          <div style="text-align:center;"><div id="px-kpi-arb" style="font-size:14px;font-weight:bold;color:#50C878;font-family:monospace;">—</div><div style="font-size:8px;color:#666;letter-spacing:1px;">OPORT. ARBITRAGEM</div></div>
-          <div style="width:1px;height:24px;background:#222;"></div>
-          <div style="text-align:center;"><div id="px-kpi-fila" style="font-size:14px;font-weight:bold;color:#F59E0B;font-family:monospace;">—</div><div style="font-size:8px;color:#666;letter-spacing:1px;">FILA PREDITIVA (h)</div></div>
+      <div class="px-command-header">
+        <span class="px-command-title">PREDICTIX</span>
+        <span class="px-command-subtitle">ARBITRAGE TERMINAL · OPORTUNIDADES E RISCOS 15D</span>
+        <div class="px-kpi-grid">
+          <div class="px-kpi"><div id="px-kpi-vol" class="val" style="color:#f4c542;">—</div><div class="lbl">VOL. FRETE IVF</div></div>
+          <div class="px-separator"></div>
+          <div class="px-kpi"><div id="px-kpi-eta" class="val" style="color:#b91c1c;">—</div><div class="lbl">RISCO ETA</div></div>
+          <div class="px-separator"></div>
+          <div class="px-kpi"><div id="px-kpi-arb" class="val" style="color:#15803d;">—</div><div class="lbl">ARBITRAGEM</div></div>
+          <div class="px-separator"></div>
+          <div class="px-kpi"><div id="px-kpi-fila" class="val" style="color:#d97706;">—</div><div class="lbl">FILA PREDITIVA</div></div>
         </div>
       </div>
       <!-- CULTURE SELECTOR + TIME SLIDER -->
-      <div style="height:36px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;">
-        <span style="font-size:9px;color:#FFD700;letter-spacing:1px;">CULTURA:</span>
-        <select id="px-culture" style="background:#111;border:1px solid #333;color:#ddd;font-family:monospace;font-size:10px;padding:2px 8px;border-radius:3px;" onchange="Predictix.setCulture(this.value)">
+      <div class="px-control-strip">
+        <span class="px-label">CULTURA:</span>
+        <select id="px-culture" class="px-select" onchange="Predictix.setCulture(this.value)">
           <option value="tomate">Tomate</option><option value="banana">Banana</option><option value="laranja">Laranja</option>
           <option value="cebola">Cebola</option><option value="manga">Manga</option><option value="uva">Uva</option>
           <option value="batata">Batata</option><option value="mamao">Mamao</option><option value="melancia">Melancia</option>
@@ -2063,40 +2111,57 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <option value="coco">Coco</option><option value="acai">Acai</option><option value="pessego">Pessego</option>
           <option value="maca">Maca</option>
         </select>
-        <div style="width:1px;height:20px;background:#222;"></div>
-        <span style="font-size:9px;color:#888;letter-spacing:1px;">HORIZONTE:</span>
-        <input type="range" id="px-horizon" min="-7" max="15" value="0" style="width:180px;accent-color:#FFD700;" oninput="Predictix.setHorizon(+this.value)">
-        <span id="px-horizon-label" style="font-size:11px;color:#FFD700;font-family:monospace;min-width:55px;">HOJE (T+0)</span>
-        <div style="width:1px;height:20px;background:#222;"></div>
-        <span style="font-size:9px;color:#888;">CAMADAS:</span>
-        <button id="px-layer-flow" onclick="Predictix.toggleLayer('flow')" style="background:rgba(80,200,120,.15);border:1px solid #50C878;color:#50C878;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">FLUXO</button>
-        <button id="px-layer-rodovias" onclick="Predictix.toggleLayer('rodovias')" style="background:rgba(59,130,246,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">RODOVIAS</button>
-        <button id="px-layer-clima" onclick="Predictix.toggleLayer('clima')" style="background:rgba(239,68,68,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">CLIMA</button>
-        <button id="px-layer-arb" onclick="Predictix.toggleLayer('arb')" style="background:rgba(255,215,0,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">ARBITRAGEM</button>
-        <div style="width:1px;height:20px;background:#222;"></div>
-        <button id="px-btn-produtores" onclick="Predictix.toggleProdutores()" style="background:rgba(0,212,255,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">👨‍🌾 PRODUTORES</button>
-        <button id="px-btn-produtores-rj" onclick="Predictix.toggleProdutoresRJ()" style="background:rgba(255,107,53,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">⚖️ EM RJ</button>
+        <div class="px-separator" style="height:20px;"></div>
+        <span class="px-muted">CAMADAS:</span>
+        <button id="px-layer-flow" class="px-layer-btn" onclick="Predictix.toggleLayer('flow')">FLUXO DINÂMICO</button>
+        <button id="px-layer-rodovias" class="px-layer-btn" onclick="Predictix.toggleLayer('rodovias')">RODOVIAS</button>
+        <button id="px-layer-ferrovias" class="px-layer-btn" onclick="Predictix.toggleLayer('ferrovias')">FERROVIAS</button>
+        <button id="px-layer-arb" class="px-layer-btn" onclick="Predictix.toggleLayer('arb')">ARBITRAGEM</button>
+        <div class="px-separator" style="height:20px;"></div>
+        <button id="px-btn-produtores" class="px-layer-btn" onclick="Predictix.toggleProdutores()">PRODUTORES</button>
+        <button id="px-btn-produtores-rj" class="px-layer-btn" onclick="Predictix.toggleProdutoresRJ()">EM RJ</button>
       </div>
       <!-- MAIN CONTENT -->
       <div style="flex:1;display:flex;overflow:hidden;">
         <!-- MAP -->
-        <div style="flex:1;position:relative;">
-          <div id="px-map" style="position:absolute;inset:0;background:#0a0a0a;"></div>
-          <!-- 30s climate overlay pending -->
-          <div id="px-clima-pending" style="display:none;position:absolute;top:10px;right:10px;z-index:900;background:rgba(10,10,10,.92);border:1px dashed rgba(239,68,68,.3);border-radius:6px;padding:10px 14px;color:#EF4444;font-family:monospace;font-size:11px;backdrop-filter:blur(4px);">
-            <div style="font-size:9px;letter-spacing:1px;color:#666;margin-bottom:4px;">CAMADA CLIMATICA</div>
+        <div class="px-map-shell">
+          <div id="px-map"></div>
+          <div class="px-map-overlay px-map-legend">
+            <div class="px-map-legend-title">MATRIZ DE FLUXO FINANCEIRO</div>
+            <div class="px-legend-row"><span class="px-legend-line green"></span><span>Exportação normal · campo para porto</span></div>
+            <div class="px-legend-row"><span class="px-legend-line yellow"></span><span>Gargalo logístico iminente via IA</span></div>
+            <div class="px-legend-row"><span class="px-legend-line red"></span><span>Paralisação confirmada de trecho</span></div>
+            <div style="margin-top:8px;border-top:1px solid #303741;padding-top:7px;font-size:9px;color:#8b949e;line-height:1.45;">Mapa base simplificado: Brasil, malhas federais, ferrovias e fronteiras estaduais tênues.</div>
+          </div>
+          <div id="px-clima-pending" class="px-map-overlay" style="display:none;top:12px;right:12px;padding:10px 14px;color:#b91c1c;font-family:monospace;font-size:11px;border-color:#7f1d1d;">
+            <div style="font-size:9px;letter-spacing:1px;color:#8b949e;margin-bottom:4px;">CAMADA DE RISCO</div>
             Ativando em <strong id="px-clima-timer">30</strong>s
+          </div>
+          <div class="px-map-overlay px-time-console">
+            <div class="px-time-row">
+              <span class="px-time-label" id="px-horizon-label">HOJE (T+0)</span>
+              <input type="range" id="px-horizon" min="-7" max="15" value="0" oninput="Predictix.setHorizon(+this.value)">
+              <span class="px-timeline-copy" id="px-horizon-copy">Leitura operacional atual</span>
+            </div>
+            <div class="px-time-presets" id="px-time-presets">
+              <button onclick="Predictix.setHorizon(-7)">HIST -7D</button>
+              <button onclick="Predictix.setHorizon(0)" class="active">HOJE</button>
+              <button onclick="Predictix.setHorizon(1)">+1D</button>
+              <button onclick="Predictix.setHorizon(3)">+3D</button>
+              <button onclick="Predictix.setHorizon(7)">+7D</button>
+              <button onclick="Predictix.setHorizon(15)">+15D</button>
+            </div>
           </div>
         </div>
         <!-- RIGHT PANEL: Terminal de Filas Preditivo + Arbitragem Detalhada -->
-        <div style="width:380px;border-left:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;background:#0d0d0d;">
-          <div style="padding:6px 12px;border-bottom:1px solid #1a1a1a;font-size:9px;color:#FFD700;letter-spacing:2px;">TERMINAL DE FILAS PREDITIVO</div>
+        <div class="px-side-panel">
+          <div class="px-panel-section-title">TERMINAL DE FILAS PREDITIVO</div>
           <div id="px-port-panel" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;">
             <div id="px-port-santos" class="px-port-card"></div>
             <div id="px-port-paranagua" class="px-port-card"></div>
             <div id="px-port-suape" class="px-port-card"></div>
           </div>
-          <div style="border-top:1px solid #1a1a1a;padding:6px 12px;font-size:9px;color:#FFD700;letter-spacing:2px;">OPORTUNIDADES DE ARBITRAGEM</div>
+          <div class="px-panel-section-title" style="border-top:1px solid #303741;">OPORTUNIDADES DE ARBITRAGEM</div>
           <div id="px-arb-list" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;"></div>
           <!-- DETALHAMENTO DA OPORTUNIDADE SELECIONADA -->
           <div id="px-arb-detail" style="border-top:2px solid #FFD700;background:rgba(10,10,10,.95);padding:10px;overflow-y:auto;max-height:300px;display:none;">
@@ -9092,11 +9157,11 @@ const FLVModule = {
 // PREDICTIX — Arbitrage Terminal Module
 // ═══════════════════════════════════════════════════════════════════
 window.Predictix = {
-  _map: null, _flowLayer: null, _climaLayer: null, _arbLayer: null, _portMarkers: null, _rodoviasLayer: null,
+  _map: null, _flowLayer: null, _climaLayer: null, _arbLayer: null, _portMarkers: null, _rodoviasLayer: null, _railLayer: null, _referenceLayer: null,
   _produtoresLayer: null, _produtoresRJLayer: null,
   _culture: 'tomate', _horizon: 0, _initialized: false,
   _climaTimer: null, _climaActive: false,
-  _layers: { flow: true, rodovias: false, clima: false, arb: true },
+  _layers: { flow: true, rodovias: true, ferrovias: true, clima: false, arb: true },
   _produtoresVisible: false, _produtoresRJVisible: false,
   _rodoviasData: null,
 
@@ -9132,18 +9197,36 @@ window.Predictix = {
   ],
 
   ROUTES: [
-    { from:[-15.9,-49.3], to:[-23.96,-46.30], road:'BR-153/SP-300', risk:0.12, name:'GO→CEAGESP (Santos)' },
-    { from:[-12.97,-38.51], to:[-8.39,-35.02], road:'BR-101', risk:0.08, name:'BA→CEASA-PE (Suape)' },
-    { from:[-24.95,-53.46], to:[-25.52,-48.52], road:'BR-277', risk:0.15, name:'PR→Paranaguá' },
-    { from:[-12.0,-55.5], to:[-23.96,-46.30], road:'BR-163/BR-364', risk:0.35, name:'MT→Santos (BR-163)' },
-    { from:[-9.39,-40.50], to:[-23.55,-46.63], road:'BR-116/BR-324', risk:0.20, name:'VSF (PE/BA)→CEAGESP' },
-    { from:[-9.39,-40.50], to:[-8.39,-35.02], road:'BR-428/BR-232', risk:0.10, name:'VSF→CEASA-PE (Suape)' },
-    { from:[-29.17,-51.18], to:[-25.52,-48.52], road:'BR-116', risk:0.18, name:'RS→Paranaguá' },
-    { from:[-19.92,-43.94], to:[-23.55,-46.63], road:'BR-381 (Fernão Dias)', risk:0.14, name:'CEASA-MG→CEAGESP' },
-    { from:[-22.91,-43.17], to:[-23.55,-46.63], road:'BR-116 (Dutra)', risk:0.06, name:'CEASA-RJ→CEAGESP' },
-    { from:[-5.19,-37.34], to:[-8.05,-34.87], road:'BR-304/BR-232', risk:0.09, name:'Mossoró→CEASA-PE' },
-    { from:[-27.41,-49.60], to:[-23.55,-46.63], road:'BR-116/BR-376', risk:0.13, name:'SC→CEAGESP' },
-    { from:[-19.39,-40.07], to:[-22.91,-43.17], road:'BR-101', risk:0.07, name:'ES→CEASA-RJ' },
+    { from:[-15.9,-49.3], to:[-23.96,-46.30], road:'BR-153/SP-300', risk:0.12, name:'GO→Santos', corridor:'Centro-Oeste Export' },
+    { from:[-12.97,-38.51], to:[-8.39,-35.02], road:'BR-101', risk:0.08, name:'BA→Suape', corridor:'Nordeste Litoral' },
+    { from:[-24.95,-53.46], to:[-25.52,-48.52], road:'BR-277', risk:0.15, name:'PR→Paranaguá', corridor:'Oeste PR' },
+    { from:[-12.0,-55.5], to:[-23.96,-46.30], road:'BR-163/BR-364', risk:0.35, name:'MT→Santos', corridor:'BR-163 Sul', confirmedAt:7 },
+    { from:[-9.39,-40.50], to:[-23.55,-46.63], road:'BR-116/BR-324', risk:0.20, name:'VSF→CEAGESP', corridor:'Vale SF Longo' },
+    { from:[-9.39,-40.50], to:[-8.39,-35.02], road:'BR-428/BR-232', risk:0.10, name:'VSF→Suape', corridor:'Vale SF Curto' },
+    { from:[-29.17,-51.18], to:[-25.52,-48.52], road:'BR-116', risk:0.18, name:'RS→Paranaguá', corridor:'Sul Export' },
+    { from:[-19.92,-43.94], to:[-23.55,-46.63], road:'BR-381', risk:0.14, name:'MG→CEAGESP', corridor:'Fernão Dias' },
+    { from:[-22.91,-43.17], to:[-23.55,-46.63], road:'BR-116', risk:0.06, name:'RJ→CEAGESP', corridor:'Dutra' },
+    { from:[-5.19,-37.34], to:[-8.05,-34.87], road:'BR-304/BR-232', risk:0.09, name:'Mossoró→CEASA-PE', corridor:'Semiárido PE' },
+    { from:[-27.41,-49.60], to:[-23.55,-46.63], road:'BR-116/BR-376', risk:0.13, name:'SC→CEAGESP', corridor:'Serra Sul' },
+    { from:[-19.39,-40.07], to:[-22.91,-43.17], road:'BR-101', risk:0.07, name:'ES→CEASA-RJ', corridor:'Leste 101' },
+  ],
+
+  TRANSPORT_ROADS: [
+    { name:'BR-163', pts:[[-3.1,-60.0],[-6.2,-57.5],[-10.8,-56.2],[-13.6,-55.8],[-16.2,-54.8],[-20.3,-54.6],[-23.5,-54.5]], status:'red' },
+    { name:'BR-364', pts:[[-9.8,-67.8],[-11.0,-62.0],[-13.5,-58.5],[-15.6,-56.1],[-17.5,-54.5]], status:'yellow' },
+    { name:'BR-153', pts:[[-5.0,-48.0],[-10.5,-48.5],[-16.2,-49.1],[-20.8,-50.0],[-23.5,-49.5]], status:'green' },
+    { name:'BR-101', pts:[[-5.8,-35.2],[-12.9,-38.5],[-19.9,-40.2],[-22.9,-43.2],[-25.5,-48.5],[-29.3,-49.7]], status:'yellow' },
+    { name:'BR-116', pts:[[-7.5,-39.3],[-15.6,-41.7],[-22.5,-43.2],[-25.3,-49.2],[-31.3,-52.1]], status:'yellow' },
+    { name:'BR-277', pts:[[-24.9,-53.5],[-25.1,-51.5],[-25.5,-49.3],[-25.52,-48.52]], status:'yellow' },
+    { name:'BR-381', pts:[[-19.9,-43.9],[-21.0,-44.6],[-22.0,-45.4],[-23.55,-46.63]], status:'green' },
+  ],
+
+  RAILWAYS: [
+    { name:'Ferrovia Norte-Sul', pts:[[-2.5,-44.2],[-7.5,-47.8],[-12.5,-49.0],[-16.0,-49.3],[-18.5,-49.8]], status:'green' },
+    { name:'Malha Paulista/Rumo', pts:[[-21.2,-48.0],[-22.3,-47.2],[-23.1,-46.8],[-23.96,-46.30]], status:'green' },
+    { name:'Ferroeste', pts:[[-24.6,-53.5],[-24.8,-51.5],[-25.2,-49.8],[-25.52,-48.52]], status:'yellow' },
+    { name:'Malha Sul', pts:[[-29.9,-51.1],[-28.0,-50.3],[-26.5,-49.2],[-25.52,-48.52]], status:'green' },
+    { name:'EFC/Itaqui', pts:[[-6.0,-50.5],[-5.5,-49.0],[-4.5,-47.0],[-2.5,-44.2]], status:'green' },
   ],
 
   ARBITRAGE_DB: {
@@ -9284,16 +9367,26 @@ window.Predictix = {
 
   init() {
     if (!this._initialized) {
-      this._map = L.map('px-map', { zoomControl:true, attributionControl:false }).setView([-10, -60], 3);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {maxZoom:18, opacity:0.7}).addTo(this._map);
-      // Thin state borders
+      this._map = L.map('px-map', {
+        zoomControl:true,
+        attributionControl:false,
+        preferCanvas:true,
+      }).setView([-13.8, -52.5], 4);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+        maxZoom:18,
+        opacity:0.42,
+        subdomains:'abcd',
+      }).addTo(this._map);
+      this._referenceLayer = L.layerGroup().addTo(this._map);
+      this._rodoviasLayer = L.layerGroup().addTo(this._map);
+      this._railLayer = L.layerGroup().addTo(this._map);
       this._flowLayer = L.layerGroup().addTo(this._map);
       this._climaLayer = L.layerGroup();
       this._arbLayer = L.layerGroup().addTo(this._map);
       this._portMarkers = L.layerGroup().addTo(this._map);
-      this._rodoviasLayer = L.layerGroup();
       this._initialized = true;
-      // Load rodovias data
+      this._renderReferenceMap();
+      this._syncLayerButtons();
       this._loadRodovias();
     }
     setTimeout(() => this._map.invalidateSize(), 200);
@@ -9317,50 +9410,141 @@ window.Predictix = {
 
   setHorizon(h) {
     this._horizon = h;
-    const el = document.getElementById('px-horizon-label');
-    if (h < 0) el.textContent = `T${h}d (hist.)`;
-    else if (h === 0) el.textContent = 'HOJE (T+0)';
-    else el.textContent = `T+${h}d (prev.)`;
+    const label = document.getElementById('px-horizon-label');
+    const slider = document.getElementById('px-horizon');
+    const copy = document.getElementById('px-horizon-copy');
+    if (label) label.textContent = this._formatHorizon(h);
+    if (slider && +slider.value !== h) slider.value = h;
+    if (copy) {
+      copy.textContent = h < 0
+        ? 'Replay historico dos gargalos e spreads'
+        : h === 0
+          ? 'Leitura operacional atual'
+          : `Previsao logistica e financeira para ${h} dia${h > 1 ? 's' : ''}`;
+    }
+    document.querySelectorAll('#px-time-presets button').forEach(btn => {
+      const onclick = btn.getAttribute('onclick') || '';
+      btn.classList.toggle('active', onclick.includes(`(${h})`));
+    });
     this._render();
   },
 
   toggleLayer(name) {
     this._layers[name] = !this._layers[name];
-    const btn = document.getElementById('px-layer-' + name);
-    if (btn) {
-      const colors = {flow:'#50C878', rodovias:'#3B82F6', clima:'#EF4444', arb:'#FFD700'};
-      btn.style.borderColor = this._layers[name] ? colors[name] : '#444';
-      btn.style.color = this._layers[name] ? colors[name] : '#888';
-    }
+    this._syncLayerButtons();
     this._render();
   },
 
   _render() {
+    this._syncLayerButtons();
     this._renderFlowLines();
     this._renderRodovias();
+    this._renderRailways();
     this._renderPorts();
     this._renderArbitrage();
     this._renderKPIs();
+  },
+
+  _formatHorizon(h) {
+    if (h < 0) return `T${h}D HIST`;
+    if (h === 0) return 'HOJE (T+0)';
+    return `T+${h}D PREV`;
+  },
+
+  _syncLayerButtons() {
+    const colors = { flow:'#15803d', rodovias:'#1d4ed8', ferrovias:'#0f766e', clima:'#b91c1c', arb:'#f4c542' };
+    Object.entries(colors).forEach(([name, color]) => {
+      const btn = document.getElementById('px-layer-' + name);
+      if (!btn) return;
+      btn.style.borderColor = this._layers[name] ? color : '#4b5563';
+      btn.style.color = this._layers[name] ? color : '#9aa4af';
+      btn.style.background = this._layers[name] ? `${color}1f` : 'rgba(139,148,158,.08)';
+    });
+  },
+
+  _statusColor(status) {
+    return { green:'#15803d', yellow:'#d97706', red:'#b91c1c' }[status] || '#15803d';
+  },
+
+  _statusLabel(status) {
+    return {
+      green:'FLUXO NORMAL',
+      yellow:'GARGALO IMINENTE',
+      red:'PARALISACAO CONFIRMADA',
+    }[status] || 'FLUXO NORMAL';
+  },
+
+  _statusFromRisk(risk, h, confirmedAt) {
+    if (confirmedAt && h >= confirmedAt) return 'red';
+    const forecast = Math.max(0, h) * 0.018;
+    const riskAdj = Math.min(1, risk + forecast + (h >= 7 ? 0.08 : 0) + (h >= 15 ? 0.1 : 0));
+    if (riskAdj >= 0.36) return 'red';
+    if (riskAdj >= 0.18) return 'yellow';
+    return 'green';
+  },
+
+  _curveMid(from, to, index) {
+    const lat = (from[0] + to[0]) / 2;
+    const lon = (from[1] + to[1]) / 2;
+    const bend = (index % 2 === 0 ? 1 : -1) * (0.7 + (index % 3) * 0.35);
+    return [lat + bend, lon + bend * 0.45];
+  },
+
+  _renderReferenceMap() {
+    this._referenceLayer.clearLayers();
+    const brasilApprox = [[4.4,-60.2],[2.0,-51.0],[-2.5,-44.2],[-5.8,-35.2],[-12.9,-38.5],[-19.9,-40.2],[-25.5,-48.5],[-33.7,-53.4],[-30.0,-57.6],[-22.0,-57.8],[-16.0,-60.0],[-9.5,-65.0],[-4.5,-69.5],[1.5,-67.2],[4.4,-60.2]];
+    L.polygon(brasilApprox, {
+      color:'#475569',
+      weight:1,
+      opacity:0.55,
+      fillColor:'#d7dee5',
+      fillOpacity:0.26,
+      className:'px-ref-line',
+    }).bindTooltip('Brasil · base geografica simplificada', {sticky:true}).addTo(this._referenceLayer);
+
+    const refs = [
+      [[-5.5,-42.5],[-10.0,-44.0],[-15.0,-43.5],[-20.0,-44.5],[-24.0,-45.5]],
+      [[-8.0,-50.5],[-14.0,-50.0],[-20.0,-51.0],[-26.0,-51.2]],
+      [[-12.0,-57.5],[-16.0,-55.0],[-21.0,-54.0],[-25.0,-54.2]],
+      [[-18.0,-40.0],[-20.0,-44.5],[-22.5,-48.0]],
+      [[-3.0,-60.0],[-8.0,-57.0],[-13.0,-56.0]],
+    ];
+    refs.forEach(pts => L.polyline(pts, {
+      color:'#64748b',
+      weight:1,
+      opacity:0.35,
+      className:'px-ref-line',
+    }).addTo(this._referenceLayer));
   },
 
   _renderFlowLines() {
     this._flowLayer.clearLayers();
     if (!this._layers.flow) return;
     const h = this._horizon;
-    this.ROUTES.forEach(r => {
-      const riskAdj = Math.min(1, r.risk + (h > 7 ? 0.15 : 0) + (h > 12 ? 0.2 : 0));
-      const color = riskAdj > 0.3 ? '#EF4444' : riskAdj > 0.15 ? '#F59E0B' : '#50C878';
-      const weight = riskAdj > 0.3 ? 3 : 2;
-      const dash = riskAdj > 0.3 ? '8,6' : riskAdj > 0.15 ? '12,4' : '';
-      const mid = [(r.from[0]+r.to[0])/2 + (Math.random()-.5)*1.5, (r.from[1]+r.to[1])/2 + (Math.random()-.5)*1.5];
+    this.ROUTES.forEach((r, index) => {
+      const status = this._statusFromRisk(r.risk, h, r.confirmedAt);
+      const color = this._statusColor(status);
+      const weight = status === 'red' ? 4.2 : status === 'yellow' ? 3.4 : 2.8;
+      const className = status === 'red' ? 'px-flow-stopped' : status === 'yellow' ? 'px-flow-warning' : 'px-flow-normal';
+      const mid = this._curveMid(r.from, r.to, index);
       const line = L.polyline([r.from, mid, r.to], {
-        color, weight, opacity:0.7, dashArray:dash, smoothFactor:2
+        color,
+        weight,
+        opacity:0.88,
+        smoothFactor:2,
+        className,
       });
-      const statusTxt = riskAdj > 0.3 ? 'PARALISAÇÃO/RISCO ALTO' : riskAdj > 0.15 ? 'GARGALO IMINENTE' : 'FLUXO NORMAL';
-      line.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>${r.name}</b><br>${r.road}<br>Status: <b style="color:${color}">${statusTxt}</b><br>Risco: ${(riskAdj*100).toFixed(0)}%${h>0?'<br>Horizonte: T+'+h+'d':''}</div>`, {sticky:true});
+      const riskPct = Math.round(Math.min(99, (r.risk + Math.max(0, h) * 0.018) * 100));
+      line.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>${r.name}</b><br>${r.road} · ${r.corridor}<br>Status: <b style="color:${color}">${this._statusLabel(status)}</b><br>Risco financeiro 15d: ${riskPct}%<br>Horizonte: ${this._formatHorizon(h)}</div>`, {sticky:true});
       this._flowLayer.addLayer(line);
-      // Arrow marker at midpoint
-      L.circleMarker(mid, {radius:3, color, fillColor:color, fillOpacity:0.8, weight:0}).addTo(this._flowLayer);
+      this._flowLayer.addLayer(L.marker(mid, {
+        icon:L.divIcon({
+          className:'px-node-label',
+          html:`${status === 'red' ? 'STOP' : status === 'yellow' ? 'AI' : 'EXP'} ${r.name}`,
+          iconSize:null,
+        }),
+        interactive:false,
+      }));
     });
   },
 
@@ -9372,88 +9556,68 @@ window.Predictix = {
     }
     this._rodoviasLayer.addTo(this._map);
     
-    const data = this._rodoviasData;
-    if (!data || !data.roads) return;
-    
-    Object.entries(data.roads).forEach(([brCode, road]) => {
-      if (!road.coords || road.coords.length < 2) return;
-      
-      const color = road.status_color || '#10B981';
-      const weight = road.status === 'CRITICAL' ? 4 : road.status === 'WARNING' ? 3 : 2;
-      const dash = road.status === 'CRITICAL' ? '6,4' : '';
-      
-      // Draw the BR line
-      const line = L.polyline(road.coords, {
-        color, weight, opacity:0.85, dashArray:dash, smoothFactor:2
+    this.TRANSPORT_ROADS.forEach(road => {
+      const color = this._statusColor(road.status);
+      const line = L.polyline(road.pts, {
+        color,
+        weight:2.2,
+        opacity:0.66,
+        smoothFactor:2,
+        className:'px-road-line',
       });
-      
-      const incidentList = road.incidents && road.incidents.length > 0 
-        ? road.incidents.map(i => `• ${i.type} (${i.severity}) - ${i.location}`).join('<br>')
-        : 'Sem incidentes ativos';
-      
-      line.bindTooltip(`<div style="font-family:monospace;font-size:11px;">
-        <b style="color:${color};font-size:13px;">${brCode}</b><br>
-        ${road.name}<br>
-        Status: <b style="color:${color}">${road.status}</b><br>
-        Tráfego: ${road.traffic_current?.toLocaleString() || 0}/${road.traffic_avg?.toLocaleString() || 0} veíc/dia<br>
-        Atraso médio: ${road.avg_delay_minutes || 0} min<br>
-        Incidentes: ${road.incidents_count || 0}<hr style="border-color:#333;margin:6px 0;">
-        ${incidentList}
-      </div>`, {sticky:true, direction:'top'});
-      
+      line.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>${road.name}</b><br>Malha rodoviaria federal<br>Status: <b style="color:${color}">${this._statusLabel(road.status)}</b></div>`, {sticky:true});
       this._rodoviasLayer.addLayer(line);
-      
-      // Add status dots at critical points
-      road.coords.forEach((coord, idx) => {
-        if (idx % 3 === 0) { // Every 3rd point
-          const dot = L.circleMarker(coord, {
-            radius: road.status === 'CRITICAL' ? 5 : 3,
-            color, fillColor:color, fillOpacity:0.6, weight:1
-          });
-          this._rodoviasLayer.addLayer(dot);
-        }
-      });
     });
-    
-    // Update KPI with rodovias data
-    const summary = data.summary;
-    if (summary) {
-      const kpiEl = document.getElementById('px-kpi-eta');
-      if (kpiEl && summary.critical_br) {
-        const criticalCount = summary.critical_br.length;
-        kpiEl.textContent = criticalCount > 0 ? `${criticalCount} BRs` : 'NORMAL';
-        kpiEl.style.color = criticalCount >= 3 ? '#EF4444' : criticalCount > 0 ? '#F59E0B' : '#50C878';
-      }
+  },
+
+  _renderRailways() {
+    this._railLayer.clearLayers();
+    if (!this._layers.ferrovias) {
+      this._map.removeLayer(this._railLayer);
+      return;
     }
+    this._railLayer.addTo(this._map);
+    this.RAILWAYS.forEach(rail => {
+      const color = this._statusColor(rail.status);
+      const line = L.polyline(rail.pts, {
+        color,
+        weight:2.4,
+        opacity:0.72,
+        smoothFactor:2,
+        className:'px-rail-line',
+      });
+      line.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>${rail.name}</b><br>Malha ferroviaria<br>Status: <b style="color:${color}">${this._statusLabel(rail.status)}</b></div>`, {sticky:true});
+      this._railLayer.addLayer(line);
+    });
   },
 
   _renderPorts() {
     this._portMarkers.clearLayers();
     const h = this._horizon;
-    // Portos maritimos
     this.PORTS.forEach(p => {
-      const volume = Math.round(p.cap * (0.6 + Math.random()*0.4) * (1 + h*0.02));
+      const volume = Math.round(p.cap * (0.68 + (p.id.length % 4) * 0.07) * (1 + Math.max(0, h) * 0.018));
       const utilization = Math.min(100, Math.round(volume / p.cap * 100));
-      const waitHours = Math.round(12 + utilization * 0.5 + (h > 7 ? 24 : 0));
-      const color = utilization > 90 ? '#EF4444' : utilization > 70 ? '#F59E0B' : '#50C878';
-      const marker = L.circleMarker([p.lat, p.lon], { radius:10, color:'#FFD700', fillColor:'#111', fillOpacity:0.9, weight:2 });
-      marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>⚓ ${p.name}</b><br>Volume: ${volume.toLocaleString()} t<br>Utilização: <b style="color:${color}">${utilization}%</b><br>Espera: <b>${waitHours}h</b></div>`, {direction:'left'});
+      const waitHours = Math.round(10 + utilization * 0.42 + (h >= 7 ? 18 : 0) + (h >= 15 ? 10 : 0));
+      const status = utilization > 90 ? 'red' : utilization > 72 ? 'yellow' : 'green';
+      const color = this._statusColor(status);
+      const marker = L.marker([p.lat, p.lon], {
+        icon:L.divIcon({
+          className:'px-node-icon port',
+          html:'',
+          iconSize:[14,14],
+          iconAnchor:[7,7],
+        }),
+      });
+      marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>${p.name}</b><br>Volume 15d: ${volume.toLocaleString('pt-BR')} t<br>Utilizacao: <b style="color:${color}">${utilization}%</b><br>Espera: <b>${waitHours}h</b><br>${this._formatHorizon(h)}</div>`, {direction:'left'});
       this._portMarkers.addLayer(marker);
       const el = document.getElementById('px-port-' + p.id);
       if (el) {
-        el.innerHTML = `<div class="px-port-name">⚓ ${p.name}</div>
-          <div class="px-port-kv"><span>Vol. 15d</span><span class="v">${volume.toLocaleString()} t</span></div>
+        el.innerHTML = `<div class="px-port-name">${p.name}</div>
+          <div class="px-port-kv"><span>Vol. 15d</span><span class="v">${volume.toLocaleString('pt-BR')} t</span></div>
           <div class="px-port-bar"><div class="px-port-bar-fill" style="width:${utilization}%;background:${color};"></div></div>
-          <div class="px-port-kv"><span>Espera Preditiva</span><span class="v" style="color:${waitHours>36?'#EF4444':'#ddd'}">${waitHours}h</span></div>
-          ${utilization>85?'<div style="font-size:9px;color:#EF4444;margin-top:3px;">⚠ FILAS EM '+(h>3?h:7)+' DIAS</div>':''}`;
+          <div class="px-port-kv"><span>Espera preditiva</span><span class="v" style="color:${color}">${waitHours}h</span></div>
+          ${utilization>85?'<div style="font-size:9px;color:#b91c1c;margin-top:3px;">ALERTA: fila critica no horizonte</div>':''}`;
       }
-    });
-    // CEASAs
-    this.CEASAS.forEach(c => {
-      const vol = Math.round(c.vol * (0.7 + Math.random()*0.3));
-      const marker = L.circleMarker([c.lat, c.lon], { radius:7, color:'#50C878', fillColor:'#0a1a0a', fillOpacity:0.9, weight:2 });
-      marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>🏪 ${c.name}</b><br>Vol. semanal: ${vol.toLocaleString()} t<br>Região: ${c.region}</div>`, {direction:'top'});
-      this._portMarkers.addLayer(marker);
     });
   },
 
@@ -9473,24 +9637,32 @@ window.Predictix = {
     opps.forEach((o, i) => {
       const margin = ((o.sellPrice - o.buyPrice - o.frete) / o.buyPrice * 100);
       const profitable = margin > 5;
-      // Buy marker (blue pulsing)
-      const buyM = L.circleMarker([o.buyLat, o.buyLon], {
-        radius:8, color:'#3B82F6', fillColor:'#3B82F6', fillOpacity:0.3, weight:2,
-        className:'px-buy-pulse'
+      const buyM = L.marker([o.buyLat, o.buyLon], {
+        icon:L.divIcon({
+          className:'px-node-icon origin',
+          html:'',
+          iconSize:[14,14],
+          iconAnchor:[7,7],
+        }),
       });
       buyM.bindTooltip(`<b style="color:#3B82F6">COMPRA</b><br>${o.buy}<br>R$ ${o.buyPrice}/un`, {direction:'top'});
       this._arbLayer.addLayer(buyM);
-      // Sell marker (red pulsing)
-      const sellM = L.circleMarker([o.sellLat, o.sellLon], {
-        radius:8, color:'#EF4444', fillColor:'#EF4444', fillOpacity:0.3, weight:2,
-        className:'px-sell-pulse'
+      const sellM = L.marker([o.sellLat, o.sellLon], {
+        icon:L.divIcon({
+          className:'px-node-icon risk',
+          html:'',
+          iconSize:[14,14],
+          iconAnchor:[7,7],
+        }),
       });
       sellM.bindTooltip(`<b style="color:#EF4444">VENDA</b><br>${o.sell}<br>R$ ${o.sellPrice}/un`, {direction:'top'});
       this._arbLayer.addLayer(sellM);
-      // Flow line connecting buy → sell
-      const flowColor = profitable ? '#FFD700' : '#555';
+      const flowColor = profitable ? '#f4c542' : '#6b7280';
       const flow = L.polyline([[o.buyLat, o.buyLon], [o.sellLat, o.sellLon]], {
-        color:flowColor, weight:profitable?2.5:1, dashArray:'10,6', opacity:0.7
+        color:flowColor,
+        weight:profitable ? 2.2 : 1.2,
+        opacity:profitable ? 0.68 : 0.38,
+        className:profitable ? 'px-flow-warning' : 'px-ref-line',
       });
       flow.on('click', () => this._showInsight(o, margin));
       this._arbLayer.addLayer(flow);
@@ -9720,16 +9892,16 @@ window.Predictix = {
     document.getElementById('px-kpi-arb').textContent = profitableCount + ' / ' + opps.length;
 
     const h = this._horizon;
-    const ivf = (112 + h * 2.3 + (Math.random()*5)).toFixed(1);
+    const ivf = (112 + h * 2.3 + (this._culture.length % 5) * 0.7).toFixed(1);
     document.getElementById('px-kpi-vol').textContent = ivf;
 
     const etaRisk = Math.min(95, Math.round(8 + h * 3.5 + (this.ROUTES.filter(r=>r.risk>0.2).length * 12)));
     document.getElementById('px-kpi-eta').textContent = etaRisk + '%';
-    document.getElementById('px-kpi-eta').style.color = etaRisk > 50 ? '#EF4444' : etaRisk > 25 ? '#F59E0B' : '#50C878';
+    document.getElementById('px-kpi-eta').style.color = etaRisk > 50 ? '#b91c1c' : etaRisk > 25 ? '#d97706' : '#15803d';
 
     const avgWait = Math.round(18 + h * 2.5);
     document.getElementById('px-kpi-fila').textContent = avgWait + 'h';
-    document.getElementById('px-kpi-fila').style.color = avgWait > 36 ? '#EF4444' : '#F59E0B';
+    document.getElementById('px-kpi-fila').style.color = avgWait > 36 ? '#b91c1c' : '#d97706';
   },
 
   // ─── PRODUTORES NO PREDICTIX ──────────────────────────────────────
