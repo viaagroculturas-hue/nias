@@ -61,11 +61,15 @@
     });
   };
 
-  document.addEventListener('click', event => {
+  function handleCardPointer(event) {
     const card = event.target.closest && event.target.closest('.horti-card');
     if (!card) return;
+    if (event.type === 'pointerdown') event.preventDefault();
     window.toggleInterpretation(card.id);
-  }, true);
+  }
+
+  document.addEventListener('pointerdown', handleCardPointer, true);
+  document.addEventListener('click', handleCardPointer, true);
 
   document.addEventListener('DOMContentLoaded', () => {
     window.registerHortiInterpretationCards();
