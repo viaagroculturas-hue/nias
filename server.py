@@ -237,58 +237,60 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404)
 
     def do_GET(self):
-        if self.path.startswith('/api/flv/'):
+        request_path = urllib.parse.urlparse(self.path).path
+
+        if request_path.startswith('/api/flv/'):
             from flv.api.routes import handle_flv
             handle_flv(self, self.path)
             return
-        if self.path == '/api/ceagesp':
+        if request_path == '/api/ceagesp':
             self._serve_ceagesp()
             return
-        if self.path == '/api/rodovias':
+        if request_path == '/api/rodovias':
             self._serve_rodovias()
             return
-        if self.path == '/api/ceasas':
+        if request_path == '/api/ceasas':
             self._serve_ceasas()
             return
-        if self.path == '/api/produtores':
+        if request_path == '/api/produtores':
             self._serve_produtores()
             return
-        if self.path == '/api/produtores-rj':
+        if request_path == '/api/produtores-rj':
             self._serve_produtores_rj()
             return
         # NIA$ Soberano Digital v5.0 - Novos Endpoints
-        if self.path.startswith('/api/warroom/'):
+        if request_path.startswith('/api/warroom/'):
             self._serve_warroom_api()
             return
-        if self.path.startswith('/api/crisis/'):
+        if request_path.startswith('/api/crisis/'):
             self._serve_crisis_api()
             return
-        if self.path.startswith('/api/growth/'):
+        if request_path.startswith('/api/growth/'):
             self._serve_growth_api()
             return
-        if self.path.startswith('/api/distributors'):
+        if request_path.startswith('/api/distributors'):
             self._serve_distributors_api()
             return
-        if self.path.startswith('/api/dossier'):
+        if request_path.startswith('/api/dossier'):
             self._serve_dossier_api()
             return
-        if self.path.startswith('/api/news'):
+        if request_path.startswith('/api/news'):
             self._serve_news_api()
             return
-        if self.path.startswith('/api/reports'):
+        if request_path.startswith('/api/reports'):
             self._serve_reports_api()
             return
-        if self.path.startswith('/api/autonomous'):
+        if request_path.startswith('/api/autonomous'):
             self._serve_autonomous_api()
             return
-        if self.path.startswith('/api/predictix/intel'):
+        if request_path.startswith('/api/predictix/intel'):
             self._serve_predictix_intelligence_api()
             return
-        if self.path.startswith('/proxy/'):
+        if request_path.startswith('/proxy/'):
             self._proxy('GET')
-        elif self.path == '/api/cepea':
+        elif request_path == '/api/cepea':
             self._serve_cepea()
-        elif self.path == '/api/conab':
+        elif request_path == '/api/conab':
             self._serve_conab()
         else:
             super().do_GET()
