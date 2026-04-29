@@ -170,7 +170,7 @@ def test_map_config(html_content):
         print("  ⚠️  Zoom pode não estar configurado para visão continental")
     
     # Verificar contornos dos países
-    if "southAmericaCountries" in html_content and "adminDivisions" in html_content:
+    if "southAmericaCountries" in html_content and "southAmericaAdminDivisions" in html_content:
         print("  ✅ Contornos dos países definidos")
     else:
         print("  ❌ Contornos/divisões dos países não encontrados")
@@ -180,7 +180,7 @@ def test_map_config(html_content):
         ("weight: 1.5", "Borda administrativa 1.5 configurada"),
         ("fillOpacity:0.72", "Hover aumenta fillOpacity"),
         ("betting:", "Score de endividamento/apostas presente"),
-        ("mercosulFlows", "Fluxos Mercosul configurados"),
+        ("addMercosulFlows", "Fluxos Mercosul configurados"),
     ]
     for needle, desc in checks:
         if needle in html_content:
