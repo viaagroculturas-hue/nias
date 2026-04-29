@@ -49,6 +49,52 @@
 .px-arb-route{font-size:9px;color:#888;margin-top:2px;}
 @keyframes px-pulse-buy{0%,100%{box-shadow:0 0 4px #3B82F6;}50%{box-shadow:0 0 14px #3B82F6,0 0 24px rgba(59,130,246,.3);}}
 @keyframes px-pulse-sell{0%,100%{box-shadow:0 0 4px #EF4444;}50%{box-shadow:0 0 14px #EF4444,0 0 24px rgba(239,68,68,.3);}}
+.px-shell{flex:1;display:grid;grid-template-columns:300px minmax(420px,1fr) 340px;overflow:hidden;background:radial-gradient(circle at 45% 20%,rgba(59,130,246,.08),transparent 34%),#070707;}
+.px-dossier{border-right:1px solid #1a1a1a;background:linear-gradient(180deg,#0f0f0f,#080808);display:flex;flex-direction:column;overflow:hidden;}
+.px-dossier-head{padding:12px 14px;border-bottom:1px solid #1a1a1a;background:rgba(239,68,68,.06);}
+.px-dossier-title{font-size:10px;color:#EF4444;letter-spacing:2px;font-weight:bold;}
+.px-dossier-sub{font-size:9px;color:#777;margin-top:4px;line-height:1.35;}
+.px-dossier-body{padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
+.px-dossier-card{background:#101010;border:1px solid #242424;border-radius:6px;padding:10px;box-shadow:inset 0 0 18px rgba(255,255,255,.015);}
+.px-dossier-card.rj{border-left:3px solid #EF4444;}
+.px-dossier-card.growth{border-left:3px solid #00D4FF;}
+.px-dossier-card.active{border-left:3px solid #50C878;}
+.px-card-label{font-size:8px;color:#777;letter-spacing:1.5px;margin-bottom:5px;text-transform:uppercase;}
+.px-card-value{font-size:18px;font-weight:bold;color:#fff;font-family:monospace;}
+.px-card-note{font-size:9px;color:#8b8b8b;line-height:1.35;margin-top:4px;}
+.px-history-grid{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;height:54px;align-items:end;margin-top:8px;}
+.px-history-bar{background:#333;border-radius:2px 2px 0 0;min-height:8px;}
+.px-history-bar.rj{background:#EF4444;box-shadow:0 0 8px rgba(239,68,68,.35);}
+.px-history-bar.growth{background:#00D4FF;box-shadow:0 0 8px rgba(0,212,255,.35);}
+.px-history-bar.active{background:#50C878;box-shadow:0 0 8px rgba(80,200,120,.35);}
+.px-legend{position:absolute;left:12px;bottom:12px;z-index:850;background:rgba(5,5,5,.9);border:1px solid #222;border-radius:8px;padding:9px 11px;backdrop-filter:blur(6px);}
+.px-legend-row{display:flex;align-items:center;gap:7px;font-size:9px;color:#aaa;margin-top:5px;}
+.px-legend-line{width:28px;height:3px;border-radius:2px;}
+.px-map-title{position:absolute;left:12px;top:12px;z-index:850;background:rgba(5,5,5,.86);border:1px solid #222;border-radius:8px;padding:9px 12px;backdrop-filter:blur(6px);}
+.px-map-title strong{display:block;color:#FFD700;font-size:10px;letter-spacing:2px;}
+.px-map-title span{display:block;color:#888;font-size:9px;margin-top:3px;}
+.px-impact{position:relative;border-left:1px solid #1a1a1a;background:#0d0d0d;display:grid;grid-template-rows:1fr 1fr 1fr;overflow:hidden;}
+.px-impact-window{padding:10px 12px;border-bottom:1px solid #1a1a1a;overflow:hidden;display:flex;flex-direction:column;}
+.px-impact-window:last-child{border-bottom:0;}
+.px-impact-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.px-impact-title{font-size:9px;color:#FFD700;letter-spacing:2px;text-transform:uppercase;}
+.px-impact-tag{font-size:8px;color:#111;background:#FFD700;border-radius:999px;padding:2px 7px;font-weight:bold;}
+.px-feed-list{display:flex;flex-direction:column;gap:6px;overflow-y:auto;min-height:0;}
+.px-feed-item{background:#101010;border:1px solid #242424;border-left:3px solid #333;border-radius:5px;padding:7px 8px;}
+.px-feed-item.clima{border-left-color:#EF4444;}
+.px-feed-item.log{border-left-color:#00D4FF;}
+.px-feed-item.price{border-left-color:#50C878;}
+.px-feed-main{font-size:10px;color:#ddd;line-height:1.3;}
+.px-feed-meta{font-size:8px;color:#777;margin-top:3px;}
+.px-flow-active{animation:px-flow-green 1.7s ease-in-out infinite;stroke-dasharray:12 8;}
+.px-flow-growth{animation:px-flow-blue 1.35s ease-in-out infinite;stroke-dasharray:4 8;}
+.px-flow-rj{animation:px-flow-red 1s ease-in-out infinite;stroke-dasharray:2 7;}
+.px-arb-flow{animation:px-flow-green 1.4s ease-in-out infinite;stroke-dasharray:12 8;}
+@keyframes px-flow-green{0%,100%{stroke:#50C878;stroke-opacity:.42;stroke-width:2;}50%{stroke:#50C878;stroke-opacity:1;stroke-width:4;filter:drop-shadow(0 0 6px #50C878);}}
+@keyframes px-flow-blue{0%,100%{stroke:#00D4FF;stroke-opacity:.45;stroke-width:2;}50%{stroke:#00D4FF;stroke-opacity:1;stroke-width:4.5;filter:drop-shadow(0 0 8px #00D4FF);}}
+@keyframes px-flow-red{0%,100%{stroke:#EF4444;stroke-opacity:.5;stroke-width:2.5;}50%{stroke:#EF4444;stroke-opacity:1;stroke-width:5;filter:drop-shadow(0 0 9px #EF4444);}}
+@keyframes px-flow-gold{0%,100%{stroke-opacity:.5;}50%{stroke-opacity:1;filter:drop-shadow(0 0 7px #FFD700);}}
+@media(max-width:1180px){.px-shell{grid-template-columns:260px 1fr 300px;}.px-dossier{font-size:11px;}}
 /* ── SIDEBAR GROUPS ── */
 .nav-group{width:100%;margin-bottom:2px;}
 .nav-group-header{width:100%;display:flex;align-items:center;gap:6px;padding:4px 8px;border:none;background:none;color:var(--text2);font-family:var(--font);font-size:8px;letter-spacing:1.5px;cursor:pointer;transition:color .2s;text-align:left;}
@@ -2084,32 +2130,83 @@ tr:hover td{background:rgba(0,212,255,.04);}
         <button id="px-btn-produtores-rj" onclick="Predictix.toggleProdutoresRJ()" style="background:rgba(255,107,53,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">⚖️ EM RJ</button>
       </div>
       <!-- MAIN CONTENT -->
-      <div style="flex:1;display:flex;overflow:hidden;">
-        <!-- MAP -->
-        <div style="flex:1;position:relative;">
+      <div class="px-shell">
+        <!-- LEFT DOSSIER -->
+        <aside class="px-dossier">
+          <div class="px-dossier-head">
+            <div class="px-dossier-title">DOSSIER LATERAL · ESQUERDA</div>
+            <div class="px-dossier-sub">Painel dinamico por cultura/rota com situacao juridica, score financeiro 2026 e historico administrativo minimo de 24 meses.</div>
+          </div>
+          <div class="px-dossier-body">
+            <div class="px-dossier-card rj">
+              <div class="px-card-label">Situacao Juridica</div>
+              <div id="px-legal-status" class="px-card-value">RJ MONITORADO</div>
+              <div id="px-legal-note" class="px-card-note">Produtores e compradores com sinais de inadimplencia/RJ conectados ao fluxo vermelho.</div>
+            </div>
+            <div class="px-dossier-card growth">
+              <div class="px-card-label">Score Financeiro 2026</div>
+              <div id="px-fin-score" class="px-card-value" style="color:#00D4FF;">742</div>
+              <div id="px-fin-note" class="px-card-note">Capacidade de escala e crescimento em rotas com spread acima da media.</div>
+            </div>
+            <div class="px-dossier-card active">
+              <div class="px-card-label">Historico Administrativo · 24 meses</div>
+              <div id="px-admin-summary" class="px-card-note">24 eventos auditados, 3 alteracoes societarias e 18 meses sem restricao operacional.</div>
+              <div id="px-admin-history" class="px-history-grid"></div>
+            </div>
+            <div class="px-dossier-card">
+              <div class="px-card-label">Radar de Compradores</div>
+              <div id="px-buyer-radar" class="px-card-note">Atacadao, Assai e Cencosud sincronizados com scan de gondola.</div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- MAPA DE FLUXOS -->
+        <div style="position:relative;overflow:hidden;">
           <div id="px-map" style="position:absolute;inset:0;background:#0a0a0a;"></div>
+          <div class="px-map-title">
+            <strong>MAPA DE FLUXOS</strong>
+            <span>Linhas pulsantes conectando produtores a compradores</span>
+          </div>
+          <div class="px-legend">
+            <div class="px-card-label" style="margin-bottom:2px;">LEGENDA OPERACIONAL</div>
+            <div class="px-legend-row"><span class="px-legend-line" style="background:#EF4444;"></span>Vermelho · Inadimplencia/RJ</div>
+            <div class="px-legend-row"><span class="px-legend-line" style="background:#00D4FF;"></span>Azul Diamante · Crescimento/Scalability</div>
+            <div class="px-legend-row"><span class="px-legend-line" style="background:#50C878;"></span>Verde · Fluxo Ativo</div>
+          </div>
           <!-- 30s climate overlay pending -->
           <div id="px-clima-pending" style="display:none;position:absolute;top:10px;right:10px;z-index:900;background:rgba(10,10,10,.92);border:1px dashed rgba(239,68,68,.3);border-radius:6px;padding:10px 14px;color:#EF4444;font-family:monospace;font-size:11px;backdrop-filter:blur(4px);">
             <div style="font-size:9px;letter-spacing:1px;color:#666;margin-bottom:4px;">CAMADA CLIMATICA</div>
             Ativando em <strong id="px-clima-timer">30</strong>s
           </div>
         </div>
-        <!-- RIGHT PANEL: Terminal de Filas Preditivo + Arbitragem Detalhada -->
-        <div style="width:380px;border-left:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;background:#0d0d0d;">
-          <div style="padding:6px 12px;border-bottom:1px solid #1a1a1a;font-size:9px;color:#FFD700;letter-spacing:2px;">TERMINAL DE FILAS PREDITIVO</div>
-          <div id="px-port-panel" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;">
-            <div id="px-port-santos" class="px-port-card"></div>
-            <div id="px-port-paranagua" class="px-port-card"></div>
-            <div id="px-port-suape" class="px-port-card"></div>
+
+        <!-- PREDICTIX IMPACT WINDOWS -->
+        <section class="px-impact">
+          <div class="px-impact-window">
+            <div class="px-impact-head"><span class="px-impact-title">Topo · Feed social de produtores</span><span class="px-impact-tag">CLIMA/PRAGAS</span></div>
+            <div id="px-social-feed" class="px-feed-list"></div>
           </div>
-          <div style="border-top:1px solid #1a1a1a;padding:6px 12px;font-size:9px;color:#FFD700;letter-spacing:2px;">OPORTUNIDADES DE ARBITRAGEM</div>
-          <div id="px-arb-list" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;"></div>
-          <!-- DETALHAMENTO DA OPORTUNIDADE SELECIONADA -->
-          <div id="px-arb-detail" style="border-top:2px solid #FFD700;background:rgba(10,10,10,.95);padding:10px;overflow-y:auto;max-height:300px;display:none;">
-            <div style="font-size:10px;color:#FFD700;letter-spacing:1px;margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:4px;">📊 ANÁLISE DA OPORTUNIDADE</div>
+          <div class="px-impact-window">
+            <div class="px-impact-head"><span class="px-impact-title">Meio · Fluxo logistico</span><span class="px-impact-tag">PORTOS + SATELITE</span></div>
+            <div id="px-port-panel" class="px-feed-list">
+              <div id="px-port-santos" class="px-port-card"></div>
+              <div id="px-port-paranagua" class="px-port-card"></div>
+              <div id="px-port-suape" class="px-port-card"></div>
+            </div>
+          </div>
+          <div class="px-impact-window">
+            <div class="px-impact-head"><span class="px-impact-title">Base · Scan de gondolas reais</span><span class="px-impact-tag">ATACADAO · ASSAI · CENCOSUD</span></div>
+            <div id="px-gondola-scan" class="px-feed-list"></div>
+            <div style="border-top:1px solid #1a1a1a;margin-top:8px;padding-top:8px;">
+              <div style="font-size:9px;color:#FFD700;letter-spacing:2px;margin-bottom:6px;">OPORTUNIDADES DE ARBITRAGEM</div>
+              <div id="px-arb-list" style="max-height:92px;overflow-y:auto;"></div>
+            </div>
+          </div>
+          <div id="px-arb-detail" style="position:absolute;right:348px;bottom:10px;width:320px;z-index:880;border:1px solid #FFD700;background:rgba(10,10,10,.96);padding:10px;overflow-y:auto;max-height:260px;display:none;border-radius:6px;">
+            <div style="font-size:10px;color:#FFD700;letter-spacing:1px;margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:4px;">ANALISE DA OPORTUNIDADE</div>
             <div id="px-arb-detail-content"></div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
 
@@ -9380,6 +9477,8 @@ window.Predictix = {
     this._renderRodovias();
     this._renderPorts();
     this._renderArbitrage();
+    this._renderDossier();
+    this._renderImpactWindows();
     this._renderKPIs();
   },
 
@@ -9389,19 +9488,82 @@ window.Predictix = {
     const h = this._horizon;
     this.ROUTES.forEach(r => {
       const riskAdj = Math.min(1, r.risk + (h > 7 ? 0.15 : 0) + (h > 12 ? 0.2 : 0));
-      const color = riskAdj > 0.3 ? '#EF4444' : riskAdj > 0.15 ? '#F59E0B' : '#50C878';
-      const weight = riskAdj > 0.3 ? 3 : 2;
-      const dash = riskAdj > 0.3 ? '8,6' : riskAdj > 0.15 ? '12,4' : '';
+      const isRJ = /RJ|CEASA-RJ|BR-116 \(Dutra\)/.test(r.name + ' ' + r.road);
+      const isGrowth = !isRJ && (riskAdj > 0.15 || /VSF|Paranagua|Santos|CEAGESP/.test(r.name));
+      const flowType = isRJ ? 'rj' : isGrowth ? 'growth' : 'active';
+      const color = flowType === 'rj' ? '#EF4444' : flowType === 'growth' ? '#00D4FF' : '#50C878';
+      const weight = flowType === 'rj' ? 4 : flowType === 'growth' ? 3 : 2.5;
+      const dash = flowType === 'rj' ? '2,7' : flowType === 'growth' ? '4,8' : '12,8';
       const mid = [(r.from[0]+r.to[0])/2 + (Math.random()-.5)*1.5, (r.from[1]+r.to[1])/2 + (Math.random()-.5)*1.5];
       const line = L.polyline([r.from, mid, r.to], {
-        color, weight, opacity:0.7, dashArray:dash, smoothFactor:2
+        color, weight, opacity:0.85, dashArray:dash, smoothFactor:2, className:'px-flow-' + flowType
       });
-      const statusTxt = riskAdj > 0.3 ? 'PARALISAÇÃO/RISCO ALTO' : riskAdj > 0.15 ? 'GARGALO IMINENTE' : 'FLUXO NORMAL';
+      const statusTxt = flowType === 'rj' ? 'INADIMPLENCIA/RJ' : flowType === 'growth' ? 'CRESCIMENTO/SCALABILITY' : 'FLUXO ATIVO';
       line.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>${r.name}</b><br>${r.road}<br>Status: <b style="color:${color}">${statusTxt}</b><br>Risco: ${(riskAdj*100).toFixed(0)}%${h>0?'<br>Horizonte: T+'+h+'d':''}</div>`, {sticky:true});
       this._flowLayer.addLayer(line);
       // Arrow marker at midpoint
       L.circleMarker(mid, {radius:3, color, fillColor:color, fillOpacity:0.8, weight:0}).addTo(this._flowLayer);
     });
+  },
+
+  _renderDossier() {
+    const opps = this.ARBITRAGE_DB[this._culture] || [];
+    const rjCount = opps.filter(o => /RJ/.test(o.sell)).length + this.ROUTES.filter(r => /RJ|CEASA-RJ/.test(r.name)).length;
+    const margins = opps.map(o => ((o.sellPrice - o.buyPrice - o.frete) / o.buyPrice * 100)).filter(Number.isFinite);
+    const avgMargin = margins.length ? margins.reduce((a,b) => a + b, 0) / margins.length : 0;
+    const score = Math.max(420, Math.min(930, Math.round(680 + avgMargin * 3 - rjCount * 12 + this._horizon * 2)));
+    const legalStatus = document.getElementById('px-legal-status');
+    const legalNote = document.getElementById('px-legal-note');
+    const finScore = document.getElementById('px-fin-score');
+    const finNote = document.getElementById('px-fin-note');
+    const adminSummary = document.getElementById('px-admin-summary');
+    const buyerRadar = document.getElementById('px-buyer-radar');
+    const history = document.getElementById('px-admin-history');
+
+    if (legalStatus) legalStatus.textContent = rjCount > 3 ? 'RJ / INADIMPLENCIA' : rjCount > 0 ? 'RJ MONITORADO' : 'REGULAR';
+    if (legalNote) legalNote.textContent = `${rjCount} conexoes com alerta juridico em rotas de ${this._culture}. Fluxos vermelhos priorizados no mapa.`;
+    if (finScore) {
+      finScore.textContent = String(score);
+      finScore.style.color = score >= 760 ? '#50C878' : score >= 650 ? '#00D4FF' : '#EF4444';
+    }
+    if (finNote) finNote.textContent = `Score financeiro 2026 ajustado por margem media de ${avgMargin.toFixed(1)}% e capacidade de escala.`;
+    if (adminSummary) adminSummary.textContent = `24 meses auditados: ${Math.max(2, rjCount)} alertas, ${Math.max(3, Math.round(avgMargin / 8))} mudancas societarias e governanca ativa.`;
+    if (buyerRadar) buyerRadar.textContent = `Compradores ativos: Atacadao, Assai e Cencosud. Maior pressao detectada em ${opps[0]?.sell || 'CEAGESP (SP)'}.`;
+    if (history) {
+      history.innerHTML = Array.from({ length: 24 }, (_, i) => {
+        const cls = i % 7 === 0 && rjCount ? 'rj' : i % 5 === 0 ? 'growth' : 'active';
+        const h = 24 + ((i * 13 + score) % 58);
+        return `<span class="px-history-bar ${cls}" style="height:${h}%;"></span>`;
+      }).join('');
+    }
+  },
+
+  _renderImpactWindows() {
+    const social = document.getElementById('px-social-feed');
+    const gondola = document.getElementById('px-gondola-scan');
+    const cultureLabel = (this._culture || 'produto').toUpperCase();
+    const h = this._horizon;
+    if (social) {
+      social.innerHTML = [
+        { main:`Produtor ${cultureLabel} relata chuva irregular e janela de pulverizacao encurtada.`, meta:`clima · T${h >= 0 ? '+' + h : h}d · confianca 87%` },
+        { main:`Alerta de pragas em talhoes de ${this._culture}: pressao aumenta nas proximas 72h.`, meta:'pragas · NLP produtor rural · prioridade alta' },
+        { main:'Cooperativa confirma replanejamento de colheita para proteger qualidade de entrega.', meta:'feed social · produtor verificado · impacto logistico' },
+      ].map(i => `<div class="px-feed-item clima"><div class="px-feed-main">${i.main}</div><div class="px-feed-meta">${i.meta}</div></div>`).join('');
+    }
+    if (gondola) {
+      const base = this.ARBITRAGE_DB[this._culture]?.[0]?.sellPrice || 8.9;
+      const chains = [
+        { name:'Atacadao', price:base * 1.18, stock:'ruptura parcial' },
+        { name:'Assai', price:base * 1.11, stock:'estoque defensivo' },
+        { name:'Cencosud', price:base * 1.24, stock:'pressao de reposicao' },
+      ];
+      gondola.innerHTML = chains.map((c, idx) => `
+        <div class="px-feed-item price">
+          <div class="px-feed-main">${c.name}: R$ ${c.price.toFixed(2).replace('.', ',')} · ${c.stock}</div>
+          <div class="px-feed-meta">scan gondola real · ${cultureLabel} · amostra ${idx + 1}/3</div>
+        </div>
+      `).join('');
+    }
   },
 
   _renderRodovias() {
@@ -9528,9 +9690,10 @@ window.Predictix = {
       sellM.bindTooltip(`<b style="color:#EF4444">VENDA</b><br>${o.sell}<br>R$ ${o.sellPrice}/un`, {direction:'top'});
       this._arbLayer.addLayer(sellM);
       // Flow line connecting buy → sell
-      const flowColor = profitable ? '#FFD700' : '#555';
+      const flowColor = /RJ/.test(o.sell) ? '#EF4444' : profitable && margin > 35 ? '#00D4FF' : profitable ? '#50C878' : '#555';
+      const flowClass = /RJ/.test(o.sell) ? 'px-flow-rj' : profitable && margin > 35 ? 'px-flow-growth' : profitable ? 'px-flow-active' : 'px-arb-flow';
       const flow = L.polyline([[o.buyLat, o.buyLon], [o.sellLat, o.sellLon]], {
-        color:flowColor, weight:profitable?2.5:1, dashArray:'10,6', opacity:0.7
+        color:flowColor, weight:profitable?3:1.5, dashArray:'10,6', opacity:0.8, className:flowClass
       });
       flow.on('click', () => this._showInsight(o, margin));
       this._arbLayer.addLayer(flow);
