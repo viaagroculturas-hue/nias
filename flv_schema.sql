@@ -185,6 +185,41 @@ CREATE INDEX IF NOT EXISTS idx_news_evt_ts       ON flv_news_events(obs_ts);
 CREATE INDEX IF NOT EXISTS idx_news_daily_date   ON flv_news_risk_daily(obs_date);
 CREATE INDEX IF NOT EXISTS idx_global_clim_date  ON flv_global_climate(obs_date);
 
+-- Aprendizado continuo: pesos dinamicos e log de Evolucao da Inteligencia
+CREATE TABLE IF NOT EXISTS learning_model_weights (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    model_name TEXT NOT NULL,
+    culture_id INTEGER REFERENCES flv_cultures(id),
+    terminal TEXT NOT NULL DEFAULT '',
+    climate_weight REAL NOT NULL,
+    logistics_weight REAL NOT NULL,
+    updated_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(model_name, culture_id, terminal)
+);
+
+CREATE TABLE IF NOT EXISTS inteligencia_evolucao_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_date TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    model_name TEXT NOT NULL,
+    culture_id INTEGER REFERENCES flv_cultures(id),
+    terminal TEXT,
+    prediction_id INTEGER REFERENCES flv_predictions(id),
+    predicted_price REAL,
+    actual_price REAL,
+    error_pct REAL,
+    climate_weight_before REAL,
+    logistics_weight_before REAL,
+    climate_weight_after REAL,
+    logistics_weight_after REAL,
+    adjustment_reason TEXT,
+    details_json TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_learning_weights_lookup ON learning_model_weights(model_name, culture_id, terminal);
+CREATE INDEX IF NOT EXISTS idx_intel_evo_date ON inteligencia_evolucao_log(event_date, event_type);
+
 -- Tabela de Produtores (RJ e outros estados)
 CREATE TABLE IF NOT EXISTS flv_producers (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
