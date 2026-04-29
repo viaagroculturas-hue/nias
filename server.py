@@ -1160,6 +1160,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         - Sugestão D+7: projeção baseada em clima + volatilidade de preços (7 dias)
         """
         import sqlite3
+        import json
         from datetime import datetime, timedelta
         db_path = os.path.join(DIR, 'nia_flv.db')
         conn = sqlite3.connect(db_path)
@@ -1222,6 +1223,43 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         cur.execute("SELECT obs_date, brent_usd, brent_change_pct, wti_usd, wti_change_pct FROM flv_macro_indicators ORDER BY obs_date DESC LIMIT 1")
         macro = dict(cur.fetchone() or {})
 
+        # 6) Alertas de Risco Crítico derivados de mudanças do Score Soberano
+        cur.execute("""
+            SELECT obs_ts, entity_type, entity_id, change_type, score_before, score_after, payload_json
+            FROM flv_change_log
+            WHERE domain = 'score'
+              AND severity = 'vermelho'
+              AND score_after > 8.5
+              AND obs_ts >= ?
+            ORDER BY obs_ts DESC
+            LIMIT 20
+        """, (d8,))
+        critical_risk_alerts = []
+        for row in cur.fetchall():
+            payload = {}
+            try:
+                payload = json.loads(row['payload_json'] or '{}')
+            except Exception:
+                payload = {}
+            alert = payload.get('alert') or {}
+            critical_risk_alerts.append({
+                "type": alert.get("type", "Risco Crítico"),
+                "severity": "vermelho",
+                "obs_ts": row["obs_ts"],
+                "entity_type": row["entity_type"],
+                "entity_id": row["entity_id"],
+                "entity_name": alert.get("entity_name") or payload.get("name"),
+                "change_type": row["change_type"],
+                "score_before": row["score_before"],
+                "score_after": row["score_after"],
+                "threshold": alert.get("threshold", 8.5),
+                "message": alert.get(
+                    "message",
+                    f"Risco Crítico: entidade {row['entity_id']} atingiu Score Soberano {float(row['score_after']):.2f} (> 8.5)"
+                ),
+                "components": alert.get("components") or payload.get("components", {}),
+            })
+
         conn.close()
 
         stress_market_score = min(100.0, total_alerts_8d * 6.0 + (alerts_by_sev.get('vermelho', 0) or 0) * 12.0)
@@ -1246,6 +1284,8 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 "wti_change_pct": macro.get("wti_change_pct"),
                 "obs_date": macro.get("obs_date"),
             },
+            "critical_risk_alerts": critical_risk_alerts,
+            "critical_risk_alerts_count": len(critical_risk_alerts),
         }
 
         # Sugestões D+7: regras quantitativas (sem adjetivos)
@@ -1292,9 +1332,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         return {
             "generated_at": datetime.now().isoformat(),
             "diagnostico_d_8": diagnostico_d8,
+            "critical_risk_alerts": critical_risk_alerts,
             "sugestao_d_plus_7": {
                 "horizon_days": 7,
-                "drivers": ["climate_avg_7d", "price_volatility_cv_pct_7d", "energy_latest"],
+                "drivers": ["climate_avg_7d", "price_volatility_cv_pct_7d", "energy_latest", "score_soberano"],
                 "suggestions": suggestions[:3],
             },
         }

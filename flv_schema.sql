@@ -122,6 +122,45 @@ CREATE TABLE IF NOT EXISTS flv_alerts (
     created_at  TEXT DEFAULT (datetime('now'))
 );
 
+-- Entidades priorizadas pelo Score Soberano (0..10)
+CREATE TABLE IF NOT EXISTS flv_sovereign_entities (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_type TEXT NOT NULL,
+    entity_id   TEXT NOT NULL,
+    name        TEXT NOT NULL,
+    lat         REAL,
+    lon         REAL,
+    country     TEXT,
+    state_uf    TEXT,
+    score_soberano REAL NOT NULL,
+    components_json TEXT,
+    status_color TEXT CHECK(status_color IN ('vermelho','azul','neutro')),
+    updated_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(entity_type, entity_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sovereign_entities_score ON flv_sovereign_entities(score_soberano);
+CREATE INDEX IF NOT EXISTS idx_sovereign_entities_color ON flv_sovereign_entities(status_color);
+
+-- Mudanças detectadas no War Room para atualização incremental e relatórios
+CREATE TABLE IF NOT EXISTS flv_change_log (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    obs_ts      TEXT NOT NULL,
+    domain      TEXT NOT NULL,
+    entity_type TEXT,
+    entity_id   TEXT,
+    change_type TEXT NOT NULL,
+    severity    TEXT,
+    score_before REAL,
+    score_after  REAL,
+    payload_json TEXT,
+    created_at  TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_change_log_obs_ts ON flv_change_log(obs_ts);
+CREATE INDEX IF NOT EXISTS idx_change_log_entity ON flv_change_log(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_change_log_severity ON flv_change_log(severity);
+
 CREATE TABLE IF NOT EXISTS flv_accuracy (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     prediction_id INTEGER REFERENCES flv_predictions(id),
@@ -137,6 +176,10 @@ CREATE TABLE IF NOT EXISTS flv_macro_indicators (
     obs_date    TEXT NOT NULL UNIQUE,
     diesel_brl_l REAL,
     diesel_change_pct REAL,
+    brent_usd   REAL,
+    brent_change_pct REAL,
+    wti_usd     REAL,
+    wti_change_pct REAL,
     usd_brl     REAL,
     selic_pct   REAL,
     ipca_yoy_pct REAL,
