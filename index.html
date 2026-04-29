@@ -7300,20 +7300,12 @@ function _showUpgradeToast(msg) {
 
 // ── Demo Mode (Guest pre-loaded scenario)
 function _activateDemoMode() {
-  // 1. Switch to municipal tab and pre-select Tomate
   setTimeout(() => {
-    const munTab = document.querySelector('[onclick*="municipal"]') || document.querySelector('[onclick*="Municipal"]');
-    if (munTab) munTab.click();
-  }, 600);
-
-  setTimeout(() => {
-    // Select tomate mesa culture
     if (typeof trocarCultura === 'function') trocarCultura('tomate');
-    // Show a "safra recorde" banner
     _showDemoBanner();
   }, 1400);
 
-  // 2. Lock note above arbitrage table (blur is now handled inline in updateArbitragem via niasRole check)
+  // 1. Lock note above arbitrage table (blur is now handled inline in updateArbitragem via niasRole check)
   setTimeout(() => {
     const arbTitle = document.querySelector('#arb-strip') || document.getElementById('arb-thead');
     if (arbTitle && !arbTitle.querySelector('.rbac-lock-note')) {
@@ -7325,7 +7317,7 @@ function _activateDemoMode() {
     }
   }, 2200);
 
-  // 3. Patch anomaly feed to show only positive events
+  // 2. Patch anomaly feed to show only positive events
   const _origPushEvt = window.pushAnomalyEvent;
   window.pushAnomalyEvent = function() {
     _origPushEvt && _origPushEvt();
