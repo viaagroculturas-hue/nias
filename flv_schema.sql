@@ -53,6 +53,37 @@ CREATE TABLE IF NOT EXISTS flv_ceasa_prices (
     UNIQUE(culture_id, terminal, price_date)
 );
 
+CREATE VIEW IF NOT EXISTS flv_prices AS
+    SELECT * FROM flv_ceasa_prices;
+
+CREATE TABLE IF NOT EXISTS flv_sovereign_entities (
+    entity_type TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    lat REAL,
+    lon REAL,
+    country TEXT,
+    state_uf TEXT,
+    score_soberano REAL NOT NULL,
+    components_json TEXT,
+    status_color TEXT,
+    updated_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (entity_type, entity_id)
+);
+
+CREATE TABLE IF NOT EXISTS flv_change_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    obs_ts TEXT NOT NULL,
+    domain TEXT,
+    entity_type TEXT,
+    entity_id TEXT,
+    change_type TEXT,
+    severity TEXT,
+    score_before REAL,
+    score_after REAL,
+    payload_json TEXT
+);
+
 CREATE TABLE IF NOT EXISTS flv_climate (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     mun_id      INTEGER NOT NULL REFERENCES flv_municipalities(id),

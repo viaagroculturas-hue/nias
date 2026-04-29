@@ -628,6 +628,18 @@ tr:hover td{background:rgba(0,212,255,.04);}
 </head>
 <body>
 
+<script>
+window._niasGuestLogin = window._niasGuestLogin || function() {
+  window.__niasPendingRole = 'guest';
+  const overlay = document.getElementById('nias-login-overlay');
+  if (overlay) overlay.style.display = 'none';
+};
+window._niasLogin = window._niasLogin || function() {
+  const errEl = document.getElementById('login-err');
+  if (errEl) errEl.textContent = 'Carregando autenticação... tente novamente em instantes.';
+};
+</script>
+
 <!-- ══════════════════════════════════════════════════════════════
      NIA$ LOGIN OVERLAY
 ══════════════════════════════════════════════════════════════ -->
@@ -2249,28 +2261,28 @@ tr:hover td{background:rgba(0,212,255,.04);}
                 <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('tomate')">
                   <div style="font-size:10px;color:#ff6b35;">🍅 TOMATE</div>
                   <div style="font-size:8px;color:#666;">Pico: Jun-Ago | Baixa: Dez-Fev</div>
-                  <div id="sit-tomate-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 88,50/cx</div>
+                  <div id="sit-tomate-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">Carregando...</div>
                   <div id="sit-tomate-alert" style="font-size:8px;color:#ff6b35;">⚠️ Quebra em GO +15%</div>
                 </div>
                 
                 <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('cebola')">
                   <div style="font-size:10px;color:#ff6b35;">🧅 CEBOLA</div>
                   <div style="font-size:8px;color:#666;">Pico: Dez-Jan | Baixa: Jun-Jul</div>
-                  <div id="sit-cebola-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 35,00/sc</div>
+                  <div id="sit-cebola-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">Carregando...</div>
                   <div id="sit-cebola-trend" style="font-size:8px;color:#ff3d3d;">▼ -8.2%</div>
                 </div>
                 
                 <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('batata')">
                   <div style="font-size:10px;color:#ff6b35;">🥔 BATATA</div>
                   <div style="font-size:8px;color:#666;">Pico: Nov-Jan | Baixa: Jun-Ago</div>
-                  <div id="sit-batata-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 62,00/sc</div>
+                  <div id="sit-batata-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">Carregando...</div>
                   <div id="sit-batata-trend" style="font-size:8px;color:#50C878;">▲ +2.1%</div>
                 </div>
                 
-                <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('manga')">
-                  <div style="font-size:10px;color:#ff6b35;">🥭 MANGA</div>
-                  <div style="font-size:8px;color:#666;">Pico: Nov-Dez-Jan | Baixa: Mai-Jun</div>
-                  <div id="sit-manga-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">R$ 68,00/cx</div>
+                <div class="sit-product-card" style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:8px;cursor:pointer;" onclick="SituationRoom.loadProductDetail('laranja')">
+                  <div style="font-size:10px;color:#ff6b35;">🍊 LARANJA</div>
+                  <div style="font-size:8px;color:#666;">Pico: Jun-Ago | Demanda industrial</div>
+                  <div id="sit-manga-price" style="font-size:14px;color:#fff;font-family:monospace;margin-top:4px;">Carregando...</div>
                   <div id="sit-manga-trend" style="font-size:8px;color:#50C878;">▲ +4.5%</div>
                 </div>
               </div>
@@ -2486,6 +2498,69 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ═══════════════════════════════════════════════════════════════════
+// CEASA PRICE STATE — single source for map, Dossier, Predictix
+// ═══════════════════════════════════════════════════════════════════
+window.NIA_DATA = window.NIA_DATA || {};
+window.NIA_DATA.prices = window.NIA_DATA.prices || {};
+
+function formatPrice(value, unit = 'kg') {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '—';
+  return n.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:2, maximumFractionDigits:2 }) + '/' + unit;
+}
+
+async function loadWarroomSnapshotPrices(force = false) {
+  const now = Date.now();
+  if (!force && window.NIA_DATA.prices._loadedAt && now - window.NIA_DATA.prices._loadedAt < 60000) {
+    return window.NIA_DATA.prices;
+  }
+  const res = await fetch('/api/warroom/snapshot');
+  if (!res.ok) throw new Error('warroom snapshot unavailable');
+  const snapshot = await res.json();
+  const products = snapshot?.ceasa_prices?.products || {};
+  window.NIA_DATA.snapshot = snapshot;
+  window.NIA_DATA.prices = { ...products, _loadedAt: now, _meta: snapshot.ceasa_prices || {} };
+  return window.NIA_DATA.prices;
+}
+
+function getCeasaPrice(slug) {
+  return window.NIA_DATA?.prices?.[slug] || null;
+}
+
+function getCeasaTrendLabel(price) {
+  const trend = price?.trend || 'estavel';
+  if (trend === 'alta') return { text:'📈 Alta', color:'var(--danger)' };
+  if (trend === 'baixa') return { text:'📉 Baixa', color:'var(--accent2)' };
+  return { text:'➡️ Estável', color:'var(--warn)' };
+}
+
+const CEASA_PRICE_OVERVIEW_IDS = {
+  tomate: ['hp-tomate-mesa', 'hp-tomate-ind'],
+  cebola: ['hp-cebola'],
+  batata: ['hp-batata'],
+  laranja: ['hp-laranja'],
+};
+
+function renderOverviewCeasaPrices(prices = NIA_DATA.prices || {}) {
+  Object.entries(CEASA_PRICE_OVERVIEW_IDS).forEach(([slug, ids]) => {
+    const item = prices[slug];
+    if (!item) return;
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = formatPrice(item.price_avg, item.unit);
+    });
+  });
+}
+
+function getCeasaSlugForHortiCard(cardId) {
+  if (cardId === 'tomate-mesa' || cardId === 'tomate-ind') return 'tomate';
+  if (cardId === 'cebola') return 'cebola';
+  if (cardId === 'batata') return 'batata';
+  if (cardId === 'laranja') return 'laranja';
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // SITUATION ROOM MODULE - VERSAO COM DADOS REAIS (API)
 // ═══════════════════════════════════════════════════════════════════
 const SituationRoom = {
@@ -2518,23 +2593,48 @@ const SituationRoom = {
   
   async loadRealData() {
     try {
-      // Buscar dados de empresas em crise
-      const crisisResponse = await fetch('/api/crisis/summary');
-      if (crisisResponse.ok) {
-        const crisisData = await crisisResponse.json();
-        if (crisisData.recent_entries && crisisData.recent_entries.length > 0) {
-          this.data = crisisData;
-          this.renderCompanies();
-          this.renderAlertBadge();
-          console.log('[SituationRoom] Dados de empresas atualizados:', crisisData.recent_entries.length);
-        }
+      const [snapshot, crisisData] = await Promise.all([
+        loadWarroomSnapshotPrices(),
+        fetch('/api/crisis/summary').then(r => r.ok ? r.json() : null).catch(() => null),
+      ]);
+      if (crisisData && crisisData.recent_entries && crisisData.recent_entries.length > 0) {
+        this.data = crisisData;
+        this.renderCompanies();
+        this.renderAlertBadge();
+        console.log('[SituationRoom] Dados de empresas atualizados:', crisisData.recent_entries.length);
+      }
+      if (snapshot) {
+        this.renderCeasaPrices();
       }
     } catch (e) {
       console.log('[SituationRoom] Usando dados embutidos (API indisponível)');
     }
     
+    this.renderCeasaPrices();
     // Buscar notícias reais
     this.loadRealNews();
+  },
+
+  renderCeasaPrices(ceasaPrices) {
+    const prices = ceasaPrices?.products || NIA_DATA.prices || {};
+    const bindings = {
+      tomate: { price: 'sit-tomate-price', trend: 'sit-tomate-alert' },
+      cebola: { price: 'sit-cebola-price', trend: 'sit-cebola-trend' },
+      batata: { price: 'sit-batata-price', trend: 'sit-batata-trend' },
+      laranja: { price: 'sit-manga-price', trend: 'sit-manga-trend' },
+    };
+    Object.entries(bindings).forEach(([slug, ids]) => {
+      const item = prices[slug];
+      const priceEl = document.getElementById(ids.price);
+      const trendEl = document.getElementById(ids.trend);
+      if (item && priceEl) priceEl.textContent = formatPrice(item.price_avg, item.unit);
+      if (item && trendEl) {
+        const label = item.alert || getCeasaTrendLabel(item).text;
+        trendEl.textContent = item.freshness === 'yesterday' ? `⚠ ${label}` : label;
+        trendEl.style.color = item.trend === 'baixa' ? '#50C878' : item.trend === 'alta' ? '#ff6b35' : '#FFD700';
+      }
+    });
+    renderOverviewCeasaPrices(prices);
   },
   
   async loadRealNews() {
@@ -3232,7 +3332,19 @@ const prices = {
 };
 const tickerIds = { soja:'tp-soja', milho:'tp-milho', boi:'tp-boi', acucar:'tp-acucar', cafe:'tp-cafe', algodao:'tp-algodao', usd:'tp-usd', tomate:'tp-tomate' };
 function updatePrices() {
+  const tomato = getCeasaPrice('tomate');
+  if (!tomato) {
+    loadWarroomSnapshotPrices().then(() => updatePrices()).catch(() => {});
+  }
+  if (tomato) {
+    const el = document.getElementById('tp-tomate');
+    if (el) {
+      el.textContent = formatPrice(tomato.price_avg, tomato.unit) + ' ▲';
+      el.className = 'tick-val tick-up';
+    }
+  }
   for (const [key, p] of Object.entries(prices)) {
+    if (key === 'tomate' && tomato) continue;
     const change = (Math.random()-.48) * 0.12;
     p.val = Math.max(0.1, p.val + change);
     p.dir = change > 0 ? 1 : -1;
@@ -3832,42 +3944,36 @@ const CEASA_BASE = [
   {ceasa:'CEASA-SC (São José)',region:'São José, SC', lat:-27.6,  lng:-48.6},
 ];
 
-const CEASA_PRODUCTS = [
-  {name:'🍅 Tomate Mesa',   unit:'cx', basePrice:88.5,  freteBase:14.2, origin:'Caçador-SC / Itapeva-SP'},
-  {name:'🫑 Pimentão',      unit:'cx', basePrice:42.0,  freteBase:18.5, origin:'Araguari-MG / Mogi das Cruzes-SP'},
-  {name:'🧅 Cebola',        unit:'sc', basePrice:35.0,  freteBase:12.0, origin:'Ituporanga-SC / Cristalina-GO'},
-  {name:'🥔 Batata',        unit:'sc', basePrice:52.1,  freteBase:11.5, origin:'Itapeva-SP / Vargem Grande-MG'},
-  {name:'🍊 Laranja',       unit:'cx', basePrice:28.4,  freteBase:9.8,  origin:'Araguari-MG / Limeira-SP'},
-  {name:'🥬 Alface/Folhas', unit:'dz', basePrice:12.8,  freteBase:8.2,  origin:'Mogi das Cruzes-SP / Caçador-SC'},
-  {name:'🥕 Cenoura',       unit:'kg', basePrice:2.9,   freteBase:7.4,  origin:'Cristalina-GO / Caçador-SC'},
-  {name:'🍅 Tomate Ind.',   unit:'t',  basePrice:148.0, freteBase:22.0, origin:'Goiânia-GO / Patos de Minas-MG'},
-  {name:'🍌 Banana',        unit:'kg', basePrice:1.8,   freteBase:6.5,  origin:'Boquim-SE / Itabaiana-SE'},
-  {name:'🥭 Manga',         unit:'cx', basePrice:42.0,  freteBase:8.8,  origin:'Petrolina-PE / Juazeiro-BA'},
-  {name:'🍇 Uva BR',        unit:'kg', basePrice:6.4,   freteBase:10.1, origin:'Petrolina-PE / Vacaria-RS'},
-  {name:'🍈 Melão',         unit:'cx', basePrice:48.6,  freteBase:9.2,  origin:'Mossoró-RN / Baraúna-RN'},
-];
-
 let _ceasaRows = [];
 let _ceasaInterval = null;
 
-function _buildCeasaRows() {
+function _buildCeasaRowsFromState() {
   _ceasaRows = [];
-  CEASA_PRODUCTS.forEach(prod => {
-    CEASA_BASE.forEach(ceasa => {
-      const distFactor = 0.7 + Math.random() * 0.6;
-      const satFactor = (logState?.br163 != null) ? Math.min(100, Math.max(0, logState.br163)) / 100 : 0.5;
-      const frete = +(prod.freteBase * distFactor * (1 + satFactor * 0.3)).toFixed(2);
-      const priceVar = (Math.random() - 0.45) * 0.12;
-      const price = +(prod.basePrice * (1 + priceVar)).toFixed(2);
+  const products = Object.values(NIA_DATA.prices || {}).filter(p => p && typeof p === 'object' && p.slug);
+  products.forEach(prod => {
+    const terminals = prod.terminals?.length ? prod.terminals : [{ terminal: prod.terminal, price_avg: prod.price_avg, source: prod.source, price_date: prod.price_date }];
+    terminals.forEach(t => {
+      const price = +(t.price_avg ?? prod.price_avg ?? 0);
+      if (!price) return;
+      const frete = +(Math.max(0.25, price * 0.08)).toFixed(2);
       const margin = +(price - frete).toFixed(2);
       _ceasaRows.push({
-        ceasa: ceasa.ceasa, region: ceasa.region, lat: ceasa.lat, lng: ceasa.lng,
-        product: prod.name, unit: prod.unit, origin: prod.origin,
-        price, frete, margin
+        ceasa: t.terminal || prod.terminal || 'Brasil CEASA',
+        region: 'BR',
+        lat: null,
+        lng: null,
+        product: prod.name || prod.slug,
+        unit: prod.unit || 'kg',
+        origin: prod.source || t.source || 'CEPEA/CONAB',
+        price,
+        frete,
+        margin,
+        alert: prod.alert || '',
       });
     });
   });
   _ceasaRows.sort((a, b) => b.margin - a.margin);
+  return _ceasaRows.length > 0;
 }
 
 function _getStatusBadge(row, rank) {
@@ -3890,9 +3996,13 @@ function _getStatusBadge(row, rank) {
 }
 
 function updateCeasaTable() {
-  _buildCeasaRows();
+  const hasSnapshotPrices = _buildCeasaRowsFromState();
   const tbody = document.getElementById('ceasa-tbody');
   if (!tbody) return;
+  if (!hasSnapshotPrices) {
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text2);font-size:10px;">Carregando /api/warroom/snapshot...</td></tr>';
+    return;
+  }
   const top30 = _ceasaRows.slice(0, 40);
   tbody.innerHTML = top30.map((r, i) => {
     const marginColor = r.margin > 50 ? 'var(--accent2)' : r.margin > 20 ? 'var(--accent)' : r.margin > 0 ? 'var(--warn)' : 'var(--danger)';
@@ -3900,7 +4010,7 @@ function updateCeasaTable() {
       <td style="padding:4px 10px;font-size:9px;color:var(--text);">${r.ceasa}</td>
       <td style="padding:4px 10px;font-size:9px;color:var(--text);">${r.product}</td>
       <td style="padding:4px 10px;font-size:9px;color:var(--text2);">${r.origin}</td>
-      <td style="padding:4px 10px;font-size:9px;text-align:right;color:var(--accent);">R$ ${r.price.toFixed(2)}/${r.unit}</td>
+      <td style="padding:4px 10px;font-size:9px;text-align:right;color:var(--accent);">${formatPrice(r.price, r.unit)}${r.alert ? '<br><span style="color:var(--warn);font-size:7px;">'+r.alert+'</span>' : ''}</td>
       <td style="padding:4px 10px;font-size:9px;text-align:right;color:var(--warn);">R$ ${r.frete.toFixed(2)}</td>
       <td style="padding:4px 10px;font-size:10px;font-weight:bold;text-align:right;color:${marginColor};">R$ ${r.margin.toFixed(2)}</td>
       <td style="padding:4px 10px;text-align:center;">${_getStatusBadge(r, i)}</td>
@@ -3912,7 +4022,7 @@ function updateCeasaTable() {
     const el = document.getElementById('ceasa-spread-best');
     const where = document.getElementById('ceasa-spread-where');
     const badge = document.getElementById('ceasa-best-badge');
-    if (el) el.textContent = '+ R$ ' + best.margin.toFixed(2) + '/' + best.unit;
+    if (el) el.textContent = '+ ' + formatPrice(best.margin, best.unit).replace('R$ ', '');
     if (where) where.textContent = best.ceasa + ' · ' + best.product;
     if (badge) badge.textContent = '🏆 MELHOR: ' + best.ceasa.split(' ')[0] + ' +R$' + best.margin.toFixed(0) + '/' + best.unit;
     const countEl = document.getElementById('ceasa-opp-count');
@@ -3928,6 +4038,12 @@ function updateCeasaTable() {
   const icapBase = 118.4 + (Math.random() - 0.5) * 2;
   const icapEl = document.getElementById('ceasa-price-idx');
   if (icapEl) icapEl.textContent = 'ICAP ' + icapBase.toFixed(1);
+  const updEl = document.getElementById('ceasa-last-upd');
+  if (updEl) {
+    const stale = Object.values(NIA_DATA.prices || {}).some(p => p.alert);
+    updEl.textContent = 'Snapshot War Room · CEPEA/Esalq · CONAB/Prohort' + (stale ? ' · Dado de Ontem' : '');
+    updEl.style.color = stale ? 'var(--warn)' : 'var(--accent)';
+  }
 }
 
 let _lastSpreadAlert = 0;
@@ -5099,6 +5215,8 @@ setTimeout(initHortiSparks, 200);
 
 function updateHorti() {
   Object.entries(hortiState).forEach(([k, h]) => {
+    const ceasaSlug = getCeasaSlugForHortiCard(k);
+    const ceasaPrice = ceasaSlug ? getCeasaPrice(ceasaSlug) : null;
     // price fluctuation
     const pChange = (Math.random()-.48) * h.price * 0.008;
     h.price = Math.max(h.price * 0.9, Math.min(h.price * 1.1, h.price + pChange));
@@ -5111,9 +5229,14 @@ function updateHorti() {
     // update DOM price
     const priceEl = document.getElementById('hp-' + k);
     if (priceEl) {
-      const fmt = h.price >= 10 ? h.price.toFixed(2).replace('.',',') : h.price.toFixed(2).replace('.',',');
-      priceEl.textContent = 'R$ ' + fmt + '/' + h.unit;
-      priceEl.style.color = h.dir > 0 ? 'var(--accent2)' : 'var(--danger)';
+      if (ceasaPrice) {
+        priceEl.textContent = formatPrice(ceasaPrice.price_avg, ceasaPrice.unit);
+        priceEl.style.color = 'var(--accent2)';
+      } else {
+        const fmt = h.price >= 10 ? h.price.toFixed(2).replace('.',',') : h.price.toFixed(2).replace('.',',');
+        priceEl.textContent = 'R$ ' + fmt + '/' + h.unit;
+        priceEl.style.color = h.dir > 0 ? 'var(--accent2)' : 'var(--danger)';
+      }
     }
 
     // update ndvi
@@ -7178,18 +7301,23 @@ async function _niasLogin() {
   }
   _niasGrantAccess(role);
 }
+window._niasLogin = _niasLogin;
 
 function _niasGuestLogin() {
   _niasGrantAccess('guest');
 }
+window._niasGuestLogin = _niasGuestLogin;
 
 function _niasGrantAccess(role) {
   niasRole = role;
+  window.__niasPendingRole = null;
   const overlay = document.getElementById('nias-login-overlay');
   if (overlay) overlay.style.display = 'none';
   _applyRBAC(role);
   if (role === 'guest') _activateDemoMode();
 }
+window._niasGrantAccess = _niasGrantAccess;
+if (window.__niasPendingRole) _niasGrantAccess(window.__niasPendingRole);
 
 // ── RBAC restrictions
 function _applyRBAC(role) {
@@ -7503,11 +7631,11 @@ function _bcArgusBlock(m) {
 
 function _bcArbSnippet(m) {
   const cult=(m.culture||'').toLowerCase();
-  const map={'tomate':{ceasa:'CEAGESP (SP)',price:'R$ 88,50/cx',margin:'+R$ 74,30'},'cebola':{ceasa:'CEASA-MG',price:'R$ 35,00/sc',margin:'+R$ 23,00'},'manga':{ceasa:'CEASA-PE',price:'R$ 68,00/cx',margin:'+R$ 59,90'},'pimentao':{ceasa:'CEASA-RJ',price:'R$ 42,00/kg',margin:'+R$ 23,50'},'soja':{ceasa:'Porto Santos',price:'R$ 142,00/sc',margin:'+R$ 28,50'},'milho':{ceasa:'Porto Santos',price:'R$ 72,00/sc',margin:'+R$ 18,20'}};
-  const hit=Object.entries(map).find(([k])=>cult.includes(k));
-  if(!hit) return `<div style="font-size:9px;color:var(--text2);">CEASA não mapeado.</div>`;
-  const [,d]=hit;
-  return `<div class="bc-arb-row"><span class="bc-arb-best">🏆 ${d.ceasa}</span><div class="bc-arb-label">Preço: ${d.price} · Margem: ${d.margin}</div></div>`;
+  const slug = Object.keys(NIA_DATA.prices || {}).find(k => cult.includes(k));
+  const d = slug ? NIA_DATA.prices[slug] : null;
+  if (!d) return `<div style="font-size:9px;color:var(--text2);">CEASA não mapeado.</div>`;
+  const alert = d.alert ? ` · <span style="color:var(--warn);">${_esc(d.alert)}</span>` : '';
+  return `<div class="bc-arb-row"><span class="bc-arb-best">🏆 ${_esc(d.terminal || 'Brasil CEASA')}</span><div class="bc-arb-label">Preço: ${formatPrice(d.price_avg, d.unit)}${alert}</div></div>`;
 }
 
 function bcToggleLayer(name,cb) { if(!bcMap||!bcMapLayers[name])return; cb.checked?bcMapLayers[name].addTo(bcMap):bcMap.removeLayer(bcMapLayers[name]); }
@@ -8785,6 +8913,24 @@ const FLVModule = {
   // Reference base prices per kg for synthetic data
   _REF: {tomate:6.3,cebola:4.2,batata:3.8,pimentao:12.3,folhosas:4.8,cenoura:5.2,manga:9.2,uva:18.8,banana:4.5,laranja:4.5,morango:29.5,maca:6.7,melao:5.0,mamao:5.0,abacaxi:7.4,alho:22,melancia:4.2,maracuja:5.0,goiaba:5.6,abacate:5.8,limao:3.2,tangerina:3.0,coco:2.5,acai:12,pessego:8.5},
 
+  _snapshotPrices(culture) {
+    const p = getNiaPrice(culture);
+    if (!p || p.price_avg == null) return null;
+    const base = Number(p.price_avg);
+    const now = new Date();
+    const series = [];
+    for (let i = 89; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const drift = 1 - (i * 0.0012);
+      series.push({ date: d.toISOString().slice(0, 10), price: +(base * drift).toFixed(2) });
+    }
+    const prices = series.map(s => s.price);
+    const sma7 = prices.map((_, i) => i < 6 ? null : +(prices.slice(i-6,i+1).reduce((a,b)=>a+b)/7).toFixed(2));
+    const sma21 = prices.map((_, i) => i < 20 ? null : +(prices.slice(i-20,i+1).reduce((a,b)=>a+b)/21).toFixed(2));
+    return { culture, terminal: p.terminal || 'Brasil CEASA', series, sma7, sma21, count: series.length, source: p.source, freshness: p.freshness };
+  },
+
   _syntheticPrices(culture) {
     const base = this._REF[culture] || 5.0;
     const now = new Date();
@@ -8824,12 +8970,12 @@ const FLVModule = {
     try {
       let prices = {series:[]}, pred = {forecast:[],trend:'estavel',confidence:0,trend_pct:0}, alerts = [];
       try {
-        const [p, pr, al] = await Promise.all([
-          fetch(`/api/flv/prices?culture=${c}&terminal=${t}&days=90`).then(r=>{if(!r.ok)throw 0;return r.json();}),
+        const [snapshot, pr, al] = await Promise.all([
+          loadNiaSnapshot(),
           fetch(`/api/flv/predictions/${c}?terminal=${t}&horizon=15`).then(r=>{if(!r.ok)throw 0;return r.json();}),
           fetch('/api/flv/alerts?severity=all').then(r=>{if(!r.ok)throw 0;return r.json();}),
         ]);
-        prices = p; pred = pr; alerts = al;
+        prices = this._snapshotPrices(c) || {series:[]}; pred = pr; alerts = al;
       } catch(e) { /* backend unavailable — use synthetic */ }
       if (!prices.series || !prices.series.length) {
         prices = this._syntheticPrices(c);
@@ -8837,8 +8983,9 @@ const FLVModule = {
       }
 
       // KPIs
+      const latestSnapshotPrice = getNiaPrice(c);
       const lastPrice = prices.series?.length ? prices.series[prices.series.length-1]?.price : null;
-      document.getElementById('flv-kpi-price').textContent = lastPrice ? `R$ ${lastPrice.toFixed(2)}` : '—';
+      document.getElementById('flv-kpi-price').textContent = latestSnapshotPrice ? formatPrice(latestSnapshotPrice) : (lastPrice ? formatPrice(lastPrice) : '—');
       const trendPct = pred.trend_pct || 0;
       const trendEl = document.getElementById('flv-kpi-trend');
       trendEl.textContent = `${trendPct > 0 ? '+' : ''}${trendPct.toFixed(1)}%`;
@@ -9148,7 +9295,7 @@ window.Predictix = {
 
   ARBITRAGE_DB: {
     tomate: [
-      { buy:'Cristalina (GO)',        buyLat:-16.77, buyLon:-47.62, buyPrice:48, sell:'CEAGESP (SP)',   sellLat:-23.55, sellLon:-46.63, sellPrice:92, frete:14.0 },
+      { buy:'Cristalina (GO)',        buyLat:-16.77, buyLon:-47.62, buyPrice:6.20, sell:'CEAGESP (SP)',   sellLat:-23.55, sellLon:-46.63, sellPrice:7.50, frete:0.32 },
       { buy:'Sumaré/Elias Fausto (SP)', buyLat:-22.82, buyLon:-47.27, buyPrice:56, sell:'CEAGESP (SP)', sellLat:-23.55, sellLon:-46.63, sellPrice:92, frete:4.5 },
       { buy:'Itapecuru (GO)',         buyLat:-15.95, buyLon:-49.81, buyPrice:45, sell:'CEASA-MG',       sellLat:-19.92, sellLon:-43.94, sellPrice:78, frete:11.0 },
       { buy:'Caçapava (SP)',          buyLat:-22.69, buyLon:-45.71, buyPrice:52, sell:'CEASA-RJ',       sellLat:-22.91, sellLon:-43.17, sellPrice:85, frete:6.0 },
@@ -9168,14 +9315,14 @@ window.Predictix = {
       { buy:'Petrolina (PE) / VSF',   buyLat:-9.39,  buyLon:-40.50, buyPrice:2.80, sell:'CEASA-PE',     sellLat:-8.05,  sellLon:-34.87, sellPrice:5.10, frete:0.45 },
     ],
     laranja: [
-      { buy:'Limeira (SP)',           buyLat:-22.56, buyLon:-47.40, buyPrice:12.0, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:22.0, frete:2.0 },
+      { buy:'Limeira (SP)',           buyLat:-22.56, buyLon:-47.40, buyPrice:92.0, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:102.5, frete:3.2, unit:'272kg' },
       { buy:'Itápolis (SP)',          buyLat:-21.60, buyLon:-49.06, buyPrice:10.5, sell:'CEASA-RJ',      sellLat:-22.91, sellLon:-43.17, sellPrice:24.0, frete:4.5 },
       { buy:'Bebedouro (SP)',         buyLat:-20.95, buyLon:-48.48, buyPrice:11.0, sell:'CEASA-MG',      sellLat:-19.92, sellLon:-43.94, sellPrice:21.0, frete:3.8 },
       { buy:'Rio Real (BA)',          buyLat:-11.48, buyLon:-37.93, buyPrice:8.50, sell:'CEASA-BA',      sellLat:-12.97, sellLon:-38.51, sellPrice:18.0, frete:1.5 },
       { buy:'Sergipe (SE)',           buyLat:-10.91, buyLon:-37.07, buyPrice:9.00, sell:'CEASA-PE',      sellLat:-8.05,  sellLon:-34.87, sellPrice:19.5, frete:2.2 },
     ],
     cebola: [
-      { buy:'Ituporanga (SC)',        buyLat:-27.41, buyLon:-49.60, buyPrice:3.20, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:5.80, frete:0.80 },
+      { buy:'Ituporanga (SC)',        buyLat:-27.41, buyLon:-49.60, buyPrice:3.20, sell:'CEAGESP (SP)',  sellLat:-23.55, sellLon:-46.63, sellPrice:3.80, frete:0.18 },
       { buy:'Cristalina (GO)',        buyLat:-16.77, buyLon:-47.62, buyPrice:2.90, sell:'CEASA-DF',      sellLat:-15.78, sellLon:-47.93, sellPrice:5.50, frete:0.40 },
       { buy:'São José do Norte (RS)', buyLat:-32.05, buyLon:-52.04, buyPrice:2.80, sell:'CEASA-RS',      sellLat:-29.92, sellLon:-51.08, sellPrice:5.20, frete:0.55 },
       { buy:'Casa Nova (BA)',         buyLat:-9.17,  buyLon:-40.97, buyPrice:2.50, sell:'CEASA-BA',      sellLat:-12.97, sellLon:-38.51, sellPrice:5.00, frete:0.70 },
@@ -9187,7 +9334,7 @@ window.Predictix = {
       { buy:'Bento Gonçalves (RS)',   buyLat:-29.17, buyLon:-51.52, buyPrice:5.50, sell:'CEASA-PR',      sellLat:-25.43, sellLon:-49.27, sellPrice:10.80, frete:1.20 },
     ],
     batata: [
-      { buy:'Vargem Grande do Sul (SP)', buyLat:-21.83, buyLon:-46.89, buyPrice:3.80, sell:'CEAGESP (SP)', sellLat:-23.55, sellLon:-46.63, sellPrice:6.20, frete:0.60 },
+      { buy:'Vargem Grande do Sul (SP)', buyLat:-21.83, buyLon:-46.89, buyPrice:4.40, sell:'CEAGESP (SP)', sellLat:-23.55, sellLon:-46.63, sellPrice:5.15, frete:0.22 },
       { buy:'Cristalina (GO)',        buyLat:-16.77, buyLon:-47.62, buyPrice:3.50, sell:'CEASA-DF',      sellLat:-15.78, sellLon:-47.93, sellPrice:6.00, frete:0.45 },
       { buy:'Araxá (MG)',             buyLat:-19.59, buyLon:-46.94, buyPrice:3.60, sell:'CEASA-MG',      sellLat:-19.92, sellLon:-43.94, sellPrice:5.90, frete:0.50 },
       { buy:'Castro (PR)',            buyLat:-24.79, buyLon:-50.01, buyPrice:3.40, sell:'CEASA-PR',      sellLat:-25.43, sellLon:-49.27, sellPrice:5.80, frete:0.30 },
@@ -9471,21 +9618,29 @@ window.Predictix = {
     }
 
     opps.forEach((o, i) => {
+      const snapshotPrice = getCeasaPrice(this._culture);
+      if (snapshotPrice) {
+        o.unit = snapshotPrice.unit || o.unit || 'kg';
+        o.sellPrice = snapshotPrice.price_avg;
+        o.source = snapshotPrice.source;
+        o.alert = snapshotPrice.alert;
+      }
       const margin = ((o.sellPrice - o.buyPrice - o.frete) / o.buyPrice * 100);
       const profitable = margin > 5;
       // Buy marker (blue pulsing)
+      const unit = o.unit || 'kg';
       const buyM = L.circleMarker([o.buyLat, o.buyLon], {
         radius:8, color:'#3B82F6', fillColor:'#3B82F6', fillOpacity:0.3, weight:2,
         className:'px-buy-pulse'
       });
-      buyM.bindTooltip(`<b style="color:#3B82F6">COMPRA</b><br>${o.buy}<br>R$ ${o.buyPrice}/un`, {direction:'top'});
+      buyM.bindTooltip(`<b style="color:#3B82F6">COMPRA</b><br>${o.buy}<br>${formatPrice(o.buyPrice, unit)}`, {direction:'top'});
       this._arbLayer.addLayer(buyM);
       // Sell marker (red pulsing)
       const sellM = L.circleMarker([o.sellLat, o.sellLon], {
         radius:8, color:'#EF4444', fillColor:'#EF4444', fillOpacity:0.3, weight:2,
         className:'px-sell-pulse'
       });
-      sellM.bindTooltip(`<b style="color:#EF4444">VENDA</b><br>${o.sell}<br>R$ ${o.sellPrice}/un`, {direction:'top'});
+      sellM.bindTooltip(`<b style="color:#EF4444">VENDA</b><br>${o.sell}<br>${formatPrice(o.sellPrice, unit)}`, {direction:'top'});
       this._arbLayer.addLayer(sellM);
       // Flow line connecting buy → sell
       const flowColor = profitable ? '#FFD700' : '#555';
@@ -9501,7 +9656,7 @@ window.Predictix = {
             <span style="font-size:10px;color:#ddd;">${o.buy} → ${o.sell}</span>
             <span class="px-arb-margin">${margin>0?'+':''}${margin.toFixed(1)}%</span>
           </div>
-          <div class="px-arb-route">Compra: R$${o.buyPrice} · Venda: R$${o.sellPrice} · Frete: R$${o.frete}</div>
+          <div class="px-arb-route">Compra: ${formatPrice(o.buyPrice, unit)} · Venda: ${formatPrice(o.sellPrice, unit)} · Frete: ${formatPrice(o.frete, unit)}</div>
         </div>
       `;
     });
@@ -9517,6 +9672,7 @@ window.Predictix = {
   _showInsight(o, margin) {
     const detailPanel = document.getElementById('px-arb-detail');
     const detailContent = document.getElementById('px-arb-detail-content');
+    const unit = o.unit || 'kg';
     
     // Verificar se elementos existem
     if (!detailPanel || !detailContent) {
@@ -9544,6 +9700,7 @@ window.Predictix = {
     const volumeDiario = 500 + (hash % 1500); // 500-2000 toneladas/dia
     const volumeMensal = volumeDiario * 30;
     const volumeAnual = volumeMensal * 12;
+    const unit = o.unit || getCeasaPrice(this._culture)?.unit || 'kg';
     const lucroPorUnidade = (o.sellPrice - o.buyPrice - o.frete);
     const lucroDiario = lucroPorUnidade * volumeDiario;
     const lucroMensal = lucroDiario * 30;
@@ -9606,14 +9763,14 @@ window.Predictix = {
     origem.style.cssText = 'background:#1a1a1a;padding:6px;border-radius:4px;';
     origem.innerHTML = '<div style="font-size:8px;color:#888;">ORIGEM</div>' +
       '<div style="font-size:10px;color:#3B82F6;font-weight:bold;">' + sanitize(o.buy) + '</div>' +
-      '<div style="font-size:9px;color:#666;">R$ ' + o.buyPrice + '/un</div>';
+      '<div style="font-size:9px;color:#666;">' + formatPrice(o.buyPrice, unit) + '</div>';
     gridOrigemDestino.appendChild(origem);
     
     const destino = document.createElement('div');
     destino.style.cssText = 'background:#1a1a1a;padding:6px;border-radius:4px;';
     destino.innerHTML = '<div style="font-size:8px;color:#888;">DESTINO</div>' +
       '<div style="font-size:10px;color:#EF4444;font-weight:bold;">' + sanitize(o.sell) + '</div>' +
-      '<div style="font-size:9px;color:#666;">R$ ' + o.sellPrice + '/un</div>';
+      '<div style="font-size:9px;color:#666;">' + formatPrice(o.sellPrice, unit) + '</div>';
     gridOrigemDestino.appendChild(destino);
     
     container.appendChild(gridOrigemDestino);
@@ -9627,11 +9784,11 @@ window.Predictix = {
         '<div style="font-size:8px;color:#888;">MARGEM</div>' +
       '</div>' +
       '<div style="text-align:center;padding:6px;background:rgba(0,212,255,0.1);border-radius:4px;">' +
-        '<div style="font-size:16px;font-weight:bold;color:#00d4ff;">R$' + lucroPorUnidade.toFixed(2) + '</div>' +
-        '<div style="font-size:8px;color:#888;">LUCRO/UN</div>' +
+        '<div style="font-size:16px;font-weight:bold;color:#00d4ff;">' + formatPrice(lucroPorUnidade, unit) + '</div>' +
+        '<div style="font-size:8px;color:#888;">LUCRO/' + unit.toUpperCase() + '</div>' +
       '</div>' +
       '<div style="text-align:center;padding:6px;background:rgba(255,107,53,0.1);border-radius:4px;">' +
-        '<div style="font-size:16px;font-weight:bold;color:#ff6b35;">R$' + o.frete + '</div>' +
+        '<div style="font-size:16px;font-weight:bold;color:#ff6b35;">' + formatPrice(o.frete, unit) + '</div>' +
         '<div style="font-size:8px;color:#888;">FRETE</div>' +
       '</div>';
     container.appendChild(gridMetricas);
@@ -10204,97 +10361,63 @@ async function niasLoadRealData() {
 
 // Atualiza cards de hortifruti na Visao Geral com dados reais
 function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
-  const flvRef = typeof FLVModule !== 'undefined' ? FLVModule._REF : {};
-  const ceagespProds = ceagespData && ceagespData.products ? ceagespData.products : {};
-  const ceagespDate = ceagespData && ceagespData.meta ? ceagespData.meta.date : '';
-
   const hortiMap = {
-    'tomate-mesa': { slug:'tomate', unit:'kg', conab:'TOMATE', cepea:'tomate', elPrice:'hp-tomate-mesa', elDelta:'hd-tomate-mesa', elSrc:'hsrc-tomate-mesa', elStatus:'hst-tomate-mesa' },
-    'tomate-ind':  { slug:'tomate', unit:'t',  conab:'EXTRATO DE TOMATE', cepea:null, elPrice:'hp-tomate-ind', elDelta:'hd-tomate-ind', elSrc:'hsrc-tomate-ind', elStatus:'hst-tomate-ind' },
-    'pimentao':    { slug:'pimentao', unit:'kg', conab:'PIMENTAO', cepea:null, elPrice:'hp-pimentao', elDelta:'hd-pimentao', elSrc:'hsrc-pimentao', elStatus:'hst-pimentao' },
-    'alface':      { slug:'folhosas', unit:'kg', conab:'ALFACE', cepea:null, elPrice:'hp-alface', elDelta:'hd-alface', elSrc:'hsrc-alface', elStatus:'hst-alface' },
-    'laranja':     { slug:'laranja', unit:'cx', conab:'LARANJA', cepea:'laranja', elPrice:'hp-laranja', elDelta:'hd-laranja', elSrc:'hsrc-laranja', elStatus:'hst-laranja' },
-    'batata':      { slug:'batata', unit:'sc', conab:'BATATA INGLESA', cepea:'batata', elPrice:'hp-batata', elDelta:'hd-batata', elSrc:'hsrc-batata', elStatus:'hst-batata' },
-    'cebola':      { slug:'cebola', unit:'kg', conab:'CEBOLA', cepea:null, elPrice:'hp-cebola', elDelta:'hd-cebola', elSrc:'hsrc-cebola', elStatus:'hst-cebola' },
-    'manga':       { slug:'manga', unit:'kg', conab:'MANGA', cepea:null, elPrice:'hp-manga', elDelta:'hd-manga', elSrc:'hsrc-manga', elStatus:'hst-manga' },
-    'uva':         { slug:'uva', unit:'kg', conab:'UVA', cepea:null, elPrice:'hp-uva', elDelta:'hd-uva', elSrc:'hsrc-uva', elStatus:'hst-uva' },
+    'tomate-mesa': { slug:'tomate', elPrice:'hp-tomate-mesa', elDelta:'hd-tomate-mesa', elSrc:'hsrc-tomate-mesa', elStatus:'hst-tomate-mesa' },
+    'tomate-ind':  { slug:'tomate', elPrice:'hp-tomate-ind', elDelta:'hd-tomate-ind', elSrc:'hsrc-tomate-ind', elStatus:'hst-tomate-ind' },
+    'pimentao':    { slug:'pimentao', elPrice:'hp-pimentao', elDelta:'hd-pimentao', elSrc:'hsrc-pimentao', elStatus:'hst-pimentao' },
+    'alface':      { slug:'folhosas', elPrice:'hp-alface', elDelta:'hd-alface', elSrc:'hsrc-alface', elStatus:'hst-alface' },
+    'laranja':     { slug:'laranja', elPrice:'hp-laranja', elDelta:'hd-laranja', elSrc:'hsrc-laranja', elStatus:'hst-laranja' },
+    'batata':      { slug:'batata', elPrice:'hp-batata', elDelta:'hd-batata', elSrc:'hsrc-batata', elStatus:'hst-batata' },
+    'cebola':      { slug:'cebola', elPrice:'hp-cebola', elDelta:'hd-cebola', elSrc:'hsrc-cebola', elStatus:'hst-cebola' },
+    'manga':       { slug:'manga', elPrice:'hp-manga', elDelta:'hd-manga', elSrc:'hsrc-manga', elStatus:'hst-manga' },
+    'uva':         { slug:'uva', elPrice:'hp-uva', elDelta:'hd-uva', elSrc:'hsrc-uva', elStatus:'hst-uva' },
   };
+  const apply = () => {
+    Object.values(hortiMap).forEach(cfg => {
+      const item = getCeasaPrice(cfg.slug);
+      const priceEl = document.getElementById(cfg.elPrice);
+      const deltaEl = document.getElementById(cfg.elDelta);
+      const srcEl = document.getElementById(cfg.elSrc);
+      const statusEl = document.getElementById(cfg.elStatus);
+      if (!item || !priceEl) return;
 
-  for (const [key, cfg] of Object.entries(hortiMap)) {
-    const priceEl = document.getElementById(cfg.elPrice);
-    const deltaEl = document.getElementById(cfg.elDelta);
-    const srcEl = document.getElementById(cfg.elSrc);
-    const statusEl = document.getElementById(cfg.elStatus);
-    if (!priceEl) continue;
-
-    // Resolve price from best source (CEAGESP > CEPEA > CONAB > FLV ref)
-    let price = null, source = '', change = null;
-
-    // 0. CEAGESP LIVE (best source — daily hortifruti)
-    if (ceagespProds[cfg.slug]) {
-      const cp = ceagespProds[cfg.slug];
-      price = cp.price_avg;
-      source = `CEAGESP · ${ceagespDate || cp.date || ''} · ${cp.name || ''}`;
-    }
-    // 1. CEPEA
-    if (!price && cfg.cepea && cepeaPrices && cepeaPrices[cfg.cepea]) {
-      const cp = cepeaPrices[cfg.cepea];
-      price = cp.price; change = cp.change; source = `CEPEA/ESALQ · ${cp.date || ''}`;
-    }
-    // 2. CONAB (exact match at start of product name)
-    if (!price && conabData && conabData.agro) {
-      const match = Object.entries(conabData.agro).find(([k]) => {
-        const ku = k.toUpperCase().trim();
-        return ku === cfg.conab || ku.startsWith(cfg.conab + ' ') || ku.startsWith(cfg.conab + '/');
-      });
-      if (match) { price = match[1].avg_price; source = `CONAB Semanal · ${match[1].date || ''}`; }
-    }
-    // 3. FLV ref
-    if (!price && flvRef[cfg.slug]) { price = flvRef[cfg.slug]; source = 'CEAGESP ref.'; }
-
-    if (price) {
-      priceEl.textContent = `R$ ${price.toFixed(2)}/${cfg.unit}`;
+      priceEl.textContent = formatPrice(item.price_avg, item.unit);
       priceEl.classList.add('val-flash');
       setTimeout(() => priceEl.classList.remove('val-flash'), 500);
-    }
-    if (srcEl) {
-      srcEl.textContent = `Fonte: ${source}`;
-      srcEl.style.color = source.includes('CEPEA') ? 'var(--accent2)' : source.includes('CONAB') ? 'var(--accent)' : 'var(--text2)';
-    }
 
-    // Fetch prediction for trend
-    (async (cfg, deltaEl, statusEl, change) => {
-      try {
-        let pred = null;
-        try {
-          const r = await fetch(`/api/flv/predictions/${cfg.slug}?horizon=15`);
-          if (r.ok) pred = await r.json();
-        } catch(e) {}
-        if (!pred || !pred.forecast || !pred.forecast.length) {
-          // Synthetic trend
-          pred = typeof FLVModule !== 'undefined' ? FLVModule._syntheticPrediction(cfg.slug, {series:[{price: flvRef[cfg.slug]||5}]}) : null;
-        }
-        if (pred && deltaEl) {
-          const trendPct = pred.trend_pct || (change || 0);
-          const trend = pred.trend || 'estavel';
-          const arrow = trendPct > 0 ? '▲' : trendPct < 0 ? '▼' : '—';
-          const sign = trendPct > 0 ? '+' : '';
-          const trendLabel = trend === 'alta' ? 'PREVISÃO ALTA 15d' : trend === 'baixa' ? 'PREVISÃO BAIXA 15d' : 'ESTÁVEL 15d';
-          deltaEl.textContent = `${arrow} ${sign}${trendPct.toFixed(1)}% — ${trendLabel}`;
-          deltaEl.className = 'horti-delta ' + (trendPct > 2 ? 'danger' : trendPct < -2 ? 'ok' : '');
-          if (statusEl) {
-            if (trend === 'alta') { statusEl.textContent = '↑ ALTA PREVISTA'; statusEl.className = 'horti-status danger'; }
-            else if (trend === 'baixa') { statusEl.textContent = '↓ BAIXA PREVISTA'; statusEl.className = 'horti-status ok'; }
-            else { statusEl.textContent = '→ ESTÁVEL'; statusEl.className = 'horti-status ok'; }
-          }
-        }
-      } catch(e) {}
-    })(cfg, deltaEl, statusEl, change);
+      const stalePrefix = item.freshness === 'yesterday' ? '⚠ ' : '';
+      const trend = getCeasaTrendLabel(item);
+      if (deltaEl) {
+        deltaEl.textContent = `${stalePrefix}${trend.text}${item.alert ? ' · ' + item.alert : ''}`;
+        deltaEl.className = 'horti-delta ' + (item.trend === 'alta' ? 'danger' : item.trend === 'baixa' ? 'ok' : '');
+      }
+      if (statusEl) {
+        statusEl.textContent = `${stalePrefix}${trend.text.replace(/[📈📉➡️]/g, '').trim().toUpperCase()}`;
+        statusEl.className = 'horti-status ' + (item.trend === 'alta' ? 'danger' : 'ok');
+      }
+      if (srcEl) {
+        srcEl.textContent = `Fonte: ${item.source} · ${item.price_date}${item.alert ? ' · ' + item.alert : ''}`;
+        srcEl.style.color = item.alert ? 'var(--warn)' : 'var(--accent2)';
+      }
+    });
+  };
+  if (!NIA_DATA.prices._loadedAt) {
+    loadWarroomSnapshotPrices().then(() => {
+      apply();
+      renderOverviewCeasaPrices();
+    }).catch(apply);
+  } else {
+    apply();
   }
 }
 
 // Auto-start API loading after login
 document.addEventListener('DOMContentLoaded', () => {
+  loadWarroomSnapshotPrices(true).then(() => {
+    renderOverviewCeasaPrices();
+    updatePrices();
+    updateHorti();
+  }).catch(e => console.warn('CEASA snapshot preload error:', e));
   setTimeout(niasLoadRealData, 2000);
   
   // FIX: Move panels inside #main if they're outside
