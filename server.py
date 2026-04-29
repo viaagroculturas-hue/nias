@@ -128,6 +128,34 @@ def _fetch_cepea():
         _cepea_cache['ts'] = time.time()
     return result
 
+_market_state_cache = {}
+_market_state_ttl = 300
+
+def _fetch_market_state():
+    if _market_state_cache.get('data') and time.time() - _market_state_cache.get('ts', 0) < _market_state_ttl:
+        return _market_state_cache['data']
+    cepea = _fetch_cepea()
+    conab = _fetch_conab()
+    try:
+        from flv.collectors.ceagesp_live import fetch_ceagesp
+        ceagesp = fetch_ceagesp()
+    except Exception as e:
+        ceagesp = {'products': {}, 'meta': {'error': str(e)}}
+    result = {
+        'prices': cepea,
+        'cepea': cepea,
+        'conab': conab,
+        'ceagesp': ceagesp,
+        'meta': {
+            'generated_at': datetime.now().isoformat(),
+            'ttl_seconds': _market_state_ttl,
+            'source': 'server-global-store',
+        },
+    }
+    _market_state_cache['data'] = result
+    _market_state_cache['ts'] = time.time()
+    return result
+
 # ── CONAB PROHORT + Preços Semanais — Dados reais massivos ─────────
 _conab_cache = {}
 
@@ -252,6 +280,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/api/ceagesp':
             self._serve_ceagesp()
             return
+        if self.path == '/api/market-state':
+            self._serve_market_state()
+            return
         if self.path == '/api/rodovias':
             self._serve_rodovias()
             return
@@ -308,6 +339,37 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode())
+
+    def _serve_market_state(self):
+        """Estado global de mercado para evitar chamadas duplicadas no frontend."""
+        try:
+            ceagesp = {}
+            try:
+                from flv.collectors.ceagesp_live import fetch_ceagesp
+                ceagesp = fetch_ceagesp()
+            except Exception as e:
+                ceagesp = {'error': str(e), 'products': {}, 'meta': {}}
+            data = {
+                'prices': _fetch_cepea(),
+                'conab': _fetch_conab(),
+                'ceagesp': ceagesp,
+                'meta': {
+                    'generated_at': datetime.now().isoformat(),
+                    'source': 'server-global-store',
+                    'ttl_seconds': min(_cepea_ttl, 3600),
+                },
+            }
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
 
     def _serve_conab(self):
         data = _fetch_conab()

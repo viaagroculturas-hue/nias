@@ -47,6 +47,9 @@
 .px-arb-card:hover{border-color:#FFD700;}
 .px-arb-margin{font-size:16px;font-weight:bold;color:#50C878;}
 .px-arb-route{font-size:9px;color:#888;margin-top:2px;}
+.px-window-layer{position:relative;z-index:2;}
+.px-map-layer{position:absolute;inset:0;z-index:1;background:#0a0a0a;}
+.px-overlay-layer{position:absolute;z-index:10;}
 @keyframes px-pulse-buy{0%,100%{box-shadow:0 0 4px #3B82F6;}50%{box-shadow:0 0 14px #3B82F6,0 0 24px rgba(59,130,246,.3);}}
 @keyframes px-pulse-sell{0%,100%{box-shadow:0 0 4px #EF4444;}50%{box-shadow:0 0 14px #EF4444,0 0 24px rgba(239,68,68,.3);}}
 /* ── SIDEBAR GROUPS ── */
@@ -2087,15 +2090,15 @@ tr:hover td{background:rgba(0,212,255,.04);}
       <div style="flex:1;display:flex;overflow:hidden;">
         <!-- MAP -->
         <div style="flex:1;position:relative;">
-          <div id="px-map" style="position:absolute;inset:0;background:#0a0a0a;"></div>
+          <div id="px-map" class="px-map-layer"></div>
           <!-- 30s climate overlay pending -->
-          <div id="px-clima-pending" style="display:none;position:absolute;top:10px;right:10px;z-index:900;background:rgba(10,10,10,.92);border:1px dashed rgba(239,68,68,.3);border-radius:6px;padding:10px 14px;color:#EF4444;font-family:monospace;font-size:11px;backdrop-filter:blur(4px);">
+          <div id="px-clima-pending" class="px-overlay-layer" style="display:none;top:10px;right:10px;background:rgba(10,10,10,.92);border:1px dashed rgba(239,68,68,.3);border-radius:6px;padding:10px 14px;color:#EF4444;font-family:monospace;font-size:11px;backdrop-filter:blur(4px);">
             <div style="font-size:9px;letter-spacing:1px;color:#666;margin-bottom:4px;">CAMADA CLIMATICA</div>
             Ativando em <strong id="px-clima-timer">30</strong>s
           </div>
         </div>
         <!-- RIGHT PANEL: Terminal de Filas Preditivo + Arbitragem Detalhada -->
-        <div style="width:380px;border-left:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;background:#0d0d0d;">
+        <div class="px-window-layer" style="width:380px;border-left:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;background:#0d0d0d;">
           <div style="padding:6px 12px;border-bottom:1px solid #1a1a1a;font-size:9px;color:#FFD700;letter-spacing:2px;">TERMINAL DE FILAS PREDITIVO</div>
           <div id="px-port-panel" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;">
             <div id="px-port-santos" class="px-port-card"></div>
@@ -2110,10 +2113,6 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <div id="px-arb-detail-content"></div>
           </div>
         </div>
-      </div>
-    </div>
-
-            </div>
       </div>
     </div>
 
@@ -2474,6 +2473,18 @@ tr:hover td{background:rgba(0,212,255,.04);}
 </div><!-- /app -->
 
 <script>
+window.NiasGlobalStore = window.NiasGlobalStore || { marketState: null, predictions: {}, statusColors: {} };
+Object.assign(window.NiasGlobalStore.statusColors, {
+  falencia:'#ff3d3d',
+  em_recuperacao:'#ff6b35',
+  recuperacao_aprovada:'#ffc107',
+  reorganizado:'#00ff88',
+  critico:'#ff3d3d',
+  alto:'#ff6b35',
+  medio:'#ffc107',
+  baixo:'#50C878',
+  normal:'#50C878',
+});
 // ═══════════════════════════════════════════════════════════════════
 // CLOCK
 // ═══════════════════════════════════════════════════════════════════
@@ -2506,8 +2517,24 @@ const SituationRoom = {
   },
   newsData: [],
   refreshInterval: null,
+  timeInterval: null,
+  _initialized: false,
+
+  STATUS_VIEW: {
+    em_recuperacao: { label: 'EM RECUPERACAO JUDICIAL', risk: 'alto', creditScore: 450, creditClass: 'Risco Alto - Cautela' },
+    recuperacao_aprovada: { label: 'RECUPERACAO APROVADA', risk: 'medio', creditScore: 560, creditClass: 'Risco Medio - Monitorar' },
+    reorganizado: { label: 'REORGANIZADO', risk: 'baixo', creditScore: 680, creditClass: 'Risco Controlado' },
+    falencia: { label: 'FALENCIA', risk: 'critico', creditScore: 250, creditClass: 'Risco Critico - Evitar' },
+    default: { label: 'SEM STATUS', risk: 'neutro', creditScore: 0, creditClass: 'Sem classificacao' }
+  },
   
   init() {
+    if (this._initialized) {
+      this.loadRealData();
+      this.updateTime();
+      return;
+    }
+    this._initialized = true;
     console.log('[SituationRoom] Inicializando versao com dados reais...');
     this.renderCompanies();
     this.renderAlertBadge();
@@ -2519,7 +2546,11 @@ const SituationRoom = {
     
     // Atualizar a cada 30 segundos
     this.refreshInterval = setInterval(() => this.loadRealData(), 30000);
-    setInterval(() => this.updateTime(), 60000);
+    this.timeInterval = setInterval(() => this.updateTime(), 60000);
+  },
+
+  statusColor(status) {
+    return window.NiasGlobalStore.statusColors[status] || '#888';
   },
   
   async loadRealData() {
@@ -2621,12 +2652,12 @@ const SituationRoom = {
     
     if (this.data.recent_entries && this.data.recent_entries.length > 0) {
       listEl.innerHTML = this.data.recent_entries.map(company => {
-        const isFalencia = company.judicial_status === 'falencia';
+        const statusView = this.STATUS_VIEW[company.judicial_status] || this.STATUS_VIEW.default;
         return `<div class="sit-company-item" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;margin-bottom:4px;transition:all 0.2s;" onmouseover="this.style.borderColor='#ff6b35'" onmouseout="this.style.borderColor='#2a2a2a'" onclick="SituationRoom.selectCompany('${company.cnpj}')">` +
           `<div style="font-size:10px;color:#fff;font-weight:bold;">${company.company_name}</div>` +
           `<div style="font-size:8px;color:#888;">${company.city}/${company.state_uf} • ${company.segment}</div>` +
-          `<div style="font-size:8px;color:${isFalencia ? '#ff3d3d' : '#ff6b35'};margin-top:2px;">` +
-            (isFalencia ? '⚠️ FALÊNCIA' : '⚖️ EM RJ') + ` • R$ ${(company.debts_total/1000000).toFixed(1)}M` +
+          `<div style="font-size:8px;color:${this.statusColor(company.judicial_status)};margin-top:2px;">` +
+            `${statusView.label} • R$ ${(company.debts_total/1000000).toFixed(1)}M` +
           `</div>` +
         `</div>`;
       }).join('');
@@ -2641,26 +2672,26 @@ const SituationRoom = {
     if (!company) return;
     
     this.selectedCompany = cnpj;
-    const isFalencia = company.judicial_status === 'falencia';
+    const statusView = this.STATUS_VIEW[company.judicial_status] || this.STATUS_VIEW.default;
     
     // Score de credito
     const scoreEl = document.getElementById('sit-credit-score');
     const classEl = document.getElementById('sit-credit-classification');
     if (scoreEl) {
-      const score = isFalencia ? 250 : 450;
+      const score = company.credit_score_2026 || statusView.creditScore;
       scoreEl.textContent = score;
       scoreEl.style.color = score > 700 ? '#50C878' : score > 500 ? '#FFD700' : score > 300 ? '#ff6b35' : '#ff3d3d';
     }
     if (classEl) {
-      classEl.textContent = isFalencia ? 'Risco Crítico - Evitar' : 'Risco Alto - Cautela';
+      classEl.textContent = statusView.creditClass;
     }
     
     // Status judicial
     const statusEl = document.getElementById('sit-judicial-status');
     const detailsEl = document.getElementById('sit-process-details');
     if (statusEl) {
-      statusEl.textContent = isFalencia ? 'FALÊNCIA' : 'EM RECUPERAÇÃO JUDICIAL';
-      statusEl.style.color = isFalencia ? '#ff3d3d' : '#ff6b35';
+      statusEl.textContent = statusView.label;
+      statusEl.style.color = this.statusColor(company.judicial_status);
     }
     if (detailsEl) {
       detailsEl.textContent = `Dívida: R$ ${(company.debts_total/1000000).toFixed(1)} milhões`;
@@ -2673,7 +2704,7 @@ const SituationRoom = {
         `<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">` +
           `<div style="width:8px;height:8px;background:#ff6b35;border-radius:50%;margin-top:3px;flex-shrink:0;"></div>` +
           `<div>` +
-            `<div style="font-size:9px;color:#fff;">Entrada em ${isFalencia ? 'Falência' : 'Recuperação Judicial'}</div>` +
+            `<div style="font-size:9px;color:#fff;">Entrada em ${statusView.label}</div>` +
             `<div style="font-size:8px;color:#666;">Processo iniciado em 2024</div>` +
           `</div>` +
         `</div>` +
@@ -4537,12 +4568,7 @@ async function loadProdutoresRJ() {
     console.log(`[Produtores RJ] ${produtores.length} produtores carregados`);
     
     // Cores por status judicial
-    const statusColors = {
-      'em_recuperacao': '#ff6b35',
-      'recuperacao_aprovada': '#ffc107',
-      'reorganizado': '#00ff88',
-      'falencia': '#ff3d3d'
-    };
+    const statusColors = window.NiasGlobalStore.statusColors;
     
     const statusLabels = {
       'em_recuperacao': 'Em Recuperação',
@@ -8412,6 +8438,21 @@ const NiasAPI = {
     }
   },
 
+  async getMarketState() {
+    return this._fetch('MARKET_STATE', async () => {
+      const r = await fetch('/api/market-state');
+      if (!r.ok) throw new Error('Market state HTTP ' + r.status);
+      const data = await r.json();
+      if (!data || !data.prices) throw new Error('Market state: payload invalido');
+      return data;
+    }, async () => ({
+      prices: await NiasAPI.getCepeaPrices(),
+      conab: await NiasAPI.getConabPrices(),
+      ceagesp: {},
+      source: 'frontend-fallback',
+    }));
+  },
+
   // ── IBGE SIDRA — Produção Agrícola Municipal ─────────────────────
   async getSidra(cultCode, varCode) {
     varCode = varCode || 214;
@@ -9139,6 +9180,8 @@ window.Predictix = {
   _layers: { flow: true, rodovias: false, clima: false, arb: true },
   _produtoresVisible: false, _produtoresRJVisible: false,
   _rodoviasData: null,
+  _marketState: null,
+  _renderSeed: 0,
 
   PORTS: [
     { id:'santos',    name:'SANTOS (SP)',    lat:-23.96, lon:-46.30, cap:12000, region:'SE', type:'porto' },
@@ -9338,7 +9381,7 @@ window.Predictix = {
     }
     setTimeout(() => this._map.invalidateSize(), 200);
     this._render();
-    this._startClimaCountdown();
+    if (!this._climaTimer && !this._climaActive) this._startClimaCountdown();
   },
 
   async _loadRodovias() {
@@ -9376,6 +9419,10 @@ window.Predictix = {
   },
 
   _render() {
+    if (!this._snapshot || this._snapshotKey !== `${this._culture}:${this._horizon}`) {
+      this._snapshotKey = `${this._culture}:${this._horizon}`;
+      this._snapshot = this._buildSnapshot();
+    }
     this._renderFlowLines();
     this._renderRodovias();
     this._renderPorts();
@@ -9383,16 +9430,42 @@ window.Predictix = {
     this._renderKPIs();
   },
 
+  _stableNoise(seed, min, max) {
+    let h = 2166136261;
+    for (let i = 0; i < seed.length; i++) {
+      h ^= seed.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return min + ((h >>> 0) / 4294967295) * (max - min);
+  },
+
+  _buildSnapshot() {
+    const h = this._horizon;
+    const ports = {};
+    this.PORTS.forEach(p => {
+      const volume = Math.round(p.cap * this._stableNoise(`${p.id}:${this._culture}:${h}:vol`, 0.6, 1.0) * (1 + h * 0.02));
+      const utilization = Math.min(100, Math.round(volume / p.cap * 100));
+      ports[p.id] = { volume, utilization, waitHours: Math.round(12 + utilization * 0.5 + (h > 7 ? 24 : 0)) };
+    });
+    const ceasas = {};
+    this.CEASAS.forEach(c => { ceasas[c.id] = { vol: Math.round(c.vol * this._stableNoise(`${c.id}:${this._culture}:${h}:vol`, 0.7, 1.0)) }; });
+    const routes = {};
+    this.ROUTES.forEach((r, i) => {
+      routes[i] = [(r.from[0] + r.to[0]) / 2 + this._stableNoise(`${i}:${h}:lat`, -0.75, 0.75), (r.from[1] + r.to[1]) / 2 + this._stableNoise(`${i}:${h}:lon`, -0.75, 0.75)];
+    });
+    return { ports, ceasas, routes };
+  },
+
   _renderFlowLines() {
     this._flowLayer.clearLayers();
     if (!this._layers.flow) return;
     const h = this._horizon;
-    this.ROUTES.forEach(r => {
+    this.ROUTES.forEach((r, i) => {
       const riskAdj = Math.min(1, r.risk + (h > 7 ? 0.15 : 0) + (h > 12 ? 0.2 : 0));
       const color = riskAdj > 0.3 ? '#EF4444' : riskAdj > 0.15 ? '#F59E0B' : '#50C878';
       const weight = riskAdj > 0.3 ? 3 : 2;
       const dash = riskAdj > 0.3 ? '8,6' : riskAdj > 0.15 ? '12,4' : '';
-      const mid = [(r.from[0]+r.to[0])/2 + (Math.random()-.5)*1.5, (r.from[1]+r.to[1])/2 + (Math.random()-.5)*1.5];
+      const mid = this._snapshot.routes[i];
       const line = L.polyline([r.from, mid, r.to], {
         color, weight, opacity:0.7, dashArray:dash, smoothFactor:2
       });
@@ -9457,24 +9530,17 @@ window.Predictix = {
     
     // Update KPI with rodovias data
     const summary = data.summary;
-    if (summary) {
-      const kpiEl = document.getElementById('px-kpi-eta');
-      if (kpiEl && summary.critical_br) {
-        const criticalCount = summary.critical_br.length;
-        kpiEl.textContent = criticalCount > 0 ? `${criticalCount} BRs` : 'NORMAL';
-        kpiEl.style.color = criticalCount >= 3 ? '#EF4444' : criticalCount > 0 ? '#F59E0B' : '#50C878';
-      }
-    }
+    if (summary?.critical_br) this._roadCriticalCount = summary.critical_br.length;
   },
 
   _renderPorts() {
     this._portMarkers.clearLayers();
-    const h = this._horizon;
     // Portos maritimos
     this.PORTS.forEach(p => {
-      const volume = Math.round(p.cap * (0.6 + Math.random()*0.4) * (1 + h*0.02));
-      const utilization = Math.min(100, Math.round(volume / p.cap * 100));
-      const waitHours = Math.round(12 + utilization * 0.5 + (h > 7 ? 24 : 0));
+      const state = this._snapshot.ports[p.id];
+      const volume = state.volume;
+      const utilization = state.utilization;
+      const waitHours = state.waitHours;
       const color = utilization > 90 ? '#EF4444' : utilization > 70 ? '#F59E0B' : '#50C878';
       const marker = L.circleMarker([p.lat, p.lon], { radius:10, color:'#FFD700', fillColor:'#111', fillOpacity:0.9, weight:2 });
       marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>⚓ ${p.name}</b><br>Volume: ${volume.toLocaleString()} t<br>Utilização: <b style="color:${color}">${utilization}%</b><br>Espera: <b>${waitHours}h</b></div>`, {direction:'left'});
@@ -9485,12 +9551,12 @@ window.Predictix = {
           <div class="px-port-kv"><span>Vol. 15d</span><span class="v">${volume.toLocaleString()} t</span></div>
           <div class="px-port-bar"><div class="px-port-bar-fill" style="width:${utilization}%;background:${color};"></div></div>
           <div class="px-port-kv"><span>Espera Preditiva</span><span class="v" style="color:${waitHours>36?'#EF4444':'#ddd'}">${waitHours}h</span></div>
-          ${utilization>85?'<div style="font-size:9px;color:#EF4444;margin-top:3px;">⚠ FILAS EM '+(h>3?h:7)+' DIAS</div>':''}`;
+          ${utilization>85?'<div style="font-size:9px;color:#EF4444;margin-top:3px;">⚠ FILAS EM '+(this._horizon>3?this._horizon:7)+' DIAS</div>':''}`;
       }
     });
     // CEASAs
     this.CEASAS.forEach(c => {
-      const vol = Math.round(c.vol * (0.7 + Math.random()*0.3));
+      const vol = this._snapshot.ceasas[c.id]?.vol || c.vol;
       const marker = L.circleMarker([c.lat, c.lon], { radius:7, color:'#50C878', fillColor:'#0a1a0a', fillOpacity:0.9, weight:2 });
       marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>🏪 ${c.name}</b><br>Vol. semanal: ${vol.toLocaleString()} t<br>Região: ${c.region}</div>`, {direction:'top'});
       this._portMarkers.addLayer(marker);
@@ -9760,12 +9826,15 @@ window.Predictix = {
     document.getElementById('px-kpi-arb').textContent = profitableCount + ' / ' + opps.length;
 
     const h = this._horizon;
-    const ivf = (112 + h * 2.3 + (Math.random()*5)).toFixed(1);
+    const ivf = (112 + h * 2.3 + this._stableNoise(`${this._culture}:${h}:ivf`, 0, 5)).toFixed(1);
     document.getElementById('px-kpi-vol').textContent = ivf;
 
-    const etaRisk = Math.min(95, Math.round(8 + h * 3.5 + (this.ROUTES.filter(r=>r.risk>0.2).length * 12)));
-    document.getElementById('px-kpi-eta').textContent = etaRisk + '%';
-    document.getElementById('px-kpi-eta').style.color = etaRisk > 50 ? '#EF4444' : etaRisk > 25 ? '#F59E0B' : '#50C878';
+    const etaEl = document.getElementById('px-kpi-eta');
+    if (etaEl && !this._layers.rodovias) {
+      const etaRisk = Math.min(95, Math.round(8 + h * 3.5 + (this.ROUTES.filter(r=>r.risk>0.2).length * 12)));
+      etaEl.textContent = etaRisk + '%';
+      etaEl.style.color = etaRisk > 50 ? '#EF4444' : etaRisk > 25 ? '#F59E0B' : '#50C878';
+    }
 
     const avgWait = Math.round(18 + h * 2.5);
     document.getElementById('px-kpi-fila').textContent = avgWait + 'h';
@@ -9914,12 +9983,7 @@ window.Predictix = {
       const produtores = data.data || [];
       console.log(`[Predictix Produtores RJ] ${produtores.length} produtores carregados`);
       
-      const statusColors = {
-        'em_recuperacao': '#ff6b35',
-        'recuperacao_aprovada': '#ffc107',
-        'reorganizado': '#00ff88',
-        'falencia': '#ff3d3d'
-      };
+      const statusColors = window.NiasGlobalStore.statusColors;
       
       const statusLabels = {
         'em_recuperacao': 'Em Recuperação',
@@ -10052,8 +10116,10 @@ window.Predictix = {
     }
     this._climaLayer.addTo(this._map);
 
-    // Add risk annotation on BR-163 if Sinop has rain
-    const sinopWeather = await fetch('/proxy/api.open-meteo.com/v1/forecast?latitude=-12.5&longitude=-55.7&daily=precipitation_sum&timezone=America/Sao_Paulo&forecast_days=7').then(r=>r.json()).catch(()=>null);
+      // Add risk annotation on BR-163 if Sinop has rain
+      const sinopWeather = await GlobalStore.get('PX_CLIMA_SINOP_7D', async () => {
+        return await fetch('/proxy/api.open-meteo.com/v1/forecast?latitude=-12.5&longitude=-55.7&daily=precipitation_sum&timezone=America/Sao_Paulo&forecast_days=7').then(r=>r.json()).catch(()=>null);
+      }, 900000);
     if (sinopWeather?.daily?.precipitation_sum) {
       const total = sinopWeather.daily.precipitation_sum.reduce((a,b)=>a+b,0);
       if (total > 20) {
@@ -10071,14 +10137,16 @@ async function niasLoadRealData() {
   const strip = document.getElementById('api-status-strip');
   if (strip) strip.textContent = 'Conectando APIs...';
 
-  const [weather, stations, fires, prices, climVars, conab] = await Promise.all([
+  const [weather, stations, fires, marketState, climVars] = await Promise.all([
     NiasAPI.getWeather(-15.78, -47.93),
     NiasAPI.getInmetStations(),
     NiasAPI.getFires(),
-    NiasAPI.getCepeaPrices(),
+    NiasAPI.getMarketState(),
     NiasAPI.getClimApiVars(),
-    NiasAPI.getConabPrices(),
   ]);
+  const prices = marketState.prices || marketState.cepea || {};
+  const conab = marketState.conab || {};
+  const ceagespData = marketState.ceagesp || {};
 
   // ── ClimAPI GFS forecast for Brasília ─────────────────────────────
   if (climVars && climVars.length > 0) {
@@ -10229,13 +10297,7 @@ async function niasLoadRealData() {
     await NiasClimate.run();
   }
 
-  // ── HORTIFRUTI — Atualizar preços com dados reais ──────────────
-  // Fetch CEAGESP live prices (priority source)
-  let ceagespData = {};
-  try {
-    const cr = await fetch('/api/ceagesp').then(r => r.ok ? r.json() : {}).catch(() => ({}));
-    ceagespData = cr;
-  } catch(e) {}
+  // ── HORTIFRUTI — Atualizar preços com dados do estado global ─────
   _updateHortiPrices(prices, conab, ceagespData);
 
   // ── Schedule refresh every 15 minutes ───────────────────────────
@@ -10247,6 +10309,7 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
   const flvRef = typeof FLVModule !== 'undefined' ? FLVModule._REF : {};
   const ceagespProds = ceagespData && ceagespData.products ? ceagespData.products : {};
   const ceagespDate = ceagespData && ceagespData.meta ? ceagespData.meta.date : '';
+  const predictionCache = window.NiasGlobalStore.predictions;
 
   const hortiMap = {
     'tomate-mesa': { slug:'tomate', unit:'kg', conab:'TOMATE', cepea:'tomate', elPrice:'hp-tomate-mesa', elDelta:'hd-tomate-mesa', elSrc:'hsrc-tomate-mesa', elStatus:'hst-tomate-mesa' },
@@ -10305,10 +10368,16 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
     // Fetch prediction for trend
     (async (cfg, deltaEl, statusEl, change) => {
       try {
-        let pred = null;
+        const predCacheKey = `${cfg.slug}:15`;
+        let pred = predictionCache[predCacheKey];
         try {
-          const r = await fetch(`/api/flv/predictions/${cfg.slug}?horizon=15`);
-          if (r.ok) pred = await r.json();
+          if (!pred) {
+            const r = await fetch(`/api/flv/predictions/${cfg.slug}?horizon=15`);
+            if (r.ok) {
+              pred = await r.json();
+              predictionCache[predCacheKey] = pred;
+            }
+          }
         } catch(e) {}
         if (!pred || !pred.forecast || !pred.forecast.length) {
           // Synthetic trend
