@@ -211,12 +211,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 #panel-biocommand{position:relative;overflow:hidden;}
 #bc-topbar{position:absolute;top:0;left:0;right:0;height:36px;z-index:1200;background:rgba(11,14,20,.88);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,212,255,.22);display:flex;align-items:center;padding:0 12px;gap:10px;flex-shrink:0;}
 #bc-topbar .bc-title{color:var(--accent);font-size:11px;font-weight:bold;letter-spacing:2px;}
-.bc-sidebar{position:absolute;top:36px;bottom:0;z-index:1100;width:260px;background:rgba(11,14,20,.78);backdrop-filter:blur(14px);border:1px solid rgba(0,212,255,.18);display:flex;flex-direction:column;transition:transform .28s cubic-bezier(.4,0,.2,1);}
+.bc-sidebar{position:absolute;top:36px;bottom:0;z-index:1100;width:350px;background:rgba(11,14,20,.78);backdrop-filter:blur(14px);border:1px solid rgba(0,212,255,.18);display:flex;flex-direction:column;transition:transform .28s cubic-bezier(.4,0,.2,1);}
 #bc-left{left:0;border-right:1px solid rgba(0,212,255,.18);}
-#bc-right{right:0;border-left:1px solid rgba(0,212,255,.18);transform:translateX(260px);}
+#bc-right{right:0;border-left:1px solid rgba(0,212,255,.18);transform:translateX(350px);}
 #bc-right.open{transform:translateX(0);}
-#bc-left.collapsed{transform:translateX(-260px);}
-#bc-map{position:absolute;inset:36px 0 0 0;z-index:1;}
+#bc-left.collapsed{transform:translateX(-350px);}
+#bc-map{position:absolute;inset:36px 350px 0 350px;z-index:1;}
+#bc-left.collapsed ~ #bc-map{left:0;}
+#bc-left:has(~ #bc-right:not(.open)) ~ #bc-map{right:0;}
 .bc-sh{height:32px;background:rgba(0,212,255,.07);border-bottom:1px solid rgba(0,212,255,.14);display:flex;align-items:center;padding:0 10px;flex-shrink:0;font-size:9px;color:var(--accent);letter-spacing:1px;}
 .bc-body{flex:1;overflow-y:auto;padding:8px;}
 .bc-body::-webkit-scrollbar{width:3px;}
@@ -453,8 +455,9 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .horti-badge.danger{background:rgba(255,61,61,.08);border:1px solid var(--danger);color:var(--danger);}
 .horti-grid{display:flex;overflow-x:auto;gap:0;}
 .horti-grid::-webkit-scrollbar{height:3px;}
-.horti-card{min-width:148px;flex-shrink:0;border-right:1px solid var(--border);padding:8px 10px;position:relative;overflow:hidden;cursor:default;transition:background .2s;}
+.horti-card{min-width:148px;flex-shrink:0;border-right:1px solid var(--border);padding:8px 10px;position:relative;overflow:hidden;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s;}
 .horti-card:hover{background:rgba(0,212,255,.04);}
+.horti-card.timer-active{background:rgba(0,212,255,.08);border-color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent);}
 .horti-card:last-child{border-right:none;}
 .horti-spark{position:absolute;top:0;left:0;width:100%;height:36px;opacity:.18;pointer-events:none;}
 .horti-icon{font-size:16px;line-height:1;margin-bottom:2px;position:relative;z-index:1;}
@@ -470,6 +473,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .horti-status.danger{background:rgba(255,61,61,.15);border:1px solid var(--danger);color:var(--danger);}
 .horti-status.warn{background:rgba(255,193,7,.12);border:1px solid var(--warn);color:var(--warn);}
 .horti-status.ok{background:rgba(0,255,136,.08);border:1px solid var(--accent2);color:var(--accent2);}
+.horti-timer-badge{font-size:8px;color:var(--accent);letter-spacing:.5px;margin-top:3px;position:relative;z-index:1;}
 .horti-type-tag{font-size:8px;padding:2px 5px;border-radius:2px;display:inline-block;margin-bottom:3px;letter-spacing:.5px;font-weight:bold;}
 .horti-subregion{font-size:9px;color:var(--text2);line-height:1.4;position:relative;z-index:1;}
 .horti-card-mesa{border-top:2px solid var(--accent);}
@@ -5136,6 +5140,48 @@ function updateHorti() {
   });
 }
 setInterval(updateHorti, 4000);
+
+const hortiCardTimers = {};
+function initHortiCardTimers() {
+  document.querySelectorAll('.horti-card[id^="hc-"]').forEach(card => {
+    const key = card.id.replace('hc-', '');
+    const state = hortiState[key];
+    if (!state) return;
+    card.addEventListener('click', () => {
+      const priceEl = document.getElementById('hp-' + key);
+      const originalPrice = state.price;
+      const originalText = priceEl ? priceEl.textContent : '';
+      const originalColor = priceEl ? priceEl.style.color : '';
+      let remaining = 15;
+      clearInterval(hortiCardTimers[key]);
+      card.classList.add('timer-active');
+      let badge = card.querySelector('.horti-timer-badge');
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.className = 'horti-timer-badge';
+        card.appendChild(badge);
+      }
+      const tick = () => {
+        badge.textContent = `Revertendo em ${remaining}s`;
+        remaining -= 1;
+        if (remaining < 0) {
+          clearInterval(hortiCardTimers[key]);
+          delete hortiCardTimers[key];
+          state.price = originalPrice;
+          if (priceEl) {
+            priceEl.textContent = originalText;
+            priceEl.style.color = originalColor;
+          }
+          card.classList.remove('timer-active');
+          badge.remove();
+        }
+      };
+      tick();
+      hortiCardTimers[key] = setInterval(tick, 1000);
+    });
+  });
+}
+setTimeout(initHortiCardTimers, 250);
 
 // ═══════════════════════════════════════════════════════════════════
 // 1. PHENOLOGICAL ENGINE — Anti-False-Alarm NDVI Logic

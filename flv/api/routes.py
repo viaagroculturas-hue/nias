@@ -42,7 +42,10 @@ def handle_flv(handler, path):
 def _send_json(handler, code, data):
     handler.send_response(code)
     handler.send_header('Content-Type', 'application/json')
-    handler.send_header('Access-Control-Allow-Origin', '*')
+    origin = handler.headers.get('Origin')
+    allowed = {'https://nias.onrender.com', 'http://localhost:5000', 'http://127.0.0.1:5000'}
+    handler.send_header('Access-Control-Allow-Origin', origin if origin in allowed else 'https://nias.onrender.com')
+    handler.send_header('Vary', 'Origin')
     handler.end_headers()
     handler.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
 

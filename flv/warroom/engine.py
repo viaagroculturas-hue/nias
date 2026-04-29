@@ -459,7 +459,58 @@ class WarRoomEngine:
             except Exception:
                 r["components"] = {}
             r.pop("components_json", None)
-        return {"generated_at": _now_iso(), "entities": rows, "count": len(rows)}
+        ceasa_prices = self._latest_ceasa_prices()
+        interpretations = self._build_price_interpretations(ceasa_prices)
+        return {
+            "generated_at": _now_iso(),
+            "entities": rows,
+            "count": len(rows),
+            "ceasa_prices": ceasa_prices,
+            "interpretation_text": interpretations,
+        }
+
+    def _latest_ceasa_prices(self) -> List[Dict[str, Any]]:
+        rows = self._query(
+            """
+            SELECT c.slug as culture_slug, c.name_pt as culture_name, p.terminal,
+                   p.price_date, p.price_avg, p.price_min, p.price_max, p.source
+            FROM flv_ceasa_prices p
+            JOIN flv_cultures c ON c.id = p.culture_id
+            WHERE p.price_date = (
+                SELECT MAX(p2.price_date)
+                FROM flv_ceasa_prices p2
+                WHERE p2.culture_id = p.culture_id AND p2.terminal = p.terminal
+            )
+            ORDER BY p.terminal, c.slug
+            LIMIT 250
+            """
+        )
+        for r in rows:
+            price = _safe_float(r.get("price_avg"))
+            r["price_avg"] = round(price, 2)
+            if r.get("price_min") is not None:
+                r["price_min"] = round(_safe_float(r.get("price_min")), 2)
+            if r.get("price_max") is not None:
+                r["price_max"] = round(_safe_float(r.get("price_max")), 2)
+        return rows
+
+    def _build_price_interpretations(self, prices: List[Dict[str, Any]]) -> List[str]:
+        if not prices:
+            return ["Sem cotações CEASA carregadas no banco persistente; execute o pipeline FLV antes da leitura operacional."]
+
+        by_terminal: Dict[str, List[Dict[str, Any]]] = {}
+        for row in prices:
+            by_terminal.setdefault(row.get("terminal") or "CEASA", []).append(row)
+
+        texts: List[str] = []
+        for terminal, rows in sorted(by_terminal.items()):
+            ordered = sorted(rows, key=lambda r: _safe_float(r.get("price_avg")), reverse=True)
+            top = ordered[0]
+            texts.append(
+                f"{terminal}: {top.get('culture_name') or top.get('culture_slug')} lidera a tela a "
+                f"R$ {top['price_avg']:.2f} em {top.get('price_date')}, fonte {top.get('source') or 'CEASA'}."
+            )
+        return texts[:20]
 
     def deltas_since(self, since_iso: str, limit: int = 250) -> Dict[str, Any]:
         rows = self._query(

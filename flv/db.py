@@ -1,14 +1,18 @@
 """FLV Database Layer — SQLite WAL mode, thread-safe."""
 import sqlite3, os, json, time
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nia_flv.db')
-SCHEMA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'flv_schema.sql')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.environ.get('NIA_DB_PATH') or os.path.join(BASE_DIR, 'nia_flv.db')
+SCHEMA_PATH = os.path.join(BASE_DIR, 'flv_schema.sql')
 
 _conn_cache = {}
 
 def get_conn():
     tid = id(os.getpid())
     if tid not in _conn_cache:
+        db_dir = os.path.dirname(os.path.abspath(DB_PATH))
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
         conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=10)
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA busy_timeout=5000")
