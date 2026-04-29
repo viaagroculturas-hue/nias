@@ -29,9 +29,31 @@ def init_db():
             except Exception:
                 pass
     conn.commit()
+    _ensure_macro_columns(conn)
     _seed_cultures(conn)
     _seed_municipalities(conn)
     print(f'[FLV] DB inicializado: {DB_PATH}')
+
+def _ensure_macro_columns(conn):
+    """Add macro regressor columns for databases created before oil features."""
+    expected = {
+        'brent_usd': 'REAL',
+        'brent_change_pct': 'REAL',
+        'wti_usd': 'REAL',
+        'wti_change_pct': 'REAL',
+    }
+    try:
+        existing = {row['name'] for row in conn.execute("PRAGMA table_info(flv_macro_indicators)").fetchall()}
+    except Exception:
+        return
+    for col, col_type in expected.items():
+        if col in existing:
+            continue
+        try:
+            conn.execute(f"ALTER TABLE flv_macro_indicators ADD COLUMN {col} {col_type}")
+        except Exception:
+            pass
+    conn.commit()
 
 def _seed_cultures(conn):
     cultures = [
