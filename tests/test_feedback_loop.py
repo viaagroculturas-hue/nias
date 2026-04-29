@@ -1,4 +1,5 @@
 import sqlite3
+import unittest
 
 from learning.feedback_loop import FeedbackLoop, init_feedback_schema
 
@@ -74,38 +75,42 @@ def _insert_pair(conn, predicted, actual, target_date="2026-04-28"):
     )
 
 
-def test_no_adjustment_when_error_is_within_threshold():
-    conn = _conn()
-    _insert_pair(conn, predicted=100.0, actual=104.0)
+class FeedbackLoopTest(unittest.TestCase):
+    def test_no_adjustment_when_error_is_within_threshold(self):
+        conn = _conn()
+        _insert_pair(conn, predicted=100.0, actual=104.0)
 
-    result = FeedbackLoop(conn=conn).run_daily(reference_date="2026-04-28")
+        result = FeedbackLoop(conn=conn).run_daily(reference_date="2026-04-28")
 
-    assert result["evaluated"] == 1
-    assert result["adjustments_count"] == 0
-    assert conn.execute("SELECT COUNT(*) FROM flv_accuracy").fetchone()[0] == 1
-    assert conn.execute("SELECT COUNT(*) FROM inteligencia_evolucao_log").fetchone()[0] == 0
+        self.assertEqual(result["evaluated"], 1)
+        self.assertEqual(result["adjustments_count"], 0)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM flv_accuracy").fetchone()[0], 1)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM inteligencia_evolucao_log").fetchone()[0], 0)
+
+    def test_adjusts_weights_and_logs_intelligence_evolution(self):
+        conn = _conn()
+        _insert_pair(conn, predicted=90.0, actual=100.0)
+        conn.execute("INSERT INTO flv_climate VALUES ('2026-04-28', 30.0, 38.0)")
+        conn.execute("INSERT INTO flv_macro_indicators VALUES ('2026-04-28', 1.0, 1.0, 0.0)")
+
+        result = FeedbackLoop(conn=conn).run_daily(reference_date="2026-04-28")
+
+        self.assertEqual(result["adjustments_count"], 1)
+
+        weights = conn.execute(
+            "SELECT climate_weight, logistics_weight FROM learning_model_weights"
+        ).fetchone()
+        self.assertIsNotNone(weights)
+        self.assertGreater(weights["climate_weight"], 0.5)
+        self.assertEqual(round(weights["climate_weight"] + weights["logistics_weight"], 4), 1.0)
+
+        log = conn.execute("SELECT * FROM inteligencia_evolucao_log").fetchone()
+        self.assertEqual(log["event_type"], "ajuste_pesos")
+        self.assertEqual(log["prediction_id"], 10)
+        self.assertEqual(log["error_pct"], 10.0)
+        self.assertIn("Previsao subestimou", log["adjustment_reason"])
 
 
-def test_adjusts_weights_and_logs_intelligence_evolution():
-    conn = _conn()
-    _insert_pair(conn, predicted=90.0, actual=100.0)
-    conn.execute("INSERT INTO flv_climate VALUES ('2026-04-28', 30.0, 38.0)")
-    conn.execute("INSERT INTO flv_macro_indicators VALUES ('2026-04-28', 1.0, 1.0, 0.0)")
-
-    result = FeedbackLoop(conn=conn).run_daily(reference_date="2026-04-28")
-
-    assert result["adjustments_count"] == 1
-
-    weights = conn.execute(
-        "SELECT climate_weight, logistics_weight FROM learning_model_weights"
-    ).fetchone()
-    assert weights is not None
-    assert weights["climate_weight"] > 0.5
-    assert round(weights["climate_weight"] + weights["logistics_weight"], 4) == 1.0
-
-    log = conn.execute("SELECT * FROM inteligencia_evolucao_log").fetchone()
-    assert log["event_type"] == "ajuste_pesos"
-    assert log["prediction_id"] == 10
-    assert log["error_pct"] == 10.0
-    assert "Previsao subestimou" in log["adjustment_reason"]
+if __name__ == "__main__":
+    unittest.main()
 
