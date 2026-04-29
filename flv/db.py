@@ -1,6 +1,8 @@
 """FLV Database Layer — SQLite WAL mode, thread-safe."""
 import sqlite3, os, json, time
 
+from flv.governance import require_elite_source
+
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nia_flv.db')
 SCHEMA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'flv_schema.sql')
 
@@ -83,8 +85,9 @@ def _seed_municipalities(conn):
             pass
     conn.commit()
 
-def upsert_price(culture_slug, terminal, price_date, price_avg, price_min=None, price_max=None, volume_kg=None, source='CONAB'):
+def upsert_price(culture_slug, terminal, price_date, price_avg, price_min=None, price_max=None, volume_kg=None, source=None):
     conn = get_conn()
+    source = require_elite_source(source)
     cid = conn.execute("SELECT id FROM flv_cultures WHERE slug=?", (culture_slug,)).fetchone()
     if not cid:
         return
@@ -94,8 +97,9 @@ def upsert_price(culture_slug, terminal, price_date, price_avg, price_min=None, 
     )
     conn.commit()
 
-def upsert_climate(ibge_code, obs_date, temp_max=None, temp_min=None, precip=None, humidity=None, wind=None, source='INMET'):
+def upsert_climate(ibge_code, obs_date, temp_max=None, temp_min=None, precip=None, humidity=None, wind=None, source=None):
     conn = get_conn()
+    source = require_elite_source(source)
     mid = conn.execute("SELECT id FROM flv_municipalities WHERE ibge_code=?", (ibge_code,)).fetchone()
     if not mid:
         return
@@ -105,8 +109,9 @@ def upsert_climate(ibge_code, obs_date, temp_max=None, temp_min=None, precip=Non
     )
     conn.commit()
 
-def upsert_ndvi(ibge_code, obs_date, ndvi_value, ndvi_anomaly=None, source='SATVeg'):
+def upsert_ndvi(ibge_code, obs_date, ndvi_value, ndvi_anomaly=None, source=None):
     conn = get_conn()
+    source = require_elite_source(source)
     mid = conn.execute("SELECT id FROM flv_municipalities WHERE ibge_code=?", (ibge_code,)).fetchone()
     if not mid:
         return
@@ -127,9 +132,10 @@ def upsert_macro_indicators(
     usd_brl=None,
     selic_pct=None,
     ipca_yoy_pct=None,
-    source='BCB/ANP'
+    source='Banco Central'
 ):
     conn = get_conn()
+    source = require_elite_source(source)
     conn.execute(
         "INSERT OR REPLACE INTO flv_macro_indicators ("
         "obs_date,diesel_brl_l,diesel_change_pct,brent_usd,brent_change_pct,wti_usd,wti_change_pct,"
@@ -153,6 +159,7 @@ def upsert_macro_indicators(
 
 def insert_news_event(obs_ts, source=None, title=None, url=None, risk_score=None, tags_json=None):
     conn = get_conn()
+    source = require_elite_source(source)
     conn.execute(
         "INSERT INTO flv_news_events (obs_ts,source,title,url,risk_score,tags_json) VALUES (?,?,?,?,?,?)",
         (obs_ts, source, title, url, risk_score, tags_json),
@@ -167,8 +174,9 @@ def upsert_news_risk_daily(obs_date, risk_index, top_tags_json=None, sources_jso
     )
     conn.commit()
 
-def upsert_global_climate(obs_date, oni=None, atl_north_warm_idx=None, source="NOAA/ESRL"):
+def upsert_global_climate(obs_date, oni=None, atl_north_warm_idx=None, source=None):
     conn = get_conn()
+    source = require_elite_source(source)
     conn.execute(
         "INSERT OR REPLACE INTO flv_global_climate (obs_date,oni,atl_north_warm_idx,source) VALUES (?,?,?,?)",
         (obs_date, oni, atl_north_warm_idx, source),

@@ -1,6 +1,8 @@
 import http.server, urllib.request, urllib.parse, json, os, re, time, base64, threading
 from datetime import datetime, timedelta
 
+from flv.governance import canonical_source, south_america_scope
+
 # ═══════════════════════════════════════════════════════════════════
 # SISTEMA AUTÔNOMO NIA$ v6.0
 # ═══════════════════════════════════════════════════════════════════
@@ -761,7 +763,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             
             if path == '' or path == 'feeds':
                 # Retorna notícias recentes
-                source = params.get('source', [''])[0]
+                source = canonical_source(params.get('source', [''])[0]) if params.get('source', [''])[0] else ''
                 category = params.get('category', [''])[0]
                 limit = int(params.get('limit', [20])[0])
                 
@@ -779,12 +781,17 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 args.append(limit)
                 
                 cursor.execute(query, args)
-                result = {'news': [dict(r) for r in cursor.fetchall()]}
+                news = [dict(r) for r in cursor.fetchall()]
+                result = {
+                    'scope': south_america_scope(),
+                    'news': [r for r in news if canonical_source(r.get('source'))],
+                }
                 
             elif path == 'sources':
                 # Lista fontes disponíveis
                 cursor.execute("SELECT DISTINCT source FROM flv_news_global ORDER BY source")
-                result = {'sources': [r[0] for r in cursor.fetchall()]}
+                sources = {canonical_source(r[0]) for r in cursor.fetchall()}
+                result = {'sources': sorted(s for s in sources if s)}
                 
             elif path == 'sentiment':
                 # Análise de sentimento agregada
@@ -802,7 +809,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                     GROUP BY sentiment
                 """, (since,))
                 
-                result = {'sentiment_analysis': [dict(r) for r in cursor.fetchall()]}
+                result = {
+                    'scope': south_america_scope(),
+                    'sentiment_analysis': [dict(r) for r in cursor.fetchall()],
+                }
             else:
                 result = {'error': 'Endpoint não encontrado', 'path': path}
             

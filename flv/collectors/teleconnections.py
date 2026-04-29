@@ -22,8 +22,9 @@ def coletar_teleconexoes_globais():
     """
     Coleta ONI (proxy) e um índice simples de Atlântico Norte (placeholder).
 
-    Nota: ONI oficial é mensal (3-month running mean). Aqui gravamos o último valor disponível
-    se houver endpoint; caso contrário, gravamos nulo e deixamos o modelo persistir o último.
+    A allowlist atual nao inclui a fonte oficial de teleconexoes. Para manter a
+    ingestao exclusiva, o coletor nao grava novos dados ate haver endpoint
+    aprovado entre Reuters, Bloomberg, BBC, Al Jazeera, IBGE ou Banco Central.
     """
     from flv.db import init_db, upsert_global_climate
 
@@ -33,22 +34,6 @@ def coletar_teleconexoes_globais():
         pass
 
     obs_date = datetime.now().strftime("%Y-%m-%d")
-
-    oni = None
-    atl = None
-    source = "NOAA/ESRL(best-effort)"
-
-    # Best-effort: alguns espelhos publicam JSON; se não, fica None.
-    # (Você pode trocar por um endpoint interno depois.)
-    try:
-        # Placeholder (não garantido): mantemos try/except para não quebrar pipeline.
-        data = _fetch_json("https://climatedataapi.worldbank.org/climateweb/rest/v1/country/mavg/tas/1991/2000/BRA", timeout=15)
-        if isinstance(data, list) and data:
-            atl = None
-    except Exception:
-        pass
-
-    upsert_global_climate(obs_date=obs_date, oni=oni, atl_north_warm_idx=atl, source=source)
-    print(f"[FLV-Teleconnections] {obs_date} oni={oni} atl_north_warm_idx={atl}")
-    return {"obs_date": obs_date, "oni": oni, "atl_north_warm_idx": atl}
+    print(f"[FLV-Teleconnections] {obs_date} sem ingestao: fonte nao aprovada na governanca")
+    return {"obs_date": obs_date, "oni": None, "atl_north_warm_idx": None, "skipped": "fonte_nao_aprovada"}
 

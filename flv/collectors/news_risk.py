@@ -14,6 +14,8 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
+from flv.governance import filter_elite_feeds, has_south_america_focus
+
 
 KEYWORDS = [
     # logística/energia
@@ -32,9 +34,8 @@ KEYWORDS = [
 
 
 DEFAULT_FEEDS = [
-    # Reuters/Bloomberg são normalmente pagos; aqui fica o “gancho” para URLs RSS se você tiver.
-    # Você pode trocar/adiantar os endpoints depois.
-    ("NoticiasAgricolas", "https://www.noticiasagricolas.com.br/rss/noticias.rss"),
+    # Configure apenas endpoints licenciados/aprovados destas fontes:
+    # Reuters, Bloomberg, BBC e Al Jazeera.
 ]
 
 
@@ -84,7 +85,11 @@ def coletar_indice_risco_noticias(feeds=None, max_items_per_feed=25):
     except Exception:
         pass
 
-    feeds = feeds or DEFAULT_FEEDS
+    feeds, rejected_feeds = filter_elite_feeds(feeds or DEFAULT_FEEDS)
+    if rejected_feeds:
+        rejected_names = ", ".join(str(source) for source, _ in rejected_feeds)
+        print(f"[FLV-NewsRisk] Fontes rejeitadas pela governanca: {rejected_names}")
+
     now = datetime.now(timezone.utc)
     obs_ts = now.isoformat()
     obs_date = now.strftime("%Y-%m-%d")
@@ -98,13 +103,16 @@ def coletar_indice_risco_noticias(feeds=None, max_items_per_feed=25):
             xml_text = _fetch(url, timeout=20)
             if not xml_text:
                 continue
-            sources.add(source)
             items = _parse_rss(xml_text)[:max_items_per_feed]
             for it in items:
                 title = it.get("title") or ""
+                url = it.get("url") or ""
+                if not has_south_america_focus(title, url):
+                    continue
                 s, tags = _score_text(title)
                 if s <= 0:
                     continue
+                sources.add(source)
                 all_scores.append(s)
                 for tg in tags:
                     tag_counts[tg] = tag_counts.get(tg, 0) + 1
@@ -112,7 +120,7 @@ def coletar_indice_risco_noticias(feeds=None, max_items_per_feed=25):
                     obs_ts=obs_ts,
                     source=source,
                     title=title[:500],
-                    url=(it.get("url") or "")[:1000],
+                    url=url[:1000],
                     risk_score=s,
                     tags_json=json.dumps(tags, ensure_ascii=False),
                 )
