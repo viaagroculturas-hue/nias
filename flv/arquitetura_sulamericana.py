@@ -902,6 +902,98 @@ PORTOS_ESTRATEGICOS = {
     }
 }
 
+VALOR_TON_REFERENCIA_USD = {
+    'SOJA': 430,
+    'MILHO': 210,
+    'TRIGO': 255,
+    'CEVADA': 240,
+    'ARROZ': 390,
+    'CAFE': 4200,
+    'UVA': 1250,
+    'BANANA': 520,
+    'CACAU': 6400,
+    'ABACATE': 1800,
+    'PALTA': 1800,
+    'CEREJA': 3600,
+    'FLORES': 5200,
+    'BATATA': 310,
+    'CEBOLA': 360,
+    'HORTALICAS': 700,
+}
+
+
+def estimar_fluxo_financeiro_polo(polo):
+    """
+    Estima fluxo financeiro anual em USD para alimentar edges do War Room.
+    Usa area_ha e cultura principal como proxy conservadora quando não há contrato real.
+    """
+    culturas = polo.get('culturas') or []
+    cultura_ref = culturas[0] if culturas else 'SOJA'
+    valor_ton = VALOR_TON_REFERENCIA_USD.get(cultura_ref, 500)
+    area_ha = float(polo.get('area_ha') or 0)
+    produtividade_t_ha = 3.2 if cultura_ref in {'SOJA', 'MILHO', 'TRIGO', 'CEVADA', 'ARROZ'} else 12.0
+    return round(area_ha * produtividade_t_ha * valor_ton, 2)
+
+
+def construir_grafo_sulamericano():
+    """
+    Retorna nodes/edges para visualização Cyber AI/War Room.
+    Cada edge contém `fluxo_financeiro` para ponderar linhas pulsantes e polylines.
+    """
+    nodes = []
+    edges = []
+    portos_usados = set()
+
+    for cluster_id, cluster in CLUSTERS_SULAMERICANOS.items():
+        for polo in cluster.get('polos', []):
+            polo_id = polo['id']
+            porto_id = polo.get('porto_ref')
+            fluxo = estimar_fluxo_financeiro_polo(polo)
+            nodes.append({
+                'id': polo_id,
+                'type': 'polo_produtivo',
+                'name': polo['nome'],
+                'lat': polo['lat'],
+                'lon': polo['lon'],
+                'country': polo.get('pais'),
+                'cluster': cluster_id,
+                'culturas': polo.get('culturas', []),
+            })
+            if porto_id:
+                portos_usados.add(porto_id)
+                edges.append({
+                    'from': polo_id,
+                    'to': porto_id,
+                    'type': 'corredor_logistico',
+                    'corredor': polo.get('corredor'),
+                    'culturas': polo.get('culturas', []),
+                    'fluxo_financeiro': fluxo,
+                    'moeda': 'USD',
+                })
+
+    for porto_id in sorted(portos_usados):
+        porto = PORTOS_ESTRATEGICOS.get(porto_id)
+        if not porto:
+            continue
+        nodes.append({
+            'id': porto_id,
+            'type': porto.get('tipo', 'porto'),
+            'name': porto['nome'],
+            'lat': porto['lat'],
+            'lon': porto['lon'],
+            'country': porto.get('pais'),
+            'risco': porto.get('risco'),
+        })
+
+    return {
+        'nodes': nodes,
+        'edges': edges,
+        'total_nodes': len(nodes),
+        'total_edges': len(edges),
+        'fluxo_financeiro_total': round(sum(e['fluxo_financeiro'] for e in edges), 2),
+        'moeda': 'USD',
+    }
+
 # Exportar para uso em outros módulos
 if __name__ == '__main__':
     print("Arquitetura de Inteligência Agrícola Sul-Americana carregada")

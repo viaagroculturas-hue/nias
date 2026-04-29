@@ -12,22 +12,60 @@ import os
 from datetime import datetime
 
 
+def coletar_gatilhos_premium(culture_slug: str, limit: int = 5) -> list[dict]:
+    """
+    Busca gatilhos recentes de fontes premium usados no dossiê lateral.
+    Reuters/Bloomberg podem vir de RSS/licença própria; aqui apenas lemos o cache normalizado.
+    """
+    try:
+        from flv.db import query
+
+        like = f"%{culture_slug}%"
+        rows = query(
+            """
+            SELECT source, category, title, url, published_at, sentiment, sentiment_score, relevance_score
+            FROM flv_news_global
+            WHERE lower(source) IN ('reuters', 'bloomberg')
+              AND (
+                lower(title) LIKE lower(?)
+                OR lower(COALESCE(summary, '')) LIKE lower(?)
+                OR lower(COALESCE(related_commodities, '')) LIKE lower(?)
+                OR category IN ('commodities', 'clima', 'geopolitica', 'logistica', 'economia', 'producao')
+              )
+            ORDER BY published_at DESC, COALESCE(relevance_score, ABS(COALESCE(sentiment_score, 0))) DESC
+            LIMIT ?
+            """,
+            (like, like, like, int(limit)),
+        )
+        return [dict(r) for r in rows]
+    except Exception:
+        return []
+
+
 def gerar_relatorio_previsao(culture_slug: str, terminal: str | None, features: list[dict], forecast_result: dict) -> str:
     if not features or not forecast_result or not forecast_result.get("forecast"):
         return "Sem dados suficientes para explicar a previsão."
+
+    gatilhos_premium = coletar_gatilhos_premium(culture_slug)
 
     # Tentativa Gemini (não pode quebrar o sistema)
     try:
         api_key = os.environ.get("GEMINI_API_KEY", "").strip()
         if api_key:
-            return _gerar_relatorio_gemini(api_key, culture_slug, terminal, features, forecast_result)
+            return _gerar_relatorio_gemini(api_key, culture_slug, terminal, features, forecast_result, gatilhos_premium)
     except Exception:
         pass
 
-    return _fallback_rules(culture_slug, terminal, features, forecast_result)
+    return _fallback_rules(culture_slug, terminal, features, forecast_result, gatilhos_premium)
 
 
-def _fallback_rules(culture_slug: str, terminal: str | None, features: list[dict], forecast_result: dict) -> str:
+def _fallback_rules(
+    culture_slug: str,
+    terminal: str | None,
+    features: list[dict],
+    forecast_result: dict,
+    gatilhos_premium: list[dict] | None = None,
+) -> str:
     last = features[-1]
     trend = forecast_result.get("trend")
     target_price = forecast_result["forecast"][-1]["price"] if forecast_result.get("forecast") else None
@@ -75,22 +113,38 @@ def _fallback_rules(culture_slug: str, terminal: str | None, features: list[dict
     if not drivers:
         drivers.append("padrões recentes de clima e preços históricos")
 
+    gatilhos = []
+    for item in (gatilhos_premium or [])[:3]:
+        source = item.get("source") or "Fonte premium"
+        title = item.get("title") or "gatilho sem título"
+        gatilhos.append(f"{source}: {title}")
+
     price_txt = f"para R$ {target_price:.2f}" if target_price is not None else "para o patamar projetado"
     term_txt = f" no terminal {terminal}" if terminal else ""
     tr = "alta" if trend == "alta" else "baixa" if trend == "baixa" else "estabilidade"
 
-    return (
+    texto = (
         f"A projeção é de {tr} {price_txt}{term_txt} devido à combinação de "
         + ", ".join(drivers[:3])
         + "."
     )
+    if gatilhos:
+        texto += " Gatilhos Reuters/Bloomberg monitorados: " + " | ".join(gatilhos) + "."
+    return texto
 
 
-def _gerar_relatorio_gemini(api_key: str, culture_slug: str, terminal: str | None, features: list[dict], forecast_result: dict) -> str:
+def _gerar_relatorio_gemini(
+    api_key: str,
+    culture_slug: str,
+    terminal: str | None,
+    features: list[dict],
+    forecast_result: dict,
+    gatilhos_premium: list[dict] | None = None,
+) -> str:
     try:
         import google.generativeai as genai
     except Exception:
-        return _fallback_rules(culture_slug, terminal, features, forecast_result)
+        return _fallback_rules(culture_slug, terminal, features, forecast_result, gatilhos_premium)
 
     last = features[-1]
     hist_tail = features[-14:] if len(features) >= 14 else features
@@ -122,6 +176,9 @@ Sinais recentes (última linha de features):
 - news_risk_index={last.get("news_risk_index")}
 - oni={last.get("oni")} atl_north_warm_idx={last.get("atl_north_warm_idx")}
 
+Gatilhos Reuters/Bloomberg recentes (usar somente se relevantes):
+{gatilhos_premium or []}
+
 Histórico (últimos dias, formato ds,y + sinais):
 {hist_tail}
 
@@ -141,10 +198,10 @@ Responda apenas com o texto final do relatório.
         )
         text = (getattr(resp, "text", None) or "").strip()
         if not text:
-            return _fallback_rules(culture_slug, terminal, features, forecast_result)
+            return _fallback_rules(culture_slug, terminal, features, forecast_result, gatilhos_premium)
         # Guardrail simples: não deixar crescer demais
         if len(text) > 1200:
             text = text[:1200].rstrip() + "…"
         return text
     except Exception:
-        return _fallback_rules(culture_slug, terminal, features, forecast_result)
+        return _fallback_rules(culture_slug, terminal, features, forecast_result, gatilhos_premium)

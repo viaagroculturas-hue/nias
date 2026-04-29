@@ -428,12 +428,15 @@ class SupplyChainMonitor:
         for link in links:
             nodes.add((link['supplier_cnpj'], link['supplier_name']))
             nodes.add((link['client_cnpj'], link['client_name']))
+            fluxo_financeiro = self._estimate_financial_flow(link)
             edges.append({
                 'from': link['supplier_cnpj'],
                 'to': link['client_cnpj'],
                 'dependency': link['dependency_type'],
                 'products': json.loads(link['products_supplied'] or '[]'),
-                'volume': link['volume_monthly']
+                'volume': link['volume_monthly'],
+                'fluxo_financeiro': fluxo_financeiro,
+                'fluxo_financeiro_brl_mes': fluxo_financeiro,
             })
         
         conn.close()
@@ -445,6 +448,30 @@ class SupplyChainMonitor:
             'critical_links': sum(1 for e in edges if e['dependency'] == 'critica'),
             'high_risk_links': sum(1 for e in edges if e['dependency'] == 'alta')
         }
+
+    def _estimate_financial_flow(self, link: Dict) -> float:
+        """
+        Estima o fluxo financeiro mensal da aresta para renderização War Room.
+        Usa volume mensal como base e aplica preços médios conservadores por família.
+        """
+        products = json.loads(link.get('products_supplied') or '[]')
+        volume = float(link.get('volume_monthly') or 0.0)
+        prices = {
+            'hortifruti': 3200.0,
+            'graos': 1450.0,
+            'soja': 2400.0,
+            'milho': 1200.0,
+            'fertilizantes': 2800.0,
+            'defensivos': 18000.0,
+            'sementes': 6500.0,
+        }
+        unit_price = prices['hortifruti']
+        for product in products:
+            key = str(product).lower()
+            if key in prices:
+                unit_price = prices[key]
+                break
+        return round(volume * unit_price, 2)
     
     def identify_supply_risks(self) -> List[Dict]:
         """
