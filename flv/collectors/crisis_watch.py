@@ -15,6 +15,8 @@ import urllib.parse
 import re
 from dataclasses import dataclass
 
+from flv.governance import ADMINISTRATIVE_CHANGE_TYPES
+
 # Garante que o banco seja encontrado independente de onde o script é executado
 if getattr(sys, 'frozen', False):
     # Executando como executável
@@ -151,10 +153,12 @@ class CrisisWatch:
         
         # Histórico de 24 meses
         history = self._get_credit_history_24m(cnpj)
+        admin_patterns = self._get_administrative_risk_patterns(cnpj)
         
         # Se tem histórico de recuperação anterior
         if history and len(history) > 1:
             score -= 100  # Reincidente
+        score += admin_patterns['score_penalty']
         
         score = max(0, min(1000, score))  # Limita entre 0 e 1000
         
@@ -193,10 +197,12 @@ class CrisisWatch:
             'status': company['judicial_status'],
             'debts_total': company['debts_total'],
             'history_24m': history,
+            'administrative_memory': admin_patterns,
             'factors': {
                 'status_penalty': status_penalties.get(company['judicial_status'], 0),
                 'debt_penalty': self._calculate_debt_penalty(company['debts_total']),
-                'reincidence_penalty': -100 if history and len(history) > 1 else 0
+                'reincidence_penalty': -100 if history and len(history) > 1 else 0,
+                'administrative_memory_penalty': admin_patterns['score_penalty']
             }
         }
     
@@ -230,6 +236,71 @@ class CrisisWatch:
         elif debt > 100_000_000:
             return -50
         return 0
+
+    def _get_administrative_risk_patterns(self, cnpj: str) -> Dict:
+        """
+        Usa todo o histórico administrativo preservado para detectar recorrência.
+
+        Alterações societárias, de administração, sede, capital e objeto social não
+        são descartadas por janela curta: padrões antigos ajudam a diferenciar uma
+        reestruturação pontual de sinais recorrentes de fraude ou má gestão.
+        """
+        conn = self.get_conn()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT change_type, change_subtype, old_value, new_value, change_date, source, confidence_score
+            FROM flv_corporate_changes
+            WHERE company_cnpj = ?
+            ORDER BY change_date DESC
+        """, (cnpj,))
+
+        changes = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+
+        type_counts = {}
+        trusted_sources = set()
+        for change in changes:
+            change_type = (change.get('change_type') or '').lower()
+            if change_type not in ADMINISTRATIVE_CHANGE_TYPES:
+                continue
+            type_counts[change_type] = type_counts.get(change_type, 0) + 1
+            if change.get('source'):
+                trusted_sources.add(change['source'])
+
+        repeated_types = {k: v for k, v in type_counts.items() if v >= 2}
+        high_risk_types = {
+            k: v for k, v in repeated_types.items()
+            if k in {'administrador', 'diretoria', 'socio', 'capital_social', 'sede'}
+        }
+
+        score_penalty = 0
+        if len(changes) >= 5:
+            score_penalty -= 40
+        if repeated_types:
+            score_penalty -= min(80, 20 * len(repeated_types))
+        if high_risk_types:
+            score_penalty -= min(80, 20 * sum(high_risk_types.values()))
+
+        flags = []
+        if high_risk_types:
+            flags.append('recorrencia_administrativa')
+        if type_counts.get('sede', 0) >= 2:
+            flags.append('mudanca_recorrente_de_sede')
+        if type_counts.get('capital_social', 0) >= 2:
+            flags.append('alteracao_recorrente_de_capital')
+        if type_counts.get('administrador', 0) >= 2 or type_counts.get('diretoria', 0) >= 2:
+            flags.append('rotatividade_de_gestao')
+
+        return {
+            'total_changes_retained': len(changes),
+            'type_counts': type_counts,
+            'repeated_types': repeated_types,
+            'high_risk_types': high_risk_types,
+            'trusted_sources': sorted(trusted_sources),
+            'fraud_or_mismanagement_flags': flags,
+            'score_penalty': max(-180, score_penalty),
+        }
     
     def get_crisis_summary(self) -> Dict:
         """

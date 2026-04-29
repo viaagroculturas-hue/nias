@@ -7,10 +7,10 @@ Objetivo: fornecer regressors diários ao modelo (ex.: diesel, USD/BRL, SELIC, I
 from __future__ import annotations
 
 import json
-import time
 import urllib.request
-import urllib.parse
-from datetime import datetime, timedelta
+from datetime import datetime
+
+from flv.governance import require_elite_source
 
 
 def _bcb_sgs_latest(serie_code: int) -> tuple[str | None, float | None]:
@@ -56,31 +56,6 @@ def _safe_float(x):
         return None
 
 
-def _stooq_latest_close(symbol: str) -> tuple[str | None, float | None]:
-    """
-    Best-effort: consulta Stooq CSV e retorna (YYYY-MM-DD, close).
-    Ex.: brent = 'brn.f', wti = 'cl.f'
-    """
-    try:
-        q = urllib.parse.urlencode({"s": symbol, "f": "sd2t2ohlcv", "h": "1", "e": "csv"})
-        url = f"https://stooq.com/q/l/?{q}"
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            raw = resp.read().decode("utf-8", errors="ignore").strip()
-        lines = [l.strip() for l in raw.splitlines() if l.strip()]
-        if len(lines) < 2:
-            return None, None
-        # header: Symbol,Date,Time,Open,High,Low,Close,Volume
-        cols = [c.strip() for c in lines[1].split(",")]
-        if len(cols) < 8:
-            return None, None
-        date = cols[1]
-        close = float(cols[6])
-        return date, close
-    except Exception:
-        return None, None
-
-
 def _pct_change(curr: float | None, prev: float | None) -> float | None:
     try:
         if curr is None or prev is None or prev == 0:
@@ -94,8 +69,8 @@ def coletar_indicadores_macro():
     """
     Coleta indicadores macro e grava em `flv_macro_indicators`.
 
-    Observação: diesel (ANP) nem sempre tem endpoint estável; se indisponível, gravamos nulo,
-    mas ainda assim USD/SELIC/IPCA entram como regressors.
+    A salvaguarda de fontes permite apenas Banco Central para indicadores macro.
+    Métricas de energia sem endpoint aprovado permanecem nulas.
     """
     from flv.db import init_db, upsert_macro_indicators, query
 
@@ -117,13 +92,11 @@ def coletar_indicadores_macro():
     dates = [d for d in [usd_date, selic_date, ipca_date] if d]
     obs_date = max(dates) if dates else datetime.now().strftime("%Y-%m-%d")
 
-    # Diesel: tentamos (best-effort) consumir algum dado público; fallback = None
+    # Diesel/energia: sem fonte aprovada na allowlist atual, mantemos nulo.
     diesel_brl_l = None
     diesel_change_pct = None
-
-    # Petróleo (energia/frete) — Brent/WTI (best-effort via Stooq)
-    brent_date, brent_usd = _stooq_latest_close("brn.f")
-    wti_date, wti_usd = _stooq_latest_close("cl.f")
+    brent_usd = None
+    wti_usd = None
 
     # Change % diário (vs último ponto gravado)
     last = None
@@ -150,7 +123,7 @@ def coletar_indicadores_macro():
         usd_brl=_safe_float(usd),
         selic_pct=_safe_float(selic),
         ipca_yoy_pct=_safe_float(ipca_yoy_pct),
-        source="BCB/ANP/Stooq(best-effort)",
+        source=require_elite_source("BCB"),
     )
 
     print(

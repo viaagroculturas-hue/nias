@@ -1,6 +1,8 @@
 """FLV SIDRA/IBGE Production Collector — Municipal agricultural production."""
 import urllib.request, json
 
+from flv.governance import require_elite_source
+
 # SIDRA table 1612 = PAM (Producao Agricola Municipal)
 # Variable 214 = production (tons), 112 = area harvested (ha)
 SIDRA_CULTURES = {
@@ -73,7 +75,7 @@ def _fetch_culture(conn, slug, prod_code):
         try:
             conn.execute(
                 "INSERT OR REPLACE INTO flv_production (mun_id,culture_id,year,production_tons,source) VALUES (?,?,?,?,?)",
-                (mid['id'], cid['id'], year, production, 'SIDRA-PAM')
+                (mid['id'], cid['id'], year, production, require_elite_source('IBGE'))
             )
             count += 1
         except Exception:
