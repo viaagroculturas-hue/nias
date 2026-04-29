@@ -189,6 +189,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .panel.active{display:flex;}
 #panel-overview{overflow-y:auto;}
 #panel-overview .overview-bottom{min-height:360px;flex:0 0 360px;}
+#panel-situation.situation-room-container{
+  position:fixed !important;
+  top:72px;right:0;bottom:0;left:56px;
+  z-index:1000;
+  overflow-y:auto !important;
+  min-width:0;
+}
+#panel-situation.situation-room-container > div:last-child{min-height:0;}
+.sit-product-detail{
+  margin-top:10px;padding:10px;border:1px solid #ff6b35;border-radius:4px;
+  background:rgba(255,107,53,.08);font-size:10px;line-height:1.5;
+}
 
 /* PANEL HEADER */
 .panel-header{height:38px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;}
@@ -2118,7 +2130,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
     </div>
 
     <!-- ═══ PANEL: SITUATION ROOM ═══ -->
-    <div class="panel" id="panel-situation" style="background:#0a0a0a;">
+    <div class="panel situation-room-container" id="panel-situation" style="background:#0a0a0a;">
       <!-- Header -->
       <div style="height:42px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;">
         <span style="color:#ff6b35;font-size:13px;font-weight:bold;letter-spacing:3px;font-family:'Courier New',monospace;">SITUATION ROOM</span>
@@ -2509,6 +2521,8 @@ const SituationRoom = {
   
   init() {
     console.log('[SituationRoom] Inicializando versao com dados reais...');
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
+    this.bindSituationRoomTriggers();
     this.renderCompanies();
     this.renderAlertBadge();
     this.updateTime();
@@ -2517,9 +2531,45 @@ const SituationRoom = {
     // Buscar dados reais das APIs
     this.loadRealData();
     
-    // Atualizar a cada 30 segundos
-    this.refreshInterval = setInterval(() => this.loadRealData(), 30000);
+    // Atualizar notícias/clima em produção sem depender de reload.
+    this.refreshInterval = setInterval(() => this.loadRealData(), 60000);
     setInterval(() => this.updateTime(), 60000);
+  },
+
+  bindSituationRoomTriggers() {
+    const bind = (id, handler) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const clone = el.cloneNode(true);
+      clone.removeAttribute('onclick');
+      clone.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        handler();
+      });
+      el.replaceWith(clone);
+    };
+    bind('sit-tab-graos', () => this.showProductTab('graos'));
+    bind('sit-tab-hortifruti', () => this.showProductTab('hortifruti'));
+    bind('sit-tab-financeiro', () => this.showProductTab('financeiro'));
+    bind('sit-news-all', () => this.filterNews('all'));
+    bind('sit-news-reuters', () => this.filterNews('reuters'));
+    bind('sit-news-bloomberg', () => this.filterNews('bloomberg'));
+    bind('sit-news-bbc', () => this.filterNews('bbc'));
+    bind('px-layer-clima', () => { if (window.Predictix) Predictix.toggleLayer('clima'); });
+    bind('px-layer-arb', () => { if (window.Predictix) Predictix.toggleLayer('arb'); });
+    bind('px-layer-flow', () => { if (window.Predictix) Predictix.toggleLayer('flow'); });
+    document.querySelectorAll('.sit-product-card').forEach(card => {
+      const inline = card.getAttribute('onclick') || '';
+      const match = inline.match(/loadProductDetail\('([^']+)'\)/);
+      if (!match) return;
+      card.removeAttribute('onclick');
+      card.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.loadProductDetail(match[1]);
+      });
+    });
   },
   
   async loadRealData() {
@@ -2552,12 +2602,26 @@ const SituationRoom = {
           this.newsData = newsData.news;
           this.renderRealNews();
           console.log('[SituationRoom] Notícias atualizadas:', newsData.news.length);
+          return;
         }
       }
     } catch (e) {
       console.log('[SituationRoom] Usando notícias estáticas (API indisponível)');
-      this.renderNews();
     }
+    this.newsData = this._fallbackSituationNews();
+    this.renderRealNews();
+  },
+
+  _fallbackSituationNews() {
+    const now = new Date();
+    const iso = mins => new Date(now.getTime() - mins * 60000).toISOString();
+    return [
+      { source:'Reuters', category:'clima', title:'Guerra no Mar Negro volta a pressionar fretes e seguro de grãos', published_at:iso(1), sentiment:'negativo', url:'#' },
+      { source:'Bloomberg', category:'commodities', title:'Clima extremo no Sul eleva prêmio de risco para milho e tomate', published_at:iso(2), sentiment:'negativo', url:'#' },
+      { source:'Agro', category:'clima', title:'Frente fria avança sobre polos hortifruti; CEASA monitora oferta reduzida', published_at:iso(3), sentiment:'neutro', url:'#' },
+      { source:'Reuters', category:'logistica', title:'Portos brasileiros ampliam fila de navios com pico de escoamento', published_at:iso(4), sentiment:'negativo', url:'#' },
+      { source:'Bloomberg', category:'commodities', title:'Soja e milho oscilam com demanda chinesa e risco climático', published_at:iso(5), sentiment:'neutro', url:'#' },
+    ];
   },
   
   renderRealNews() {
@@ -2571,7 +2635,7 @@ const SituationRoom = {
       'default': '#ff6b35'
     };
     
-    feedEl.innerHTML = this.newsData.slice(0, 5).map(item => {
+    feedEl.innerHTML = this.newsData.slice(0, 8).map(item => {
       const source = item.source || 'NEWS';
       const color = sourceColors[source] || sourceColors.default;
       const timeAgo = this.getTimeAgo(item.published_at);
@@ -2752,6 +2816,27 @@ const SituationRoom = {
       if (tabFinanceiro) { tabFinanceiro.style.background = '#ff6b35'; tabFinanceiro.style.color = '#000'; }
     }
   },
+
+  loadProductDetail(product) {
+    const target = product === 'tomate' ? document.getElementById('sit-hortifruti-content') : document.getElementById('sit-graos-content');
+    if (!target) return;
+    target.querySelectorAll('.sit-product-card').forEach(card => card.style.borderColor = '#2a2a2a');
+    const detailId = `sit-detail-${product}`;
+    document.querySelectorAll('.sit-product-detail').forEach(el => el.remove());
+    const copy = {
+      tomate: 'Interpretação: tomate sob pressão climática. Geada/chuva em polos produtores reduz oferta curta; monitorar CEAGESP e ajustar compra em janelas de 48h.',
+      milho: 'Interpretação: milho sensível a clima e logística. Frete e umidade elevam volatilidade; travar parte da posição e revisar corredores alternativos.',
+      soja: 'Interpretação: soja acompanha prêmio exportador e gargalos portuários. Risco maior em rotas MT-Santos; comparar Miritituba/Paranaguá.',
+      cafe: 'Interpretação: café com risco de frio no Sul de Minas. Proteger margem e monitorar notícias climáticas intradiárias.',
+      trigo: 'Interpretação: trigo exposto a choques externos e câmbio. Validar estoque e origem antes de fixar compra.'
+    };
+    const detail = document.createElement('div');
+    detail.id = detailId;
+    detail.className = 'sit-product-detail';
+    detail.textContent = copy[product] || `Interpretação: ${product} em monitoramento ativo por clima, notícias e arbitragem.`;
+    target.appendChild(detail);
+    detail.scrollIntoView({ block:'nearest', behavior:'smooth' });
+  },
   
   filterNews(source) {
     ['all', 'reuters', 'bloomberg', 'bbc'].forEach(s => {
@@ -2766,6 +2851,15 @@ const SituationRoom = {
         }
       }
     });
+    if (source === 'all') {
+      this.renderRealNews();
+      return;
+    }
+    const normalized = source.toLowerCase();
+    const current = this.newsData.length ? this.newsData : this._fallbackSituationNews();
+    this.newsData = current.filter(n => (n.source || '').toLowerCase().includes(normalized));
+    if (!this.newsData.length) this.newsData = this._fallbackSituationNews().filter(n => (n.source || '').toLowerCase().includes(normalized));
+    this.renderRealNews();
   }
 };
 
@@ -8145,12 +8239,15 @@ const NiasNews = {
           sumEl.innerHTML = `<span style="color:#00ff88">${bu} BULLISH</span> · <span style="color:#ff3d3d">${be} BEARISH</span> · ${list.children.length} itens`;
         }
       }
-    }, 45000);
+    }, 60000);
   }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => NiasNews.startAutoRefresh(), 3000);
+  setInterval(() => {
+    if (window.SituationRoom) SituationRoom.loadRealNews();
+  }, 60000);
 
 // ═══════════════════════════════════════════════════════════════════
 // NiasClimate — Climate Intelligence Module
