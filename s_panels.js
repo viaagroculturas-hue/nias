@@ -66,6 +66,14 @@
     window.registerHortiInterpretationCards();
   });
 
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    Object.keys(timers).forEach(cardId => {
+      const card = resolveCard(cardId);
+      if (!card) delete timers[cardId];
+    });
+  });
+
   window.NiasInterpretation = {
     TIMER_MS,
     timers,
