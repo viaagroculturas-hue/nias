@@ -8,26 +8,32 @@ Depois pode evoluir para embeddings + classificador.
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
+from html import unescape
 
 
 KEYWORDS = [
+    # Gatilhos solicitados: pesos altos porque representam choques sistêmicos.
+    (r"\bgreve\s+de\s+caminhoneir\w*", 1.00, "GREVE_CAMINHONEIROS"),
+    (r"\bguerra\s+na\s+ucr[aâ]nia\b", 0.90, "GUERRA_UCRANIA"),
+    (r"\bseca\s+no\s+canal\s+do\s+panam[aá]\b", 0.90, "SECA_CANAL_PANAMA"),
     # logística/energia
-    (r"\bgreve\s+de\s+caminhoneir", 1.00, "GREVE_CAMINHONEIROS"),
-    (r"\bparalisa", 0.55, "PARALISACAO"),
-    (r"\bbloqueio\b|\binterdi", 0.45, "BLOQUEIO"),
-    (r"\bdiesel\b", 0.30, "DIESEL"),
+    (r"\bparalisa\w*", 0.55, "PARALISACAO"),
+    (r"\bbloqueio\b|\binterdi\w*", 0.45, "BLOQUEIO"),
+    (r"\bdiesel\b|\bfrete\b|\btransporte\b", 0.30, "LOGISTICA_CUSTO"),
     # geopolítica
-    (r"\bguerra\s+na\s+ucr[aâ]nia\b|\bucr[aâ]nia\b", 0.70, "UCRANIA"),
-    (r"\bsan[cç][aã]o|\bembargo\b", 0.55, "SANCOES"),
+    (r"\bucr[aâ]nia\b|\brussia\b|\br[úu]ssia\b", 0.55, "UCRANIA"),
+    (r"\bsan[cç][aã]o\w*|\bembargo\b", 0.55, "SANCOES"),
     # clima global/logística marítima
-    (r"\bseca\s+no\s+canal\s+do\s+panam[aá]\b|\bcanal\s+do\s+panam[aá]\b", 0.65, "PANAMA"),
+    (r"\bcanal\s+do\s+panam[aá]\b|\bpanama canal\b", 0.65, "PANAMA"),
     (r"\bel\s*ni[nñ]o\b|\boni\b", 0.40, "EL_NINO"),
     (r"\bla\s*ni[nñ]a\b", 0.35, "LA_NINA"),
+    (r"\bquebra\s+de\s+safra\b|\bcrop failure\b", 0.50, "QUEBRA_SAFRA"),
 ]
 
 
@@ -36,6 +42,37 @@ DEFAULT_FEEDS = [
     # Você pode trocar/adiantar os endpoints depois.
     ("NoticiasAgricolas", "https://www.noticiasagricolas.com.br/rss/noticias.rss"),
 ]
+
+
+def _feeds_from_env() -> list[tuple[str, str]]:
+    """
+    Lê feeds adicionais de FLV_NEWS_RSS_FEEDS.
+
+    Formatos aceitos:
+    - JSON: [{"source":"Reuters","url":"https://..."}, ...]
+    - Texto: "Reuters|https://...;Bloomberg|https://..."
+    """
+    raw = os.environ.get("FLV_NEWS_RSS_FEEDS", "").strip()
+    if not raw:
+        return []
+    feeds: list[tuple[str, str]] = []
+    try:
+        data = json.loads(raw)
+        if isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict) and item.get("source") and item.get("url"):
+                    feeds.append((str(item["source"]), str(item["url"])))
+        if feeds:
+            return feeds
+    except Exception:
+        pass
+    for part in raw.split(";"):
+        if "|" not in part:
+            continue
+        source, url = [p.strip() for p in part.split("|", 1)]
+        if source and url:
+            feeds.append((source, url))
+    return feeds
 
 
 def _fetch(url: str, timeout=20) -> str | None:
@@ -53,9 +90,15 @@ def _parse_rss(xml_text: str) -> list[dict]:
 
     for item in root.findall(".//item"):
         title = (item.findtext("title") or "").strip()
+        description = (item.findtext("description") or item.findtext("summary") or "").strip()
         link = (item.findtext("link") or "").strip()
         pub = (item.findtext("pubDate") or "").strip()
-        items.append({"title": title, "url": link, "pubDate": pub})
+        items.append({
+            "title": unescape(re.sub(r"<[^>]+>", " ", title)).strip(),
+            "description": unescape(re.sub(r"<[^>]+>", " ", description)).strip(),
+            "url": link,
+            "pubDate": pub,
+        })
     return items
 
 
@@ -84,7 +127,7 @@ def coletar_indice_risco_noticias(feeds=None, max_items_per_feed=25):
     except Exception:
         pass
 
-    feeds = feeds or DEFAULT_FEEDS
+    feeds = feeds or (_feeds_from_env() + DEFAULT_FEEDS)
     now = datetime.now(timezone.utc)
     obs_ts = now.isoformat()
     obs_date = now.strftime("%Y-%m-%d")
@@ -92,6 +135,7 @@ def coletar_indice_risco_noticias(feeds=None, max_items_per_feed=25):
     all_scores = []
     tag_counts = {}
     sources = set()
+    seen = set()
 
     for source, url in feeds:
         try:
@@ -102,7 +146,12 @@ def coletar_indice_risco_noticias(feeds=None, max_items_per_feed=25):
             items = _parse_rss(xml_text)[:max_items_per_feed]
             for it in items:
                 title = it.get("title") or ""
-                s, tags = _score_text(title)
+                body = f"{title} {it.get('description') or ''}"
+                dedupe_key = (it.get("url") or title).strip().lower()
+                if dedupe_key in seen:
+                    continue
+                seen.add(dedupe_key)
+                s, tags = _score_text(body)
                 if s <= 0:
                     continue
                 all_scores.append(s)

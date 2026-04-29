@@ -8,6 +8,7 @@ entra automaticamente em modo de segurança (_fallback_rules).
 
 from __future__ import annotations
 
+import json
 import os
 from datetime import datetime
 
@@ -33,13 +34,14 @@ def _fallback_rules(culture_slug: str, terminal: str | None, features: list[dict
     target_price = forecast_result["forecast"][-1]["price"] if forecast_result.get("forecast") else None
 
     drivers = []
+    details = _load_recent_context(last.get("ds"))
 
     # Notícias
     nri = float(last.get("news_risk_index") or 0.0)
     if nri >= 0.65:
-        drivers.append("notícias globais com risco elevado (cadeia logística/geopolítica)")
+        drivers.append(_describe_news_driver(details) or "notícias globais com risco elevado (cadeia logística/geopolítica)")
     elif nri >= 0.35:
-        drivers.append("noticiário com risco moderado (pressão em custos e fluxo)")
+        drivers.append(_describe_news_driver(details) or "noticiário com risco moderado (pressão em custos e fluxo)")
 
     # Diesel
     diesel = last.get("diesel_brl_l")
@@ -64,6 +66,13 @@ def _fallback_rules(culture_slug: str, terminal: str | None, features: list[dict
         except Exception:
             pass
 
+    try:
+        atl = float(last.get("atl_north_warm_idx") or 0.0)
+        if atl >= 0.5:
+            drivers.append("Atlântico Norte aquecido (teleconexão aumentando risco de clima extremo)")
+    except Exception:
+        pass
+
     # USD
     usd = last.get("usd_brl")
     try:
@@ -86,6 +95,93 @@ def _fallback_rules(culture_slug: str, terminal: str | None, features: list[dict
     )
 
 
+def _load_recent_context(last_ds: str | None) -> dict:
+    context = {"news": [], "daily": None, "global_climate": None}
+    try:
+        from flv.db import query
+
+        if last_ds:
+            daily = query(
+                """
+                SELECT obs_date, risk_index, top_tags_json, sources_json
+                FROM flv_news_risk_daily
+                WHERE obs_date >= ?
+                ORDER BY obs_date DESC LIMIT 1
+                """,
+                (last_ds,),
+            )
+            context["daily"] = daily[0] if daily else None
+
+        news = query(
+            """
+            SELECT obs_ts, source, title, risk_score, tags_json
+            FROM flv_news_events
+            WHERE risk_score >= 0.35
+            ORDER BY obs_ts DESC, risk_score DESC LIMIT 5
+            """
+        )
+        context["news"] = news
+
+        climate = query(
+            """
+            SELECT obs_date, oni, atl_north_warm_idx, source
+            FROM flv_global_climate
+            ORDER BY obs_date DESC LIMIT 1
+            """
+        )
+        context["global_climate"] = climate[0] if climate else None
+    except Exception:
+        pass
+    return context
+
+
+def _describe_news_driver(context: dict) -> str | None:
+    news = context.get("news") or []
+    if news:
+        event = news[0]
+        title = (event.get("title") or "").strip()
+        tags = _parse_json_list(event.get("tags_json"))
+        tag_text = _humanize_tag(tags[0]) if tags else None
+        if title:
+            if tag_text:
+                return f"noticiário de {tag_text}: \"{title[:120]}\""
+            return f"noticiário relevante: \"{title[:120]}\""
+
+    daily = context.get("daily") or {}
+    top_tags = _parse_json_list(daily.get("top_tags_json"))
+    if top_tags:
+        tag = top_tags[0][0] if isinstance(top_tags[0], (list, tuple)) else str(top_tags[0])
+        return f"notícias globais com risco elevado ({_humanize_tag(tag)})"
+    return None
+
+
+def _parse_json_list(raw):
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def _humanize_tag(tag) -> str:
+    mapping = {
+        "GREVE_CAMINHONEIROS": "greve de caminhoneiros",
+        "GUERRA_UCRANIA": "guerra na Ucrânia",
+        "SECA_CANAL_PANAMA": "seca no Canal do Panamá",
+        "PANAMA": "risco no Canal do Panamá",
+        "UCRANIA": "risco geopolítico no Mar Negro/Ucrânia",
+        "LOGISTICA_CUSTO": "custo logístico e diesel",
+        "QUEBRA_SAFRA": "quebra de safra",
+        "EL_NINO": "El Niño",
+        "LA_NINA": "La Niña",
+        "SANCOES": "sanções/embargos",
+        "BLOQUEIO": "bloqueios logísticos",
+    }
+    return mapping.get(str(tag), str(tag).replace("_", " ").lower())
+
+
 def _gerar_relatorio_gemini(api_key: str, culture_slug: str, terminal: str | None, features: list[dict], forecast_result: dict) -> str:
     try:
         import google.generativeai as genai
@@ -94,6 +190,7 @@ def _gerar_relatorio_gemini(api_key: str, culture_slug: str, terminal: str | Non
 
     last = features[-1]
     hist_tail = features[-14:] if len(features) >= 14 else features
+    context = _load_recent_context(last.get("ds"))
 
     trend = forecast_result.get("trend")
     horizon = forecast_result.get("horizon_days")
@@ -121,6 +218,15 @@ Sinais recentes (última linha de features):
 - usd_brl={last.get("usd_brl")} selic_pct={last.get("selic_pct")} ipca_yoy_pct={last.get("ipca_yoy_pct")}
 - news_risk_index={last.get("news_risk_index")}
 - oni={last.get("oni")} atl_north_warm_idx={last.get("atl_north_warm_idx")}
+
+Eventos de noticias recentes detectados:
+{context.get("news")}
+
+Resumo diario do indice de risco:
+{context.get("daily")}
+
+Teleconexoes globais mais recentes:
+{context.get("global_climate")}
 
 Histórico (últimos dias, formato ds,y + sinais):
 {hist_tail}

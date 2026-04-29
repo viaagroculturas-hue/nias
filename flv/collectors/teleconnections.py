@@ -7,7 +7,10 @@ Se falhar, mantém último valor gravado (via regressors persistentes).
 
 from __future__ import annotations
 
+import csv
+import io
 import json
+import re
 import urllib.request
 from datetime import datetime
 
@@ -16,6 +19,65 @@ def _fetch_json(url: str, timeout=20):
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8", errors="ignore"))
+
+
+def _fetch_text(url: str, timeout=20) -> str:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", errors="ignore")
+
+
+def _latest_oni_from_noaa() -> float | None:
+    """
+    Lê a tabela oficial ONI da NOAA/CPC.
+
+    O endpoint é texto fixo; a função tolera mudanças pequenas de espaçamento e
+    retorna o último valor numérico disponível.
+    """
+    text = _fetch_text("https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt", timeout=15)
+    vals: list[float] = []
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) < 3 or not any(p.isdigit() and len(p) == 4 for p in parts):
+            continue
+        try:
+            vals.append(float(parts[-1]))
+        except Exception:
+            continue
+    return vals[-1] if vals else None
+
+
+def _latest_atlantic_sst_anomaly() -> float | None:
+    """
+    Proxy de aquecimento do Atlântico Norte via ERSST NCDC.
+
+    Usa o índice Nino/teleconexão como série mensal de anomalia de SST no
+    Atlântico Norte quando o formato CSV está disponível publicamente.
+    """
+    urls = [
+        "https://www.ncei.noaa.gov/access/monitoring/teleconnections/nao/data.csv",
+        "https://www.ncei.noaa.gov/access/monitoring/teleconnections/amo/data.csv",
+    ]
+    for url in urls:
+        try:
+            text = _fetch_text(url, timeout=15)
+            rows = csv.reader(io.StringIO(text))
+            vals: list[float] = []
+            for row in rows:
+                if len(row) < 2:
+                    continue
+                joined = ",".join(row)
+                nums = re.findall(r"-?\d+(?:\.\d+)?", joined)
+                if nums:
+                    try:
+                        vals.append(float(nums[-1]))
+                    except Exception:
+                        pass
+            if vals:
+                return vals[-1]
+        except Exception:
+            continue
+    return None
 
 
 def coletar_teleconexoes_globais():
@@ -36,17 +98,27 @@ def coletar_teleconexoes_globais():
 
     oni = None
     atl = None
-    source = "NOAA/ESRL(best-effort)"
+    sources = []
 
-    # Best-effort: alguns espelhos publicam JSON; se não, fica None.
-    # (Você pode trocar por um endpoint interno depois.)
     try:
-        # Placeholder (não garantido): mantemos try/except para não quebrar pipeline.
-        data = _fetch_json("https://climatedataapi.worldbank.org/climateweb/rest/v1/country/mavg/tas/1991/2000/BRA", timeout=15)
-        if isinstance(data, list) and data:
-            atl = None
+        oni = _latest_oni_from_noaa()
+        sources.append("NOAA/CPC ONI")
     except Exception:
         pass
+
+    try:
+        atl = _latest_atlantic_sst_anomaly()
+        if atl is not None:
+            sources.append("NOAA/NCEI Atlantic")
+    except Exception:
+        pass
+
+    if oni is None and atl is None:
+        # Mantem compatibilidade com o comportamento anterior: falhas de rede nao
+        # derrubam a pipeline e o modelo persiste o ultimo regressor conhecido.
+        source = "NOAA(best-effort)"
+    else:
+        source = "/".join(sources) if sources else "NOAA(best-effort)"
 
     upsert_global_climate(obs_date=obs_date, oni=oni, atl_north_warm_idx=atl, source=source)
     print(f"[FLV-Teleconnections] {obs_date} oni={oni} atl_north_warm_idx={atl}")

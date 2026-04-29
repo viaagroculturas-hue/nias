@@ -1,4 +1,5 @@
 """FLV Feature Builder — Assembles feature matrix for Prophet from DB tables."""
+import json
 import time, re
 from datetime import datetime, timedelta
 
@@ -18,6 +19,81 @@ def _parse_date(ds):
     if m:
         return f'{m.group(3)}-{m.group(2)}-{m.group(1)}'
     return None
+
+def _safe_json(value, default):
+    if not value:
+        return default
+    try:
+        return json.loads(value)
+    except Exception:
+        return default
+
+def _latest_news_pulse(conn):
+    """Return today's/latest news pulse so stale price series still receive real-time shocks."""
+    try:
+        row = conn.execute(
+            """
+            SELECT obs_date, risk_index, top_tags_json, sources_json
+            FROM flv_news_risk_daily
+            ORDER BY obs_date DESC LIMIT 1
+            """
+        ).fetchone()
+    except Exception:
+        return {}
+    if not row:
+        return {}
+    return {
+        'obs_date': row['obs_date'],
+        'risk_index': float(row['risk_index'] or 0.0),
+        'top_tags': _safe_json(row['top_tags_json'], []),
+        'sources': _safe_json(row['sources_json'], []),
+    }
+
+def _latest_news_events(conn, limit=5):
+    try:
+        rows = conn.execute(
+            """
+            SELECT obs_ts, source, title, url, risk_score, tags_json
+            FROM flv_news_events
+            WHERE risk_score > 0
+            ORDER BY obs_ts DESC, risk_score DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    except Exception:
+        return []
+    events = []
+    for row in rows:
+        events.append({
+            'obs_ts': row['obs_ts'],
+            'source': row['source'],
+            'title': row['title'],
+            'url': row['url'],
+            'risk_score': float(row['risk_score'] or 0.0),
+            'tags': _safe_json(row['tags_json'], []),
+        })
+    return events
+
+def _latest_global_climate(conn):
+    try:
+        row = conn.execute(
+            """
+            SELECT obs_date, oni, atl_north_warm_idx, source
+            FROM flv_global_climate
+            ORDER BY obs_date DESC LIMIT 1
+            """
+        ).fetchone()
+    except Exception:
+        return {}
+    if not row:
+        return {}
+    return {
+        'obs_date': row['obs_date'],
+        'oni': row['oni'],
+        'atl_north_warm_idx': row['atl_north_warm_idx'],
+        'source': row['source'],
+    }
 
 def build_features(culture_slug, terminal=None, mun_id=None, days=120):
     """Build Prophet-compatible DataFrame dict with columns: ds, y, local_clima, macro_*, news_risk_index, teleconnections_*."""
@@ -101,6 +177,9 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
         glob_map = {}
 
     holiday_dates = set(h[0] for h in BR_HOLIDAYS_2026)
+    latest_news = _latest_news_pulse(conn)
+    latest_events = _latest_news_events(conn)
+    latest_global = _latest_global_climate(conn)
 
     # Build feature rows
     result = []
@@ -187,7 +266,7 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
 
         is_hol = 1.0 if ds in holiday_dates else 0.0
 
-        result.append({
+        row = {
             'ds': ds,
             'y': y,
             'precip_7d': precip_7d,
@@ -206,7 +285,26 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
             'news_risk_index': news_risk if news_risk is not None else last_news_risk,
             'oni': oni if oni is not None else last_oni,
             'atl_north_warm_idx': atl if atl is not None else last_atl,
-        })
+        }
+        result.append(row)
+
+    if result:
+        # Injeta o pulso mais recente na última observação para o modelo perceber notícias
+        # e teleconexões coletadas depois do último preço CEASA disponível.
+        last = result[-1]
+        if latest_news and latest_news.get('obs_date') and latest_news['obs_date'] >= last['ds']:
+            last['news_risk_index'] = latest_news.get('risk_index', last.get('news_risk_index', 0.0))
+            last['news_top_tags'] = latest_news.get('top_tags', [])
+            last['news_sources'] = latest_news.get('sources', [])
+            last['news_events'] = latest_events
+            last['news_obs_date'] = latest_news.get('obs_date')
+        if latest_global and latest_global.get('obs_date') and latest_global['obs_date'] >= last['ds']:
+            if latest_global.get('oni') is not None:
+                last['oni'] = latest_global['oni']
+            if latest_global.get('atl_north_warm_idx') is not None:
+                last['atl_north_warm_idx'] = latest_global['atl_north_warm_idx']
+            last['global_climate_obs_date'] = latest_global.get('obs_date')
+            last['global_climate_source'] = latest_global.get('source')
 
     return result
 
@@ -242,6 +340,12 @@ def build_future_regressors(last_features, horizon=15):
             'news_risk_index': last.get('news_risk_index', 0.0),
             'oni': last.get('oni', 0.0),
             'atl_north_warm_idx': last.get('atl_north_warm_idx', 0.0),
+            'news_top_tags': last.get('news_top_tags', []),
+            'news_sources': last.get('news_sources', []),
+            'news_events': last.get('news_events', []),
+            'news_obs_date': last.get('news_obs_date'),
+            'global_climate_obs_date': last.get('global_climate_obs_date'),
+            'global_climate_source': last.get('global_climate_source'),
         })
 
     return future
