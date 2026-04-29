@@ -628,6 +628,18 @@ tr:hover td{background:rgba(0,212,255,.04);}
 </head>
 <body>
 
+<script>
+window._niasGuestLogin = window._niasGuestLogin || function() {
+  window.__niasPendingRole = 'guest';
+  const overlay = document.getElementById('nias-login-overlay');
+  if (overlay) overlay.style.display = 'none';
+};
+window._niasLogin = window._niasLogin || function() {
+  const errEl = document.getElementById('login-err');
+  if (errEl) errEl.textContent = 'Carregando autenticação... tente novamente em instantes.';
+};
+</script>
+
 <!-- ══════════════════════════════════════════════════════════════
      NIA$ LOGIN OVERLAY
 ══════════════════════════════════════════════════════════════ -->
@@ -7261,18 +7273,23 @@ async function _niasLogin() {
   }
   _niasGrantAccess(role);
 }
+window._niasLogin = _niasLogin;
 
 function _niasGuestLogin() {
   _niasGrantAccess('guest');
 }
+window._niasGuestLogin = _niasGuestLogin;
 
 function _niasGrantAccess(role) {
   niasRole = role;
+  window.__niasPendingRole = null;
   const overlay = document.getElementById('nias-login-overlay');
   if (overlay) overlay.style.display = 'none';
   _applyRBAC(role);
   if (role === 'guest') _activateDemoMode();
 }
+window._niasGrantAccess = _niasGrantAccess;
+if (window.__niasPendingRole) _niasGrantAccess(window.__niasPendingRole);
 
 // ── RBAC restrictions
 function _applyRBAC(role) {
