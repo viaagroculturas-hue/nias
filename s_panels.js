@@ -52,7 +52,6 @@
       card.dataset.interpretationBound = '1';
       card.setAttribute('role', 'button');
       card.setAttribute('tabindex', '0');
-      card.addEventListener('click', () => window.toggleInterpretation(card.id));
       card.addEventListener('keydown', event => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
@@ -61,6 +60,12 @@
       });
     });
   };
+
+  document.addEventListener('click', event => {
+    const card = event.target.closest && event.target.closest('.horti-card');
+    if (!card) return;
+    window.toggleInterpretation(card.id);
+  }, true);
 
   document.addEventListener('DOMContentLoaded', () => {
     window.registerHortiInterpretationCards();
