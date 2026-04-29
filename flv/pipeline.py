@@ -55,6 +55,13 @@ def run_pipeline():
     except Exception as e:
         print(f'[FLV-Pipeline] Teleconexões erro: {e}')
 
+    # 4.8 Inteligência estratégica — RJ/satélite, dreno de capital, bets e frete Mercosul
+    try:
+        from flv.collectors.strategic_intelligence import coletar_inteligencia_estrategica
+        coletar_inteligencia_estrategica()
+    except Exception as e:
+        print(f'[FLV-Pipeline] Inteligência estratégica erro: {e}')
+
     # 5. Evaluate anticipation thresholds
     try:
         from flv.model.thresholds import evaluate_realtime

@@ -29,6 +29,11 @@ def handle_flv(handler, path):
         elif route.startswith('/api/flv/climate/'):
             ibge = route.split('/api/flv/climate/')[-1].split('?')[0]
             data = _get_climate(ibge, params)
+        elif route == '/api/flv/strategic-intelligence':
+            data = _get_strategic_intelligence_summary(params)
+        elif route.startswith('/api/flv/strategic-intelligence/'):
+            domain = route.split('/api/flv/strategic-intelligence/')[-1].split('?')[0]
+            data = _get_strategic_intelligence_domain(domain, params)
         elif route == '/api/flv/pipeline/run':
             data = _trigger_pipeline()
         else:
@@ -234,3 +239,111 @@ def _trigger_pipeline():
     from flv.pipeline import run_pipeline
     threading.Thread(target=run_pipeline, daemon=True).start()
     return {'status': 'pipeline_started', 'timestamp': datetime.now().isoformat()}
+
+def _get_strategic_intelligence_summary(params):
+    from flv.db import query
+
+    obs = params.get('date')
+    if not obs:
+        rows = query("""
+            SELECT obs_date FROM (
+                SELECT obs_date FROM flv_rj_satellite_watch
+                UNION ALL SELECT obs_date FROM flv_capital_drain
+                UNION ALL SELECT obs_date FROM flv_betting_dominance
+                UNION ALL SELECT obs_date FROM flv_geopolitical_freight
+            ) ORDER BY obs_date DESC LIMIT 1
+        """)
+        obs = rows[0]['obs_date'] if rows else datetime.now().strftime('%Y-%m-%d')
+
+    rj_rows = query("""
+        SELECT abandonment_status, COUNT(*) as count, AVG(abandonment_score) as avg_score
+        FROM flv_rj_satellite_watch
+        WHERE obs_date=?
+        GROUP BY abandonment_status
+    """, (obs,))
+    drain_rows = query("""
+        SELECT state_uf, debt_amount_brl, online_bets_spend_brl, capital_drain_index
+        FROM flv_capital_drain
+        WHERE obs_date=? AND location_level='state'
+        ORDER BY capital_drain_index DESC
+        LIMIT 10
+    """, (obs,))
+    betting_rows = query("""
+        SELECT region_key, leading_company, estimated_ggr_brl, market_share_pct, peak_period
+        FROM flv_betting_dominance
+        WHERE obs_date=?
+        ORDER BY estimated_ggr_brl DESC
+        LIMIT 10
+    """, (obs,))
+    freight_rows = query("""
+        SELECT route_key, recalculated_freight_brl_t, freight_delta_pct, middle_east_risk_index
+        FROM flv_geopolitical_freight
+        WHERE obs_date=?
+        ORDER BY freight_delta_pct DESC
+    """, (obs,))
+    demographics = query("""
+        SELECT age_band, sex, SUM(debtors_count) as debtors_count, SUM(debt_amount_brl) as debt_amount_brl
+        FROM flv_debtor_demographics
+        WHERE obs_date=?
+        GROUP BY age_band, sex
+        ORDER BY debtors_count DESC
+        LIMIT 12
+    """, (obs,))
+
+    return {
+        'obs_date': obs,
+        'rj_satellite_watch': rj_rows,
+        'capital_drain_top_states': drain_rows,
+        'debtor_profile_top_segments': demographics,
+        'betting_dominance': betting_rows,
+        'geopolitical_freight': freight_rows,
+        'sources_note': 'Dados persistidos por StrategicIntelligenceCollector; campos confidence_score/evidence_json indicam origem e confiabilidade.'
+    }
+
+def _get_strategic_intelligence_domain(domain, params):
+    from flv.db import query
+
+    if domain == 'run':
+        from flv.collectors.strategic_intelligence import coletar_inteligencia_estrategica
+        return coletar_inteligencia_estrategica()
+
+    limit = int(params.get('limit', '100'))
+    state = params.get('state', '').upper()
+    city = params.get('city', '')
+    domains = {
+        'rj-satellite': (
+            "SELECT * FROM flv_rj_satellite_watch WHERE 1=1",
+            " ORDER BY obs_date DESC, abandonment_score DESC LIMIT ?",
+        ),
+        'capital-drain': (
+            "SELECT * FROM flv_capital_drain WHERE 1=1",
+            " ORDER BY obs_date DESC, capital_drain_index DESC LIMIT ?",
+        ),
+        'debtor-profile': (
+            "SELECT * FROM flv_debtor_demographics WHERE 1=1",
+            " ORDER BY obs_date DESC, debtors_count DESC LIMIT ?",
+        ),
+        'betting-dominance': (
+            "SELECT * FROM flv_betting_dominance WHERE 1=1",
+            " ORDER BY obs_date DESC, estimated_ggr_brl DESC LIMIT ?",
+        ),
+        'geopolitical-freight': (
+            "SELECT * FROM flv_geopolitical_freight WHERE 1=1",
+            " ORDER BY obs_date DESC, freight_delta_pct DESC LIMIT ?",
+        ),
+    }
+    if domain not in domains:
+        return {'error': 'Strategic intelligence domain not found', 'domain': domain, 'available': sorted(domains.keys()) + ['run']}
+
+    sql, order_sql = domains[domain]
+    args = []
+    if state and domain in ('rj-satellite', 'capital-drain', 'debtor-profile', 'betting-dominance'):
+        sql += " AND state_uf=?"
+        args.append(state)
+    if city and domain in ('rj-satellite', 'capital-drain', 'debtor-profile'):
+        sql += " AND city LIKE ?"
+        args.append(f"%{city}%")
+    sql += order_sql
+    args.append(limit)
+    rows = query(sql, args)
+    return {'domain': domain, 'items': rows, 'count': len(rows)}

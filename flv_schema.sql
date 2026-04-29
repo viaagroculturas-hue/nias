@@ -137,12 +137,21 @@ CREATE TABLE IF NOT EXISTS flv_macro_indicators (
     obs_date    TEXT NOT NULL UNIQUE,
     diesel_brl_l REAL,
     diesel_change_pct REAL,
+    brent_usd   REAL,
+    brent_change_pct REAL,
+    wti_usd     REAL,
+    wti_change_pct REAL,
     usd_brl     REAL,
     selic_pct   REAL,
     ipca_yoy_pct REAL,
     source      TEXT DEFAULT 'BCB/ANP',
     created_at  TEXT DEFAULT (datetime('now'))
 );
+
+ALTER TABLE flv_macro_indicators ADD COLUMN brent_usd REAL;
+ALTER TABLE flv_macro_indicators ADD COLUMN brent_change_pct REAL;
+ALTER TABLE flv_macro_indicators ADD COLUMN wti_usd REAL;
+ALTER TABLE flv_macro_indicators ADD COLUMN wti_change_pct REAL;
 
 -- Notícias (NLP leve) + índice de risco agregado
 CREATE TABLE IF NOT EXISTS flv_news_events (
@@ -512,3 +521,109 @@ CREATE TABLE IF NOT EXISTS flv_satellite_imagery (
 CREATE INDEX IF NOT EXISTS idx_satellite_type ON flv_satellite_imagery(image_type);
 CREATE INDEX IF NOT EXISTS idx_satellite_date ON flv_satellite_imagery(capture_date);
 CREATE INDEX IF NOT EXISTS idx_satellite_country ON flv_satellite_imagery(country);
+
+-- Inteligência estratégica: RJ + satélite, dreno de capital, bets e frete geopolítico
+CREATE TABLE IF NOT EXISTS flv_rj_satellite_watch (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    obs_date    TEXT NOT NULL,
+    cnpj        TEXT,
+    company_name TEXT NOT NULL,
+    process_number TEXT,
+    court       TEXT,
+    provimento_ref TEXT DEFAULT 'CNJ Provimento 216/2026',
+    edital_source TEXT,
+    city        TEXT,
+    state_uf    TEXT,
+    lat         REAL,
+    lon         REAL,
+    hectares_estimated REAL,
+    judicial_status TEXT,
+    entry_date  TEXT,
+    debts_total REAL,
+    ndvi_latest REAL,
+    ndvi_anomaly REAL,
+    abandonment_score REAL,
+    abandonment_status TEXT CHECK(abandonment_status IN ('sem_indicio','monitorar','provavel_abandono')),
+    satellite_source TEXT,
+    evidence_json TEXT,
+    created_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(obs_date, cnpj, process_number)
+);
+
+CREATE TABLE IF NOT EXISTS flv_capital_drain (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    obs_date    TEXT NOT NULL,
+    location_level TEXT CHECK(location_level IN ('state','city')) NOT NULL,
+    state_uf    TEXT NOT NULL,
+    city        TEXT,
+    indebted_people INTEGER,
+    debt_amount_brl REAL,
+    tourism_spend_brl REAL,
+    lottery_spend_brl REAL,
+    online_bets_spend_brl REAL,
+    betting_share_pct REAL,
+    capital_drain_index REAL,
+    source      TEXT,
+    confidence_score REAL,
+    created_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(obs_date, location_level, state_uf, city)
+);
+
+CREATE TABLE IF NOT EXISTS flv_debtor_demographics (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    obs_date    TEXT NOT NULL,
+    state_uf    TEXT NOT NULL,
+    city        TEXT,
+    age_band    TEXT,
+    education_level TEXT,
+    sex         TEXT CHECK(sex IN ('F','M','NI')),
+    debtors_count INTEGER,
+    debt_amount_brl REAL,
+    source      TEXT,
+    confidence_score REAL,
+    created_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(obs_date, state_uf, city, age_band, education_level, sex)
+);
+
+CREATE TABLE IF NOT EXISTS flv_betting_dominance (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    obs_date    TEXT NOT NULL,
+    region_key  TEXT NOT NULL,
+    state_uf    TEXT,
+    leading_company TEXT NOT NULL,
+    estimated_ggr_brl REAL,
+    market_share_pct REAL,
+    peak_period TEXT,
+    peak_hour_local INTEGER,
+    evidence_json TEXT,
+    source      TEXT,
+    confidence_score REAL,
+    created_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(obs_date, region_key, leading_company)
+);
+
+CREATE TABLE IF NOT EXISTS flv_geopolitical_freight (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    obs_date    TEXT NOT NULL,
+    route_key   TEXT NOT NULL,
+    origin_country TEXT,
+    destination_country TEXT,
+    distance_km REAL,
+    brent_usd   REAL,
+    brent_change_pct REAL,
+    fertilizer_index REAL,
+    middle_east_risk_index REAL,
+    base_freight_brl_t REAL,
+    recalculated_freight_brl_t REAL,
+    freight_delta_pct REAL,
+    assumptions_json TEXT,
+    source      TEXT,
+    created_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(obs_date, route_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_rj_sat_watch_obs ON flv_rj_satellite_watch(obs_date, state_uf);
+CREATE INDEX IF NOT EXISTS idx_capital_drain_loc ON flv_capital_drain(obs_date, state_uf, city);
+CREATE INDEX IF NOT EXISTS idx_debtor_demo_loc ON flv_debtor_demographics(obs_date, state_uf, city);
+CREATE INDEX IF NOT EXISTS idx_betting_dom_region ON flv_betting_dominance(obs_date, region_key);
+CREATE INDEX IF NOT EXISTS idx_geo_freight_route ON flv_geopolitical_freight(obs_date, route_key);
