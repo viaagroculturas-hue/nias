@@ -29,6 +29,12 @@ def handle_flv(handler, path):
         elif route.startswith('/api/flv/climate/'):
             ibge = route.split('/api/flv/climate/')[-1].split('?')[0]
             data = _get_climate(ibge, params)
+        elif route == '/api/flv/ia/analyze':
+            data = _get_ia_analysis()
+        elif route == '/api/flv/risk/analyze':
+            data = _get_risk_analysis(params)
+        elif route == '/api/flv/risk/sources':
+            data = _get_risk_sources()
         elif route == '/api/flv/pipeline/run':
             data = _trigger_pipeline()
         else:
@@ -42,10 +48,7 @@ def handle_flv(handler, path):
 def _send_json(handler, code, data):
     handler.send_response(code)
     handler.send_header('Content-Type', 'application/json')
-    origin = handler.headers.get('Origin')
-    allowed = {'https://nias.onrender.com', 'http://localhost:5000', 'http://127.0.0.1:5000'}
-    handler.send_header('Access-Control-Allow-Origin', origin if origin in allowed else 'https://nias.onrender.com')
-    handler.send_header('Vary', 'Origin')
+    handler.send_header('Access-Control-Allow-Origin', '*')
     handler.end_headers()
     handler.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
 
@@ -55,12 +58,16 @@ def _get_cultures():
 
 def _get_prices(params):
     from flv.db import query
+    from flv.data_quality import date_order_expr
     culture = params.get('culture', 'tomate')
     terminal = params.get('terminal', '')
     days = int(params.get('days', '90'))
+    price_order = date_order_expr('p.price_date')
 
-    sql = """
-        SELECT p.price_date as date, p.price_avg as price, p.price_min, p.price_max, p.terminal, p.source
+    sql = f"""
+        SELECT p.price_date as date, p.price_avg as price, p.price_min, p.price_max,
+               p.terminal, p.source, COALESCE(p.is_synthetic,0) as is_synthetic,
+               COALESCE(p.data_quality,'official_or_observed') as data_quality
         FROM flv_ceasa_prices p
         JOIN flv_cultures c ON c.id = p.culture_id
         WHERE c.slug = ?
@@ -69,25 +76,24 @@ def _get_prices(params):
     if terminal:
         sql += " AND p.terminal = ?"
         args.append(terminal)
-    sql += " ORDER BY p.price_date DESC LIMIT ?"
+    sql += f" ORDER BY {price_order} DESC LIMIT ?"
     args.append(days)
 
     rows = query(sql, args)
 
-    # Fallback: if terminal filter returned empty, try without terminal
     if not rows and terminal:
-        sql2 = """
-            SELECT p.price_date as date, p.price_avg as price, p.price_min, p.price_max, p.terminal, p.source
+        sql2 = f"""
+            SELECT p.price_date as date, p.price_avg as price, p.price_min, p.price_max,
+                   p.terminal, p.source, COALESCE(p.is_synthetic,0) as is_synthetic,
+                   COALESCE(p.data_quality,'official_or_observed') as data_quality
             FROM flv_ceasa_prices p
             JOIN flv_cultures c ON c.id = p.culture_id
             WHERE c.slug = ?
-            ORDER BY p.price_date DESC LIMIT ?
+            ORDER BY {price_order} DESC LIMIT ?
         """
         rows = query(sql2, [culture, days])
 
     rows.reverse()
-
-    # Compute SMAs
     prices = [r['price'] for r in rows]
     sma7 = _sma(prices, 7)
     sma21 = _sma(prices, 21)
@@ -144,14 +150,16 @@ def _get_alerts(params):
 
 def _get_heatmap(params):
     from flv.db import query
+    from flv.data_quality import date_order_expr
     culture = params.get('culture', 'tomate')
+    price_order = date_order_expr('p.price_date')
 
-    sql = """
+    sql = f"""
         SELECT m.ibge_code, m.name, m.state_uf, m.lat, m.lon,
                mc.area_mha,
                (SELECT ndvi_value FROM flv_ndvi WHERE mun_id=m.id ORDER BY obs_date DESC LIMIT 1) as ndvi,
                (SELECT price_avg FROM flv_ceasa_prices p JOIN flv_cultures c ON c.id=p.culture_id
-                WHERE c.slug=? ORDER BY p.price_date DESC LIMIT 1) as last_price,
+                WHERE c.slug=? ORDER BY {price_order} DESC LIMIT 1) as last_price,
                (SELECT severity FROM flv_alerts a JOIN flv_cultures c ON c.id=a.culture_id
                 WHERE c.slug=? AND a.mun_id=m.id AND a.valid_until > datetime('now')
                 ORDER BY CASE severity WHEN 'vermelho' THEN 0 WHEN 'laranja' THEN 1 ELSE 2 END LIMIT 1) as alert_severity
@@ -163,6 +171,8 @@ def _get_heatmap(params):
 
 def _get_municipality(ibge):
     from flv.db import query
+    from flv.data_quality import date_order_expr
+    price_order = date_order_expr('p.price_date')
 
     mun = query("SELECT * FROM flv_municipalities WHERE ibge_code=?", (ibge,))
     if not mun:
@@ -175,10 +185,10 @@ def _get_municipality(ibge):
         WHERE p.mun_id=? ORDER BY p.year DESC
     """, (mun['id'],))
 
-    prices = query("""
+    prices = query(f"""
         SELECT c.slug, p.price_date, p.price_avg, p.terminal
         FROM flv_ceasa_prices p JOIN flv_cultures c ON c.id=p.culture_id
-        WHERE p.terminal = ? ORDER BY p.price_date DESC LIMIT 50
+        WHERE p.terminal = ? ORDER BY {price_order} DESC LIMIT 50
     """, (mun.get('ceasa_ref', ''),))
 
     alerts = query("""
@@ -237,3 +247,18 @@ def _trigger_pipeline():
     from flv.pipeline import run_pipeline
     threading.Thread(target=run_pipeline, daemon=True).start()
     return {'status': 'pipeline_started', 'timestamp': datetime.now().isoformat()}
+
+
+def _get_ia_analysis():
+    from flv.ai_analyzer import analyze_information
+    return analyze_information()
+
+
+def _get_risk_analysis(params):
+    from flv.risk_intelligence_api import analyze_risk
+    return analyze_risk(params)
+
+
+def _get_risk_sources():
+    from flv.risk_intelligence_api import _load_sources
+    return _load_sources()

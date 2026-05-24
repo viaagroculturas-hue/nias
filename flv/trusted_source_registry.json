@@ -1,0 +1,18 @@
+{
+  "version": "2026-05-24",
+  "policy": "Nenhum dado estimado, sintético ou fallback pode ser exibido como dado real. Todo payload deve carregar source_status, source_url e updated_at quando disponível.",
+  "sources": [
+    {"id":"noaa_cpc_enso","name":"NOAA CPC ENSO Diagnostic Discussion","category":"climate_enso","url":"https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml","status":"official","refresh":"monthly/weekly support pages","use":"El Niño/La Niña, probabilidades e discussão técnica"},
+    {"id":"iri_enso","name":"IRI ENSO Forecast","category":"climate_enso","url":"https://iri.columbia.edu/our-expertise/climate/forecasts/enso/current/","status":"research_institution","refresh":"monthly","use":"probabilidades ENSO por trimestre"},
+    {"id":"nasa_power_daily","name":"NASA POWER Daily API","category":"weather","url":"https://power.larc.nasa.gov/api/temporal/daily/point","status":"official_open_api","refresh":"daily","use":"precipitação, temperatura, radiação, vento por coordenada"},
+    {"id":"ibge_sidra_pam","name":"IBGE SIDRA/PAM","category":"production","url":"https://apisidra.ibge.gov.br/values","status":"official_open_api","refresh":"annual","use":"produção agrícola municipal, área colhida, rendimento"},
+    {"id":"ibge_sidra_lspa","name":"IBGE SIDRA/LSPA","category":"crop_forecast","url":"https://apisidra.ibge.gov.br/values","status":"official_open_api","refresh":"monthly","use":"levantamento sistemático da produção agrícola"},
+    {"id":"conab_portal","name":"CONAB Portal de Informações Agropecuárias","category":"prices_crop_supply","url":"https://portaldeinformacoes.conab.gov.br/","status":"official_public","refresh":"periodic","use":"preços, safras e dados agropecuários"},
+    {"id":"conab_graos","name":"CONAB Safra de Grãos","category":"crop_supply","url":"https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/safras/safra-de-graos","status":"official_public","refresh":"monthly reports","use":"acompanhamento da safra brasileira de grãos"},
+    {"id":"cepea_hfbrasil","name":"CEPEA/ESALQ + HF Brasil","category":"prices_market","url":"https://www.cepea.esalq.usp.br/","status":"reference_public","refresh":"daily/weekly depending indicator","use":"indicadores de preços agropecuários e HF"},
+    {"id":"fewsnet","name":"USGS/FEWS NET","category":"food_security_climate","url":"https://fews.net/","status":"official_partner","refresh":"periodic","use":"risco de segurança alimentar, clima e safras"},
+    {"id":"reliefweb","name":"ReliefWeb API","category":"disasters_conflict","url":"https://api.reliefweb.int/v1/reports","status":"un_ocha","refresh":"continuous","use":"eventos de desastres, conflitos, greves e emergências"},
+    {"id":"worldbank_commodities","name":"World Bank Commodity Markets","category":"inputs_macro","url":"https://www.worldbank.org/en/research/commodity-markets","status":"official_reference","refresh":"monthly","use":"fertilizantes, energia, alimentos e commodities"},
+    {"id":"datajud_cnj","name":"CNJ DataJud","category":"legal_judicial","url":"https://www.cnj.jus.br/sistemas/datajud/","status":"official_requires_access","refresh":"court dependent","use":"processos judiciais, inclusive RJ quando autorizado"}
+  ]
+}

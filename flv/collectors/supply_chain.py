@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Set
 from dataclasses import dataclass
 
-from flv.db import DB_PATH
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nia_flv.db')
 
 
 @dataclass

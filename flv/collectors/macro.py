@@ -49,6 +49,34 @@ def _bcb_sgs_latest(serie_code: int) -> tuple[str | None, float | None]:
     return obs, v
 
 
+
+def _bcb_sgs_last_values(serie_code: int, n: int = 12) -> list[tuple[str, float]]:
+    url = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{serie_code}/dados/ultimos/{n}?formato=json"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            data = json.loads(resp.read().decode("utf-8", errors="ignore"))
+    except Exception:
+        return []
+    out = []
+    for item in data or []:
+        try:
+            dt = datetime.strptime(item.get("data", ""), "%d/%m/%Y").strftime("%Y-%m-%d")
+            val = float(str(item.get("valor", "")).replace(".", "").replace(",", "."))
+            out.append((dt, val))
+        except Exception:
+            continue
+    return out
+
+def _ipca_12m_from_mom() -> tuple[str | None, float | None]:
+    vals = _bcb_sgs_last_values(433, 12)
+    if len(vals) < 12:
+        return None, None
+    acc = 1.0
+    for _, mom in vals[-12:]:
+        acc *= 1.0 + (mom / 100.0)
+    return vals[-1][0], (acc - 1.0) * 100.0
+
 def _safe_float(x):
     try:
         return float(x)
@@ -111,7 +139,7 @@ def coletar_indicadores_macro():
     # 433: IPCA (variação mensal, %) -> aqui usamos proxy do último valor mensal
     usd_date, usd = _bcb_sgs_latest(1)
     selic_date, selic = _bcb_sgs_latest(11)
-    ipca_date, ipca_mom = _bcb_sgs_latest(433)
+    ipca_date, ipca_yoy = _ipca_12m_from_mom()
 
     # Normaliza data de gravação: usa a mais recente disponível
     dates = [d for d in [usd_date, selic_date, ipca_date] if d]
@@ -136,8 +164,8 @@ def coletar_indicadores_macro():
     brent_change_pct = _pct_change(brent_usd, (last or {}).get("brent_usd"))
     wti_change_pct = _pct_change(wti_usd, (last or {}).get("wti_usd"))
 
-    # IPCA YoY: não é trivial via SGS sem outra série; como fallback, gravamos o último MoM
-    ipca_yoy_pct = ipca_mom
+    # IPCA YoY calculado por capitalização dos últimos 12 meses da série SGS 433
+    ipca_yoy_pct = ipca_yoy
 
     upsert_macro_indicators(
         obs_date=obs_date,
@@ -154,7 +182,7 @@ def coletar_indicadores_macro():
     )
 
     print(
-        f"[FLV-Macro] {obs_date} salvo: USD={usd} SELIC={selic} IPCA(proxy)={ipca_yoy_pct} "
+        f"[FLV-Macro] {obs_date} salvo: USD={usd} SELIC={selic} IPCA_12m={ipca_yoy_pct} "
         f"Brent={brent_usd} WTI={wti_usd} Diesel={diesel_brl_l}"
     )
     return {

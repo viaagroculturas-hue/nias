@@ -22,6 +22,7 @@ def _parse_date(ds):
 def build_features(culture_slug, terminal=None, mun_id=None, days=120):
     """Build Prophet-compatible DataFrame dict with columns: ds, y, local_clima, macro_*, news_risk_index, teleconnections_*."""
     from flv.db import get_conn
+    from flv.data_quality import date_order_expr, normalize_date
     from flv.model.thresholds import BR_HOLIDAYS_2026
     conn = get_conn()
 
@@ -30,12 +31,12 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
         return []
 
     # Get price series
-    price_sql = "SELECT price_date as ds, price_avg as y FROM flv_ceasa_prices WHERE culture_id=?"
+    price_sql = "SELECT price_date as ds, price_avg as y, COALESCE(is_synthetic,0) as is_synthetic FROM flv_ceasa_prices WHERE culture_id=?"
     params = [cid['id']]
     if terminal:
         price_sql += " AND terminal=?"
         params.append(terminal)
-    price_sql += " ORDER BY price_date DESC LIMIT ?"
+    price_sql += f" ORDER BY {date_order_expr('price_date')} DESC LIMIT ?"
     params.append(days)
 
     prices = conn.execute(price_sql, params).fetchall()
@@ -43,6 +44,10 @@ def build_features(culture_slug, terminal=None, mun_id=None, days=120):
         return []
 
     prices = list(reversed([dict(r) for r in prices]))
+    for r in prices:
+        nd = normalize_date(r.get('ds'))
+        if nd:
+            r['ds'] = nd
 
     # Get climate data (average across all tracked municipalities if mun_id not specified)
     climate_sql = """

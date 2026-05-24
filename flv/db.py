@@ -1,18 +1,14 @@
 """FLV Database Layer — SQLite WAL mode, thread-safe."""
 import sqlite3, os, json, time
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.environ.get('NIA_DB_PATH') or os.path.join(BASE_DIR, 'nia_flv.db')
-SCHEMA_PATH = os.path.join(BASE_DIR, 'flv_schema.sql')
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nia_flv.db')
+SCHEMA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'flv_schema.sql')
 
 _conn_cache = {}
 
 def get_conn():
     tid = id(os.getpid())
     if tid not in _conn_cache:
-        db_dir = os.path.dirname(os.path.abspath(DB_PATH))
-        if db_dir:
-            os.makedirs(db_dir, exist_ok=True)
         conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=10)
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA busy_timeout=5000")
@@ -88,35 +84,57 @@ def _seed_municipalities(conn):
     conn.commit()
 
 def upsert_price(culture_slug, terminal, price_date, price_avg, price_min=None, price_max=None, volume_kg=None, source='CONAB'):
+    from flv.data_quality import normalize_date, valid_price, quality_for_source
+    price_date = normalize_date(price_date)
+    price_avg = valid_price(price_avg)
+    price_min = valid_price(price_min) if price_min is not None else None
+    price_max = valid_price(price_max) if price_max is not None else None
+    if not price_date or price_avg is None:
+        return
+    is_synthetic, data_quality = quality_for_source(source)
     conn = get_conn()
     cid = conn.execute("SELECT id FROM flv_cultures WHERE slug=?", (culture_slug,)).fetchone()
     if not cid:
         return
     conn.execute(
-        "INSERT OR REPLACE INTO flv_ceasa_prices (culture_id,terminal,price_date,price_avg,price_min,price_max,volume_kg,source) VALUES (?,?,?,?,?,?,?,?)",
-        (cid['id'], terminal, price_date, price_avg, price_min, price_max, volume_kg, source)
+        "INSERT OR REPLACE INTO flv_ceasa_prices (culture_id,terminal,price_date,price_avg,price_min,price_max,volume_kg,source,is_synthetic,data_quality) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (cid['id'], terminal, price_date, price_avg, price_min, price_max, volume_kg, source, is_synthetic, data_quality)
     )
     conn.commit()
 
 def upsert_climate(ibge_code, obs_date, temp_max=None, temp_min=None, precip=None, humidity=None, wind=None, source='INMET'):
+    from flv.data_quality import normalize_date, quality_for_source
+    obs_date = normalize_date(obs_date)
+    if not obs_date:
+        return
+    is_synthetic, data_quality = quality_for_source(source)
     conn = get_conn()
     mid = conn.execute("SELECT id FROM flv_municipalities WHERE ibge_code=?", (ibge_code,)).fetchone()
     if not mid:
         return
     conn.execute(
-        "INSERT OR REPLACE INTO flv_climate (mun_id,obs_date,temp_max_c,temp_min_c,precip_mm,humidity_pct,wind_ms,source) VALUES (?,?,?,?,?,?,?,?)",
-        (mid['id'], obs_date, temp_max, temp_min, precip, humidity, wind, source)
+        "INSERT OR REPLACE INTO flv_climate (mun_id,obs_date,temp_max_c,temp_min_c,precip_mm,humidity_pct,wind_ms,source,is_synthetic,data_quality) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (mid['id'], obs_date, temp_max, temp_min, precip, humidity, wind, source, is_synthetic, data_quality)
     )
     conn.commit()
 
 def upsert_ndvi(ibge_code, obs_date, ndvi_value, ndvi_anomaly=None, source='SATVeg'):
+    from flv.data_quality import normalize_date, quality_for_source
+    obs_date = normalize_date(obs_date)
+    try:
+        ndvi_value = float(ndvi_value)
+    except Exception:
+        return
+    if not obs_date or ndvi_value < 0 or ndvi_value > 1:
+        return
+    is_synthetic, data_quality = quality_for_source(source)
     conn = get_conn()
     mid = conn.execute("SELECT id FROM flv_municipalities WHERE ibge_code=?", (ibge_code,)).fetchone()
     if not mid:
         return
     conn.execute(
-        "INSERT OR REPLACE INTO flv_ndvi (mun_id,obs_date,ndvi_value,ndvi_anomaly,source) VALUES (?,?,?,?,?)",
-        (mid['id'], obs_date, ndvi_value, ndvi_anomaly, source)
+        "INSERT OR REPLACE INTO flv_ndvi (mun_id,obs_date,ndvi_value,ndvi_anomaly,source,is_synthetic,data_quality) VALUES (?,?,?,?,?,?,?)",
+        (mid['id'], obs_date, ndvi_value, ndvi_anomaly, source, is_synthetic, data_quality)
     )
     conn.commit()
 
@@ -133,12 +151,19 @@ def upsert_macro_indicators(
     ipca_yoy_pct=None,
     source='BCB/ANP'
 ):
+    from flv.data_quality import normalize_date, valid_percent, quality_for_source
+    obs_date = normalize_date(obs_date)
+    if not obs_date:
+        return
+    ipca_yoy_pct = valid_percent(ipca_yoy_pct, low=-10.0, high=30.0) if ipca_yoy_pct is not None else None
+    selic_pct = valid_percent(selic_pct, low=0.0, high=50.0) if selic_pct is not None else None
+    is_synthetic, data_quality = quality_for_source(source)
     conn = get_conn()
     conn.execute(
         "INSERT OR REPLACE INTO flv_macro_indicators ("
         "obs_date,diesel_brl_l,diesel_change_pct,brent_usd,brent_change_pct,wti_usd,wti_change_pct,"
-        "usd_brl,selic_pct,ipca_yoy_pct,source"
-        ") VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        "usd_brl,selic_pct,ipca_yoy_pct,source,is_synthetic,data_quality"
+        ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (
             obs_date,
             diesel_brl_l,
@@ -151,6 +176,8 @@ def upsert_macro_indicators(
             selic_pct,
             ipca_yoy_pct,
             source,
+            is_synthetic,
+            data_quality,
         )
     )
     conn.commit()
@@ -172,10 +199,15 @@ def upsert_news_risk_daily(obs_date, risk_index, top_tags_json=None, sources_jso
     conn.commit()
 
 def upsert_global_climate(obs_date, oni=None, atl_north_warm_idx=None, source="NOAA/ESRL"):
+    from flv.data_quality import normalize_date, quality_for_source
+    obs_date = normalize_date(obs_date)
+    if not obs_date or (oni is None and atl_north_warm_idx is None):
+        return
+    is_synthetic, data_quality = quality_for_source(source)
     conn = get_conn()
     conn.execute(
-        "INSERT OR REPLACE INTO flv_global_climate (obs_date,oni,atl_north_warm_idx,source) VALUES (?,?,?,?)",
-        (obs_date, oni, atl_north_warm_idx, source),
+        "INSERT OR REPLACE INTO flv_global_climate (obs_date,oni,atl_north_warm_idx,source,is_synthetic,data_quality) VALUES (?,?,?,?,?,?)",
+        (obs_date, oni, atl_north_warm_idx, source, is_synthetic, data_quality),
     )
     conn.commit()
 

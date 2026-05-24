@@ -1,5 +1,5 @@
 """FLV CEASA Price Collector — CONAB PrecosSemanalUF + ProhortDiario."""
-import urllib.request, time, re
+import urllib.request, time, re, os
 
 # Map CONAB product names → FLV slugs
 CONAB_PRODUCT_MAP = {
@@ -32,6 +32,7 @@ UF_TERMINAL = {
 def fetch_all():
     """Fetch CONAB weekly prices and insert into DB."""
     from flv.db import get_conn
+    from flv.data_quality import normalize_date, valid_price
     conn = get_conn()
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
     inserted = 0
@@ -54,7 +55,7 @@ def fetch_all():
                 continue
             prod_name = cols[0].strip().upper()
             uf = cols[3].strip().upper()
-            data_sem = cols[7].strip()
+            data_sem = normalize_date(cols[7].strip())
             valor_str = cols[10].strip().replace(',', '.')
 
             slug = None
@@ -66,10 +67,10 @@ def fetch_all():
                 continue
 
             try:
-                valor = float(valor_str)
+                valor = valid_price(valor_str)
             except ValueError:
                 continue
-            if valor <= 0:
+            if valor is None:
                 continue
 
             terminal = UF_TERMINAL.get(uf, f'CEASA-{uf}')
@@ -92,15 +93,14 @@ def fetch_all():
     except Exception as e:
         print(f'[FLV-CEASA] Erro PrecosSemanalUF: {e}')
 
-    # Strategy 2: Generate reference prices for FLV products missing from CONAB Semanal
-    # These are hortifruti products (cenoura, melancia, morango, folhosas, melao, etc.)
-    # that CONAB only tracks in ProhortDiario (167MB) or not at all
-    _fill_missing_flv(conn)
+    # Fallback sintético desativado por padrão: não misturar referência simulada com dado observado.
+    if os.getenv('FLV_ALLOW_SYNTHETIC_FALLBACK', '').lower() in ('1', 'true', 'yes'):
+        _fill_missing_flv(conn)
 
     return inserted
 
 def _fill_missing_flv(conn):
-    """Generate realistic price series for FLV products not covered by CONAB Semanal."""
+    """Generate synthetic reference price series. Disabled unless FLV_ALLOW_SYNTHETIC_FALLBACK=1."""
     import math
     from datetime import datetime, timedelta
 
@@ -149,7 +149,7 @@ def _fill_missing_flv(conn):
                 try:
                     conn.execute(
                         "INSERT OR IGNORE INTO flv_ceasa_prices (culture_id,terminal,price_date,price_avg,source) VALUES (?,?,?,?,?)",
-                        (cid['id'], terminal, date, price, 'CEAGESP-ref')
+                        (cid['id'], terminal, date, price, 'synthetic:CEAGESP-ref')
                     )
                     filled += 1
                 except:

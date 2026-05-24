@@ -1,0 +1,93 @@
+{
+  "version": "2026-05-24",
+  "sources": [
+    {
+      "id": "noaa_cpc_enso",
+      "name": "NOAA Climate Prediction Center - ENSO Diagnostic Discussion / ONI-RONI",
+      "category": "clima_enso",
+      "authority": "oficial",
+      "coverage": "global",
+      "signal": "probabilidade de El Niño/La Niña, ONI/RONI, anomalias Niño 3.4",
+      "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml",
+      "refresh_hint": "mensal/semanal conforme produto NOAA",
+      "risk_use": "antecipar alteração de chuva/temperatura e risco regional de quebra de safra"
+    },
+    {
+      "id": "iri_enso",
+      "name": "IRI/CPC ENSO Forecast Plume",
+      "category": "clima_enso",
+      "authority": "acadêmico-oficial",
+      "coverage": "global",
+      "signal": "probabilidades probabilísticas de El Niño, La Niña e neutralidade",
+      "url": "https://iri.columbia.edu/our-expertise/climate/forecasts/enso/current/",
+      "refresh_hint": "mensal",
+      "risk_use": "confirmar tendência ENSO com ensemble de modelos"
+    },
+    {
+      "id": "nasa_power_daily",
+      "name": "NASA POWER Daily API",
+      "category": "meteorologia",
+      "authority": "oficial",
+      "coverage": "global por coordenada",
+      "signal": "precipitação, temperatura, vento, radiação e umidade diária",
+      "url": "https://power.larc.nasa.gov/api/temporal/daily/point",
+      "refresh_hint": "diário",
+      "risk_use": "detectar seca, excesso de chuva, calor/frio e janela de colheita"
+    },
+    {
+      "id": "usgs_fews_net",
+      "name": "USGS FEWS NET Data Portal",
+      "category": "seca_vegetacao",
+      "authority": "oficial",
+      "coverage": "global, com foco em segurança alimentar",
+      "signal": "produtos geoespaciais, seca, vegetação e monitoramento de risco alimentar",
+      "url": "https://earlywarning.usgs.gov/fews/",
+      "refresh_hint": "periódico por produto",
+      "risk_use": "validar deterioração vegetativa e risco de perda produtiva"
+    },
+    {
+      "id": "fao_giews",
+      "name": "FAO GIEWS - Global Information and Early Warning System",
+      "category": "safras_segurança_alimentar",
+      "authority": "oficial ONU",
+      "coverage": "global por país/região",
+      "signal": "alertas de safra, abastecimento, produção e segurança alimentar",
+      "url": "https://www.fao.org/giews/en/",
+      "refresh_hint": "mensal/periódico",
+      "risk_use": "confirmar quebras, escassez e choques de oferta por país"
+    },
+    {
+      "id": "faostat",
+      "name": "FAOSTAT",
+      "category": "produção_histórica",
+      "authority": "oficial ONU",
+      "coverage": "245+ países/territórios",
+      "signal": "produção, área, comércio e indicadores agrícolas históricos",
+      "url": "https://www.fao.org/faostat/en/",
+      "refresh_hint": "anual/periódico",
+      "risk_use": "baseline histórico para anomalia de safra e exposição por cultura"
+    },
+    {
+      "id": "reliefweb_disasters",
+      "name": "ReliefWeb API - desastres, greves, conflitos e emergências humanitárias",
+      "category": "eventos_disruptivos",
+      "authority": "ONU/OCHA",
+      "coverage": "global",
+      "signal": "eventos de desastre, conflito, crise, bloqueios, inundações e tempestades",
+      "url": "https://api.reliefweb.int/v1/reports",
+      "refresh_hint": "quase tempo real",
+      "risk_use": "capturar choques logísticos e sociais que afetam produção e fertilizantes"
+    },
+    {
+      "id": "world_bank_commodity_prices",
+      "name": "World Bank Commodity Markets - Pink Sheet",
+      "category": "fertilizantes_energia",
+      "authority": "oficial multilateral",
+      "coverage": "global",
+      "signal": "índices e preços de energia, fertilizantes, alimentos e commodities",
+      "url": "https://www.worldbank.org/en/research/commodity-markets",
+      "refresh_hint": "mensal",
+      "risk_use": "antecipar pressão de custo de ureia, fosfatos, potássio, energia e frete"
+    }
+  ]
+}

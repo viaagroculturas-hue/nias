@@ -23,7 +23,7 @@ else:
     # Executando como script
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-DB_PATH = os.environ.get('NIA_DB_PATH') or os.path.join(BASE_DIR, 'nia_flv.db')
+DB_PATH = os.path.join(BASE_DIR, 'nia_flv.db')
 
 @dataclass
 class JudicialProcess:
