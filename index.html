@@ -187,8 +187,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 #main{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column;}
 .panel{display:none;width:100%;flex:1;flex-direction:column;overflow:hidden;}
 .panel.active{display:flex;}
-#panel-overview{overflow-y:auto;}
-#panel-overview .overview-bottom{min-height:360px;flex:0 0 360px;}
 
 /* PANEL HEADER */
 .panel-header{height:38px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;}
@@ -213,14 +211,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 #panel-biocommand{position:relative;overflow:hidden;}
 #bc-topbar{position:absolute;top:0;left:0;right:0;height:36px;z-index:1200;background:rgba(11,14,20,.88);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,212,255,.22);display:flex;align-items:center;padding:0 12px;gap:10px;flex-shrink:0;}
 #bc-topbar .bc-title{color:var(--accent);font-size:11px;font-weight:bold;letter-spacing:2px;}
-.bc-sidebar{position:absolute;top:36px;bottom:0;z-index:1100;width:350px;background:rgba(11,14,20,.78);backdrop-filter:blur(14px);border:1px solid rgba(0,212,255,.18);display:flex;flex-direction:column;transition:transform .28s cubic-bezier(.4,0,.2,1);}
+.bc-sidebar{position:absolute;top:36px;bottom:0;z-index:1100;width:260px;background:rgba(11,14,20,.78);backdrop-filter:blur(14px);border:1px solid rgba(0,212,255,.18);display:flex;flex-direction:column;transition:transform .28s cubic-bezier(.4,0,.2,1);}
 #bc-left{left:0;border-right:1px solid rgba(0,212,255,.18);}
-#bc-right{right:0;border-left:1px solid rgba(0,212,255,.18);transform:translateX(350px);}
+#bc-right{right:0;border-left:1px solid rgba(0,212,255,.18);transform:translateX(260px);}
 #bc-right.open{transform:translateX(0);}
-#bc-left.collapsed{transform:translateX(-350px);}
-#bc-map{position:absolute;inset:36px 350px 0 350px;z-index:1;}
-#bc-left.collapsed ~ #bc-map{left:0;}
-#bc-left:has(~ #bc-right:not(.open)) ~ #bc-map{right:0;}
+#bc-left.collapsed{transform:translateX(-260px);}
+#bc-map{position:absolute;inset:36px 0 0 0;z-index:1;}
 .bc-sh{height:32px;background:rgba(0,212,255,.07);border-bottom:1px solid rgba(0,212,255,.14);display:flex;align-items:center;padding:0 10px;flex-shrink:0;font-size:9px;color:var(--accent);letter-spacing:1px;}
 .bc-body{flex:1;overflow-y:auto;padding:8px;}
 .bc-body::-webkit-scrollbar{width:3px;}
@@ -413,6 +409,31 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .chat-side-title{color:var(--accent);font-size:10px;letter-spacing:2px;flex-shrink:0;}
 .quick-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);text-align:left;padding:7px 11px;border-radius:6px;cursor:pointer;font-family:var(--font);font-size:11px;transition:all .2s;line-height:1.4;}
 .quick-btn:hover{border-color:var(--accent);color:var(--text);}
+.ia-analysis-box{margin:10px 14px 0 14px;border:1px solid var(--border);background:linear-gradient(180deg,rgba(0,212,255,.06),rgba(5,14,26,.55));border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
+.ia-analysis-head{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:1.5px;color:var(--accent);font-weight:bold;}
+.ia-analysis-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
+.ia-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:7px;min-height:44px;}
+.ia-card .k{font-size:8px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;}
+.ia-card .v{font-size:15px;color:var(--text);font-weight:bold;margin-top:3px;}
+.ia-findings{display:flex;flex-direction:column;gap:5px;max-height:165px;overflow-y:auto;}
+.ia-finding{border-left:3px solid var(--accent);padding:5px 7px;background:rgba(0,0,0,.16);font-size:10px;line-height:1.35;}
+.ia-finding.warn{border-left-color:var(--warn);}.ia-finding.danger{border-left-color:var(--danger);}.ia-finding.info{border-left-color:var(--accent);}
+.ia-rec-list{font-size:10px;color:var(--text2);line-height:1.45;margin:0;padding-left:18px;}
+.ia-run-btn{margin-left:auto;background:var(--accent);color:#050e1a;border:none;border-radius:4px;padding:5px 9px;font-size:9px;font-family:var(--font);font-weight:bold;cursor:pointer;letter-spacing:1px;}
+.ia-run-btn:hover{filter:brightness(1.1);}
+.risk-box{margin:8px 14px 0 14px;border:1px solid rgba(255,193,7,.35);background:linear-gradient(180deg,rgba(255,193,7,.06),rgba(5,14,26,.55));border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
+.risk-head{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:1.5px;color:var(--warn);font-weight:bold;}
+.risk-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.risk-controls select,.risk-controls input{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:10px;padding:4px 7px;border-radius:3px;outline:none;}
+.risk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
+.risk-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:7px;min-height:48px;}
+.risk-card .k{font-size:8px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;}
+.risk-card .v{font-size:14px;color:var(--text);font-weight:bold;margin-top:3px;}
+.risk-table-wrap{max-height:210px;overflow:auto;border:1px solid var(--border);border-radius:6px;}
+.risk-table td,.risk-table th{font-size:9px;padding:5px 7px;}
+.risk-pill{font-size:8px;border:1px solid var(--border);padding:2px 5px;border-radius:999px;white-space:nowrap;}
+.risk-pill.baixo{color:var(--accent2);border-color:var(--accent2);}.risk-pill.atenção{color:var(--warn);border-color:var(--warn);}.risk-pill.alto,.risk-pill.crítico{color:var(--danger);border-color:var(--danger);}
+
 
 /* NEWS FEED */
 .news-card{display:flex;gap:8px;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.04);cursor:default;transition:background .15s;}
@@ -457,9 +478,8 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .horti-badge.danger{background:rgba(255,61,61,.08);border:1px solid var(--danger);color:var(--danger);}
 .horti-grid{display:flex;overflow-x:auto;gap:0;}
 .horti-grid::-webkit-scrollbar{height:3px;}
-.horti-card{min-width:148px;flex-shrink:0;border-right:1px solid var(--border);padding:8px 10px;position:relative;overflow:hidden;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s;}
+.horti-card{min-width:148px;flex-shrink:0;border-right:1px solid var(--border);padding:8px 10px;position:relative;overflow:hidden;cursor:default;transition:background .2s;}
 .horti-card:hover{background:rgba(0,212,255,.04);}
-.horti-card.timer-active{background:rgba(0,212,255,.08);border-color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent);}
 .horti-card:last-child{border-right:none;}
 .horti-spark{position:absolute;top:0;left:0;width:100%;height:36px;opacity:.18;pointer-events:none;}
 .horti-icon{font-size:16px;line-height:1;margin-bottom:2px;position:relative;z-index:1;}
@@ -475,7 +495,6 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .horti-status.danger{background:rgba(255,61,61,.15);border:1px solid var(--danger);color:var(--danger);}
 .horti-status.warn{background:rgba(255,193,7,.12);border:1px solid var(--warn);color:var(--warn);}
 .horti-status.ok{background:rgba(0,255,136,.08);border:1px solid var(--accent2);color:var(--accent2);}
-.horti-timer-badge{font-size:8px;color:var(--accent);letter-spacing:.5px;margin-top:3px;position:relative;z-index:1;}
 .horti-type-tag{font-size:8px;padding:2px 5px;border-radius:2px;display:inline-block;margin-bottom:3px;letter-spacing:.5px;font-weight:bold;}
 .horti-subregion{font-size:9px;color:var(--text2);line-height:1.4;position:relative;z-index:1;}
 .horti-card-mesa{border-top:2px solid var(--accent);}
@@ -630,6 +649,14 @@ tr:hover td{background:rgba(0,212,255,.04);}
   border:1px solid #50c878 !important;
   color:#50c878 !important;cursor:default !important;
 }
+
+.audit-box{background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(0,255,136,.05));border:1px solid rgba(0,212,255,.28);border-radius:8px;margin-bottom:10px;padding:10px;}
+.audit-head{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--accent);font-size:10px;font-weight:bold;letter-spacing:1px;margin-bottom:8px;}
+.audit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px;}
+.audit-card{background:rgba(0,0,0,.18);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:9px;color:var(--text2);line-height:1.35;}
+.audit-card strong{display:block;color:var(--text);font-size:10px;margin-bottom:3px;}
+.audit-list{font-size:9px;color:var(--text2);line-height:1.45;margin:6px 0 0 16px;padding:0;}
+.deprecated-panel-note{font-size:9px;color:var(--text2);border:1px dashed var(--border);padding:8px;border-radius:6px;margin:8px 0;}
 </style>
 </head>
 <body>
@@ -721,13 +748,9 @@ tr:hover td{background:rgba(0,212,255,.04);}
     <button class="nav-btn" onclick="showPanel('municipal')" title="Inteligência Geográfica"><span>🌐</span><span class="nav-label">MUNICIPAL</span></button>
     <button class="nav-btn" onclick="showPanel('biocommand')" title="Ciclo Bioclimático"><span>🧬</span><span class="nav-label">BIO-COMMAND</span></button>
     <button class="nav-btn" onclick="showPanel('oferta')" title="Mercado e Preços"><span>💰</span><span class="nav-label">MERCADO</span></button>
-    <button class="nav-btn flv-nav-marker" onclick="showPanel('flv_insights')" title="Antecipação FLV"><span>🌿</span><span class="nav-label">FLV</span></button>
-    <button class="nav-btn" onclick="showPanel('warroom')" title="War Room"><span>🛡️</span><span class="nav-label">WAR ROOM</span></button>
-    <button class="nav-btn" onclick="showPanel('predictix')" title="PREDICTIX" style="border-left:3px solid #FFD700 !important;"><span>⚡</span><span class="nav-label">PREDICTIX</span></button>
-    <!-- SITUATION ROOM BUTTON v5.0 -->
-    <button class="nav-btn" onclick="showPanel('situation')" title="Situation Room" style="border-left:3px solid #ff6b35 !important;"><span>🎯</span><span class="nav-label">SITUATION</span></button>
+    <button class="nav-btn" onclick="showPanel('situation')" title="Situation Real" style="border-left:3px solid #ff6b35 !important;"><span>🎯</span><span class="nav-label">SITUATION</span></button>
     <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="showPanel('chat')" title="Assistente IA"><span>◉</span><span class="nav-label">IA</span></button>
+    <button class="nav-btn" onclick="showPanel('chat')" title="IA e Auditoria"><span>◉</span><span class="nav-label">IA/AUDITORIA</span></button>
     <div style="flex:1"></div>
     <button class="nav-btn" onclick="toggleSidebar()" title="Expandir"><span id="sb-icon">»</span></button>
   </div>
@@ -1151,6 +1174,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
       <div id="bc-topbar">
         <span class="bc-title">N<span style="color:var(--accent2)">IA</span>$ · BIO-COMMAND</span>
         <span class="panel-badge ok" style="font-size:9px;">MAPA INTEGRADO</span>
+        <span class="panel-badge" id="bc-sa-count" style="font-size:9px;background:rgba(80,200,120,.08);color:#50C878;border-color:#50C878;">SA HORTIFRUTI</span>
         <span class="badge-live" style="font-size:9px;">● LIVE</span>
         <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
           <button class="bc-toggle-btn" onclick="bcToggleLeft()">⬡ FILTROS</button>
@@ -1191,11 +1215,23 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <button class="cult-btn" onclick="bcTrocarCultura('alho')">🧄 Alho</button>
           <button class="cult-btn" onclick="bcTrocarCultura('alface')">🥬 Alface</button>
           
+          <div style="font-size:9px;color:var(--text2);margin:7px 0 4px;letter-spacing:1px;">ANDINOS / TROPICAIS</div>
+          <button class="cult-btn" onclick="bcTrocarCultura('cacau')">🍫 Cacau</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('mandioca')">🌿 Mandioca</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('aspargos')">🟢 Aspargos</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('palta')">🥑 Palta/Avocado</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('arandano')">🫐 Arándano/Mirtilo</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('brocolis')">🥦 Brócolis</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('mandarina')">🍊 Mandarina</button>
+          
           <div style="font-size:9px;color:var(--text2);margin:7px 0 4px;letter-spacing:1px;">PROTEÍNAS</div>
           <button class="cult-btn" onclick="bcTrocarCultura('pecuaria_corte')">🐄 Pecuária Corte</button>
           <button class="cult-btn" onclick="bcTrocarCultura('pecuaria_leite')">🥛 Pecuária Leite</button>
           <button class="cult-btn" onclick="bcTrocarCultura('aves')">🐔 Aves</button>
           <button class="cult-btn" onclick="bcTrocarCultura('suinos')">🐷 Suínos</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('ovos')">🥚 Ovos</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('frango')">🍗 Frango</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('leite')">🥛 Leite</button>
           
           <div style="font-size:9px;color:var(--text2);margin:7px 0 4px;letter-spacing:1px;">COMMODITIES</div>
           <button class="cult-btn" onclick="bcTrocarCultura('cafe')">☕ Café</button>
@@ -1383,130 +1419,82 @@ tr:hover td{background:rgba(0,212,255,.04);}
       </div>
     </div>
 
-    <!-- ═══ PANEL: OFERTA ═══ -->
+    <!-- ═══ PANEL: OFERTA / MERCADO REAL ═══ -->
     <div class="panel" id="panel-oferta">
       <div class="panel-header">
-        <span class="panel-title">TERMINAL DE ARBITRAGEM — CEASAS · SUPER IA · ALTA FREQUÊNCIA</span>
-        <span class="panel-badge ok" id="ceasa-best-badge">🏆 MELHOR: CEAGESP +R$74/cx</span>
-        <span class="panel-badge danger" id="ceasa-opp-count">● 3 OPORTUNIDADES</span>
-        <span class="panel-badge warn" id="ph-delta2">δ_clima = 0.968</span>
-        <span class="badge-live">● LIVE</span>
+        <span class="panel-title">MERCADO — DADOS REAIS CURADOS · OFERTA · PREÇOS · FONTES</span>
+        <span class="panel-badge ok" id="mercado-data-badge">BASE OFICIAL/REFERENCIAL</span>
+        <span class="panel-badge warn" id="mercado-quality-badge">SEM SIMULAÇÃO</span>
+        <span class="badge-live" id="mercado-last-updated">● ATUALIZADO</span>
       </div>
-      <!-- KPI HFT strip -->
+
       <div style="display:flex;align-items:stretch;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--bg3);">
-        <div style="flex:1;padding:5px 14px;border-right:1px solid var(--border);display:flex;align-items:center;gap:10px;">
-          <span style="font-size:9px;color:var(--text2);letter-spacing:1px;">MELHOR SPREAD ATUAL</span>
-          <span id="ceasa-spread-best" style="font-size:16px;font-weight:bold;color:var(--accent2);font-family:var(--font);">+ R$ 74,30/cx</span>
-          <span style="font-size:9px;color:var(--text2);" id="ceasa-spread-where">CEAGESP · Tomate Mesa</span>
+        <div style="flex:1;padding:7px 14px;border-right:1px solid var(--border);">
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;">PRODUTOS MONITORADOS</div>
+          <div id="mercado-kpi-produtos" style="font-size:18px;font-weight:bold;color:var(--accent);font-family:var(--font);">—</div>
         </div>
-        <div style="flex:1;padding:5px 14px;border-right:1px solid var(--border);display:flex;align-items:center;gap:10px;">
-          <span style="font-size:9px;color:var(--text2);letter-spacing:1px;">FRETE MÉDIO NACIONAL IA</span>
-          <span id="ceasa-frete-avg" style="font-size:16px;font-weight:bold;color:var(--warn);font-family:var(--font);">R$ 13,80/cx</span>
-          <span id="ceasa-frete-var" style="font-size:10px;color:var(--danger);">↑ +2.4%</span>
+        <div style="flex:1;padding:7px 14px;border-right:1px solid var(--border);">
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;">FONTES OFICIAIS / REFERENCIAIS</div>
+          <div id="mercado-kpi-fontes" style="font-size:18px;font-weight:bold;color:var(--accent2);font-family:var(--font);">—</div>
         </div>
-        <div style="flex:1;padding:5px 14px;display:flex;align-items:center;gap:10px;">
-          <span style="font-size:9px;color:var(--text2);letter-spacing:1px;">PREÇO MÉDIO NACIONAL</span>
-          <span id="ceasa-price-idx" style="font-size:16px;font-weight:bold;color:var(--accent);font-family:var(--font);">ICAP 118,4</span>
-          <span id="ceasa-price-var" style="font-size:10px;color:var(--accent2);">▲ +0.7% 24h</span>
+        <div style="flex:1;padding:7px 14px;border-right:1px solid var(--border);">
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;">REGISTROS COM PREÇO</div>
+          <div id="mercado-kpi-precos" style="font-size:18px;font-weight:bold;color:var(--warn);font-family:var(--font);">—</div>
         </div>
-        <div style="width:200px;padding:5px 12px;border-left:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;gap:2px;">
-          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;">ATUALIZAÇÃO</div>
-          <div id="ceasa-last-upd" style="font-size:10px;color:var(--accent);">CEPEA · CONAB · CEAGESP · AIS</div>
-          <div style="font-size:9px;color:var(--text2);">Ciclo: 3,5s · IC 94%</div>
+        <div style="width:270px;padding:7px 14px;">
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;">CRITÉRIO</div>
+          <div style="font-size:10px;color:var(--text);line-height:1.35;">Valores reais/curados por fonte. Itens sem preço oficial entram como produção/oferta, sem inventar cotação.</div>
         </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;padding:7px 10px;background:rgba(0,212,255,.045);border-bottom:1px solid var(--border);flex-shrink:0;">
+        <select id="mercado-filter-categoria" onchange="renderMercadoReal()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:10px;padding:4px 7px;border-radius:3px;">
+          <option value="all">Todas as categorias</option>
+          <option value="grãos">Grãos</option>
+          <option value="frutas">Frutas</option>
+          <option value="hortaliças">Hortaliças</option>
+          <option value="granjeiros">Granjeiros/Lácteos</option>
+        </select>
+        <select id="mercado-filter-fonte" onchange="renderMercadoReal()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:10px;padding:4px 7px;border-radius:3px;">
+          <option value="all">Todas as fontes</option>
+          <option value="CONAB">CONAB</option>
+          <option value="IBGE PAM">IBGE PAM</option>
+          <option value="CEAGESP">CEAGESP</option>
+          <option value="CEPEA">CEPEA</option>
+          <option value="CNA">CNA</option>
+        </select>
+        <input id="mercado-search" oninput="renderMercadoReal()" placeholder="buscar produto, fonte, região..." style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:10px;padding:4px 8px;border-radius:3px;outline:none;">
+        <button onclick="exportMercadoCSV()" style="background:rgba(0,255,136,.12);border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:10px;padding:4px 8px;border-radius:3px;cursor:pointer;">EXPORTAR CSV</button>
       </div>
 
       <div style="flex:1;display:flex;overflow:hidden;">
-
-        <!-- LEFT: VOLUME / OFERTA NACIONAL (compact) -->
-        <div style="width:220px;display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;flex-shrink:0;">
-          <div style="padding:5px 10px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:9px;color:var(--accent);letter-spacing:1px;flex-shrink:0;">OFERTA NACIONAL · Mt</div>
-          <div style="flex:1;overflow-y:auto;">
-            <table style="width:100%;border-collapse:collapse;">
-              <thead><tr>
-                <th style="background:var(--bg3);color:var(--accent);font-size:8px;padding:3px 7px;text-align:left;position:sticky;top:0;">PRODUTO</th>
-                <th style="background:var(--bg3);color:var(--accent);font-size:8px;padding:3px 7px;text-align:right;position:sticky;top:0;">Mt</th>
-                <th style="background:var(--bg3);color:var(--accent);font-size:8px;padding:3px 7px;text-align:right;position:sticky;top:0;">VAR.</th>
-              </tr></thead>
-              <tbody id="oferta-tbody">
-                <tr><td colspan="3" style="background:rgba(0,212,255,.06);color:var(--accent);font-size:8px;letter-spacing:1px;padding:3px 7px;">GRÃOS</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">Soja</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-soja">147.2</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-soja">▼-3.2%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">Milho</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-milho">89.5</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-milho">▼-1.8%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">Cana</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-cana">610.0</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-cana">▲+0.5%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">Algodão</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-algodao">3.1</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-algodao">▼-4.1%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">Arroz</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-arroz">12.3</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-neu" id="otv-arroz">—0.0%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">Feijão</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-feijao">3.4</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-feijao">▼-2.1%</td></tr>
-                <tr><td colspan="3" style="background:rgba(0,212,255,.06);color:var(--accent);font-size:8px;letter-spacing:1px;padding:3px 7px;">HORTIFRUTIS</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍅 Tom.Mesa</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-tomate-mesa">5.1</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-tomate-mesa">▼-11.2%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🫑 Pimentão</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-pimentao">3.2</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-pimentao">▼-9.8%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🥬 Folhosas</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-folh">4.1</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-folh">▼-8.7%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍊 Cítricos</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-citr">24.5</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-citr">▼-6.4%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🥔 Batata</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-batata">4.8</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-batata">▲+1.2%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🧅 Cebola</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-cebola">1.6</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-cebola">▲+3.1%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍓 Morango</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-morango">0.4</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-morango">▼-5.1%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍎 Maçã</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-maca">1.1</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-maca">▲+4.6%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍈 Melão</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-melao">0.6</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-melao">▼-12.8%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍌 Banana</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-banana">7.3</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-banana">▲+1.8%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🫐 Mamão</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-mamao">1.8</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-mamao">▲+0.9%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🧄 Alho</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-alho">0.2</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-alho">▼-3.4%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🥕 Cenoura</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-cenoura">0.8</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-cenoura">▲+2.3%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍍 Abacaxi</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-abacaxi">2.6</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-abacaxi">▲+3.5%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍇 Uva BR</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-uva">1.7</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-uva">▲+2.8%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🥭 Manga</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-manga">1.4</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-manga">▼-14.3%</td></tr>
-                <tr><td colspan="3" style="background:rgba(255,107,53,.06);color:var(--accent3);font-size:8px;letter-spacing:1px;padding:3px 7px;">INDÚSTRIA / EXPORT.</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍅 Tom.Ind.</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-tomate-ind">4.7</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-dn" id="otv-tomate-ind">▼-7.4%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍇 Uva AR</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-uva-ar">3.1</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-uva-ar">▲+1.4%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">🍎 Maçã AR</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-maca-ar">0.9</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-maca-ar">▲+2.1%</td></tr>
-                <tr><td colspan="3" style="background:rgba(0,212,255,.06);color:var(--accent);font-size:8px;letter-spacing:1px;padding:3px 7px;">PROTEÍNA</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">Boi Gordo</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-boi">11.2</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-boi">▲+2.3%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">Frango</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-frango">14.6</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-frango">▲+1.4%</td></tr>
-                <tr><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);">Suíno</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" id="ot-suino">5.2</td><td style="padding:2px 7px;font-size:9px;border-bottom:1px solid var(--border);text-align:right;" class="td-up" id="otv-suino">▲+0.8%</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- CENTER: CEASA TERMINAL -->
         <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border);">
-          <div style="padding:5px 12px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            <span style="color:var(--accent);font-size:10px;letter-spacing:2px;">MONITOR DE CEASAS — PREÇO × FRETE × MARGEM · IA</span>
-            <span class="pulse" style="width:5px;height:5px;background:var(--accent2);display:inline-block;border-radius:50%;margin-left:auto;"></span>
-          </div>
-          <div style="flex:1;overflow-y:auto;">
-            <table style="width:100%;border-collapse:collapse;">
-              <thead id="ceasa-thead"><tr>
-                <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 10px;text-align:left;position:sticky;top:0;letter-spacing:1px;">CEASA / REGIÃO</th>
-                <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 10px;text-align:left;position:sticky;top:0;">PRODUTO</th>
-                <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 10px;text-align:left;position:sticky;top:0;">ORIGEM</th>
-                <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 10px;text-align:right;position:sticky;top:0;">PREÇO</th>
-                <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 10px;text-align:right;position:sticky;top:0;">FRETE IA</th>
-                <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 10px;text-align:right;position:sticky;top:0;">MARGEM</th>
-                <th style="background:var(--bg3);color:var(--accent);font-size:9px;padding:5px 10px;text-align:center;position:sticky;top:0;">STATUS</th>
-              </tr></thead>
-              <tbody id="ceasa-tbody"></tbody>
+          <div style="padding:6px 10px;font-size:10px;color:var(--accent);letter-spacing:1px;border-bottom:1px solid var(--border);">TABELA DE MERCADO ORGANIZADA</div>
+          <div style="flex:1;overflow:auto;">
+            <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+              <thead>
+                <tr>
+                  <th style="width:14%;background:var(--bg3);color:var(--accent);font-size:9px;padding:6px;text-align:left;position:sticky;top:0;">PRODUTO</th>
+                  <th style="width:11%;background:var(--bg3);color:var(--accent);font-size:9px;padding:6px;text-align:left;position:sticky;top:0;">CATEGORIA</th>
+                  <th style="width:13%;background:var(--bg3);color:var(--accent);font-size:9px;padding:6px;text-align:right;position:sticky;top:0;">OFERTA/PRODUÇÃO</th>
+                  <th style="width:11%;background:var(--bg3);color:var(--accent);font-size:9px;padding:6px;text-align:right;position:sticky;top:0;">PREÇO</th>
+                  <th style="width:10%;background:var(--bg3);color:var(--accent);font-size:9px;padding:6px;text-align:center;position:sticky;top:0;">TENDÊNCIA</th>
+                  <th style="width:18%;background:var(--bg3);color:var(--accent);font-size:9px;padding:6px;text-align:left;position:sticky;top:0;">REGIÃO/TERMINAL</th>
+                  <th style="width:14%;background:var(--bg3);color:var(--accent);font-size:9px;padding:6px;text-align:left;position:sticky;top:0;">FONTE</th>
+                  <th style="width:9%;background:var(--bg3);color:var(--accent);font-size:9px;padding:6px;text-align:center;position:sticky;top:0;">STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="mercado-real-tbody"></tbody>
             </table>
           </div>
         </div>
-
-        <!-- RIGHT: CHART + SPREAD OPPORTUNITIES -->
-        <div style="width:300px;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;">
-          <div style="flex:1;display:flex;flex-direction:column;border-bottom:1px solid var(--border);overflow:hidden;">
-            <div id="oferta-chart-title" style="padding:5px 10px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:9px;color:var(--accent);letter-spacing:1px;flex-shrink:0;">SOJA BR — PROD. vs DEMANDA</div>
-            <div class="chart-wrap" style="flex:1;"><canvas id="chartOferta"></canvas></div>
-          </div>
-          <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
-            <div style="padding:5px 10px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;flex-shrink:0;">
-              <span class="pulse" style="width:5px;height:5px;background:var(--danger);display:inline-block;border-radius:50%;"></span>
-              <span style="font-size:9px;color:var(--danger);letter-spacing:1px;">🚨 SPREAD DE OPORTUNIDADE</span>
-            </div>
-            <div id="ceasa-opp-feed" style="flex:1;overflow-y:auto;padding:4px 0;"></div>
-          </div>
+        <div style="width:330px;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:6px 10px;font-size:10px;color:var(--accent);letter-spacing:1px;border-bottom:1px solid var(--border);">DIAGNÓSTICO DE QUALIDADE</div>
+          <div id="mercado-quality-panel" style="padding:10px;overflow:auto;flex:1;font-size:10px;color:var(--text);line-height:1.5;"></div>
         </div>
-
       </div>
     </div>
 
-    <!-- ═══ PANEL: ANÁLISE MUNICIPAL ═══ -->
     <div class="panel" id="panel-municipal">
       <div class="panel-header">
         <span class="panel-title">ANÁLISE MUNICIPAL — BIÓPSIA GEOESPACIAL DE PRECISÃO</span>
@@ -1572,18 +1560,43 @@ tr:hover td{background:rgba(0,212,255,.04);}
               <option value="batata">Batata</option>
               <option value="cebola">Cebola</option>
               <option value="alho">Alho</option>
+              <option value="mandioca">Mandioca</option>
+              <option value="aspargos">Aspargos</option>
+              <option value="brocolis">Brócolis</option>
+              <option value="pimentao">Pimentão</option>
+              <option value="alface">Alface</option>
+              <option value="cenoura">Cenoura</option>
+              </optgroup>
+              <optgroup label="── PROTEÍNA / GRANJEIROS ──">
+              <option value="ovos">Ovos</option>
+              <option value="frango">Frango</option>
+              <option value="leite">Leite</option>
+              <option value="suinos">Suínos</option>
               </optgroup>
               <optgroup label="── OUTROS ──">
               <option value="cana">Cana</option>
               <option value="cafe">Cafe</option>
+              <option value="cacau">Cacau</option>
+              <option value="palta">Palta</option>
+              <option value="arandano">Arándano</option>
+              <option value="arroz">Arroz</option>
               </optgroup>
             </select>
             <select id="mun-country" onchange="filterMunicipalMap(document.getElementById('mun-filter').value)" style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:10px;padding:2px 6px;border-radius:3px;outline:none;">
               <option value="all">Todos os países</option>
               <option value="BR">Brasil</option>
               <option value="AR">Argentina</option>
+              <option value="CL">Chile</option>
+              <option value="PE">Peru</option>
+              <option value="CO">Colômbia</option>
+              <option value="EC">Equador</option>
+              <option value="BO">Bolívia</option>
               <option value="PY">Paraguai</option>
               <option value="UY">Uruguai</option>
+              <option value="VE">Venezuela</option>
+              <option value="GY">Guiana</option>
+              <option value="SR">Suriname</option>
+              <option value="GF">Guiana Francesa</option>
             </select>
             <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;"></div>
             <span style="font-size:9px;color:var(--text2);white-space:nowrap;">CAMADAS:</span>
@@ -1591,7 +1604,14 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <button id="mun-lyr-logistics" onclick="toggleMunLayer('logistics')" class="lyr-btn" title="Vetores CEASA">→ Logística</button>
             <button id="mun-lyr-risk" onclick="toggleMunLayer('risk')" class="lyr-btn active" title="Alertas de risco">⚠ Risco</button>
             <button id="mun-lyr-sidra" onclick="fetchSidraLayer()" class="lyr-btn" title="Dados SIDRA/PAM">📡 SIDRA PAM</button>
-            <span style="margin-left:auto;font-size:9px;color:var(--text2);white-space:nowrap;">Hover = tooltip IA | Clique estado = drill-down</span>
+            <span style="margin-left:auto;font-size:9px;color:var(--text2);white-space:nowrap;">Hover = tooltip IA | Clique polo = detalhe</span>
+          </div>
+          <div id="mun-sa-summary" style="height:30px;background:rgba(0,255,136,.045);border-bottom:1px solid rgba(0,255,136,.18);display:flex;align-items:center;gap:12px;padding:0 12px;flex-shrink:0;overflow:hidden;font-size:9px;color:var(--text2);letter-spacing:.5px;">
+            <span style="color:#00ff88;font-weight:bold;letter-spacing:1px;">BASE SUL-AMERICANA HF+GRANJEIROS</span>
+            <span id="mun-sa-count">-- polos</span>
+            <span id="mun-sa-countries">-- países</span>
+            <span id="mun-sa-products" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">-- produtos</span>
+            <span id="mun-sa-note" style="color:var(--warn);">polo/região produtiva · não propriedade rural</span>
           </div>
           <div style="flex:1;display:flex;overflow:hidden;">
 
@@ -1628,6 +1648,16 @@ tr:hover td{background:rgba(0,212,255,.04);}
                 <button class="cult-btn" id="cb-batata"   onclick="trocarCultura('batata')">🥔 Batata</button>
                 <button class="cult-btn" id="cb-cebola"   onclick="trocarCultura('cebola')">🧅 Cebola</button>
                 <button class="cult-btn" id="cb-alho"     onclick="trocarCultura('alho')">🧄 Alho</button>
+                <button class="cult-btn" id="cb-mandioca" onclick="trocarCultura('mandioca')">🌱 Mandioca</button>
+                <button class="cult-btn" id="cb-aspargos" onclick="trocarCultura('aspargos')">🥬 Aspargos</button>
+                <button class="cult-btn" id="cb-brocolis" onclick="trocarCultura('brocolis')">🥦 Brócolis</button>
+                <button class="cult-btn" id="cb-pimentao" onclick="trocarCultura('pimentao')">🫑 Pimentão</button>
+                <button class="cult-btn" id="cb-alface" onclick="trocarCultura('alface')">🥬 Alface</button>
+                <div style="font-size:8px;color:var(--text2);letter-spacing:1px;padding:2px 0 4px;border-bottom:1px solid var(--border);margin:7px 0 4px;">GRANJEIROS / LÁCTEOS</div>
+                <button class="cult-btn" id="cb-ovos" onclick="trocarCultura('ovos')">🥚 Ovos</button>
+                <button class="cult-btn" id="cb-frango" onclick="trocarCultura('frango')">🐔 Frango</button>
+                <button class="cult-btn" id="cb-leite" onclick="trocarCultura('leite')">🥛 Leite</button>
+                <button class="cult-btn" id="cb-suinos" onclick="trocarCultura('suinos')">🐖 Suínos</button>
                 <div style="font-size:8px;color:var(--text2);letter-spacing:1px;padding:2px 0 4px;border-bottom:1px solid var(--border);margin:7px 0 4px;">VISÃO GERAL</div>
                 <button class="cult-btn active" id="cb-all" onclick="trocarCultura('all')">🌍 Todas as Culturas</button>
               </div>
@@ -2039,81 +2069,65 @@ tr:hover td{background:rgba(0,212,255,.04);}
       </div>
     </div>
 
-    <!-- ═══ PANEL: PREDICTIX ARBITRAGE TERMINAL ═══ -->
-    <div class="panel" id="panel-predictix" style="background:#0a0a0a;">
-      <!-- HEADER -->
-      <div style="height:42px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;">
-        <span style="color:#FFD700;font-size:13px;font-weight:bold;letter-spacing:3px;font-family:'Courier New',monospace;">PREDICTIX</span>
-        <span style="color:#555;font-size:10px;letter-spacing:2px;">TERMINAL DE ARBITRAGEM AGRICOLA</span>
-        <div style="margin-left:auto;display:flex;gap:14px;align-items:center;">
-          <div style="text-align:center;"><div id="px-kpi-vol" style="font-size:14px;font-weight:bold;color:#FFD700;font-family:monospace;">—</div><div style="font-size:8px;color:#666;letter-spacing:1px;">VOL. FRETE IVF</div></div>
-          <div style="width:1px;height:24px;background:#222;"></div>
-          <div style="text-align:center;"><div id="px-kpi-eta" style="font-size:14px;font-weight:bold;color:#EF4444;font-family:monospace;">—</div><div style="font-size:8px;color:#666;letter-spacing:1px;">RISCO MULTA ETA</div></div>
-          <div style="width:1px;height:24px;background:#222;"></div>
-          <div style="text-align:center;"><div id="px-kpi-arb" style="font-size:14px;font-weight:bold;color:#50C878;font-family:monospace;">—</div><div style="font-size:8px;color:#666;letter-spacing:1px;">OPORT. ARBITRAGEM</div></div>
-          <div style="width:1px;height:24px;background:#222;"></div>
-          <div style="text-align:center;"><div id="px-kpi-fila" style="font-size:14px;font-weight:bold;color:#F59E0B;font-family:monospace;">—</div><div style="font-size:8px;color:#666;letter-spacing:1px;">FILA PREDITIVA (h)</div></div>
+    <!-- ═══ PANEL: PREDICTX LIVE INTELLIGENCE ═══ -->
+    <div class="panel" id="panel-predictix" style="background:radial-gradient(circle at 20% 10%, rgba(0,212,255,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(255,215,0,.14), transparent 30%), #05070b; color:#e5f7ff; overflow:hidden;">
+      <style>
+        .pxx-card{background:linear-gradient(145deg,rgba(8,16,26,.92),rgba(4,7,12,.96));border:1px solid rgba(0,212,255,.22);border-radius:18px;box-shadow:0 0 24px rgba(0,212,255,.10), inset 0 0 20px rgba(255,255,255,.018)}
+        .pxx-chip{border:1px solid rgba(0,212,255,.35);background:rgba(0,212,255,.08);color:#8eeaff;border-radius:999px;padding:4px 10px;font:10px 'Courier New',monospace;letter-spacing:.8px}
+        .pxx-btn{border:1px solid rgba(255,215,0,.5);background:linear-gradient(90deg,rgba(255,215,0,.18),rgba(0,212,255,.12));color:#ffe681;border-radius:10px;padding:7px 12px;font:11px 'Courier New',monospace;letter-spacing:1px;cursor:pointer}
+        .pxx-glow{animation:pxxPulse 2.6s ease-in-out infinite}@keyframes pxxPulse{0%,100%{box-shadow:0 0 16px rgba(0,212,255,.12)}50%{box-shadow:0 0 30px rgba(0,212,255,.34)}}
+        .pxx-line{height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.5),transparent)}
+      
+.audit-box{background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(0,255,136,.05));border:1px solid rgba(0,212,255,.28);border-radius:8px;margin-bottom:10px;padding:10px;}
+.audit-head{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--accent);font-size:10px;font-weight:bold;letter-spacing:1px;margin-bottom:8px;}
+.audit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px;}
+.audit-card{background:rgba(0,0,0,.18);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:9px;color:var(--text2);line-height:1.35;}
+.audit-card strong{display:block;color:var(--text);font-size:10px;margin-bottom:3px;}
+.audit-list{font-size:9px;color:var(--text2);line-height:1.45;margin:6px 0 0 16px;padding:0;}
+.deprecated-panel-note{font-size:9px;color:var(--text2);border:1px dashed var(--border);padding:8px;border-radius:6px;margin:8px 0;}
+</style>
+      <div style="height:58px;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid rgba(0,212,255,.16);background:rgba(2,5,10,.76);backdrop-filter:blur(10px);">
+        <div>
+          <div style="font-size:16px;font-weight:900;letter-spacing:4px;color:#8eeaff;font-family:'Courier New',monospace;text-shadow:0 0 18px rgba(0,212,255,.75);">PREDICTX LIVE</div>
+          <div style="font-size:10px;color:#8092a4;letter-spacing:2px;">IA DE EVENTOS · CLIMA · LOGÍSTICA · SAFRA · DEMANDA</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+          <span id="pxx-live-status" class="pxx-chip">● sincronizando</span>
+          <span id="pxx-updated" class="pxx-chip">UTC --</span>
+          <button class="pxx-btn" onclick="PredictXLive.load(true)">ATUALIZAR AGORA</button>
         </div>
       </div>
-      <!-- CULTURE SELECTOR + TIME SLIDER -->
-      <div style="height:36px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;">
-        <span style="font-size:9px;color:#FFD700;letter-spacing:1px;">CULTURA:</span>
-        <select id="px-culture" style="background:#111;border:1px solid #333;color:#ddd;font-family:monospace;font-size:10px;padding:2px 8px;border-radius:3px;" onchange="Predictix.setCulture(this.value)">
-          <option value="tomate">Tomate</option><option value="banana">Banana</option><option value="laranja">Laranja</option>
-          <option value="cebola">Cebola</option><option value="manga">Manga</option><option value="uva">Uva</option>
-          <option value="batata">Batata</option><option value="mamao">Mamao</option><option value="melancia">Melancia</option>
-          <option value="abacaxi">Abacaxi</option><option value="alho">Alho</option><option value="melao">Melao</option>
-          <option value="cenoura">Cenoura</option><option value="morango">Morango</option><option value="pimentao">Pimentao</option>
-          <option value="folhosas">Folhosas</option><option value="maracuja">Maracuja</option><option value="goiaba">Goiaba</option>
-          <option value="abacate">Abacate</option><option value="limao">Limao</option><option value="tangerina">Tangerina</option>
-          <option value="coco">Coco</option><option value="acai">Acai</option><option value="pessego">Pessego</option>
-          <option value="maca">Maca</option>
-        </select>
-        <div style="width:1px;height:20px;background:#222;"></div>
-        <span style="font-size:9px;color:#888;letter-spacing:1px;">HORIZONTE:</span>
-        <input type="range" id="px-horizon" min="-7" max="15" value="0" style="width:180px;accent-color:#FFD700;" oninput="Predictix.setHorizon(+this.value)">
-        <span id="px-horizon-label" style="font-size:11px;color:#FFD700;font-family:monospace;min-width:55px;">HOJE (T+0)</span>
-        <div style="width:1px;height:20px;background:#222;"></div>
-        <span style="font-size:9px;color:#888;">CAMADAS:</span>
-        <button id="px-layer-flow" onclick="Predictix.toggleLayer('flow')" style="background:rgba(80,200,120,.15);border:1px solid #50C878;color:#50C878;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">FLUXO</button>
-        <button id="px-layer-rodovias" onclick="Predictix.toggleLayer('rodovias')" style="background:rgba(59,130,246,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">RODOVIAS</button>
-        <button id="px-layer-clima" onclick="Predictix.toggleLayer('clima')" style="background:rgba(239,68,68,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">CLIMA</button>
-        <button id="px-layer-arb" onclick="Predictix.toggleLayer('arb')" style="background:rgba(255,215,0,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">ARBITRAGEM</button>
-        <div style="width:1px;height:20px;background:#222;"></div>
-        <button id="px-btn-produtores" onclick="Predictix.toggleProdutores()" style="background:rgba(0,212,255,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">👨‍🌾 PRODUTORES</button>
-        <button id="px-btn-produtores-rj" onclick="Predictix.toggleProdutoresRJ()" style="background:rgba(255,107,53,.1);border:1px solid #444;color:#888;font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;cursor:pointer;">⚖️ EM RJ</button>
-      </div>
-      <!-- MAIN CONTENT -->
-      <div style="flex:1;display:flex;overflow:hidden;">
-        <!-- MAP -->
-        <div style="flex:1;position:relative;">
-          <div id="px-map" style="position:absolute;inset:0;background:#0a0a0a;"></div>
-          <!-- 30s climate overlay pending -->
-          <div id="px-clima-pending" style="display:none;position:absolute;top:10px;right:10px;z-index:900;background:rgba(10,10,10,.92);border:1px dashed rgba(239,68,68,.3);border-radius:6px;padding:10px 14px;color:#EF4444;font-family:monospace;font-size:11px;backdrop-filter:blur(4px);">
-            <div style="font-size:9px;letter-spacing:1px;color:#666;margin-bottom:4px;">CAMADA CLIMATICA</div>
-            Ativando em <strong id="px-clima-timer">30</strong>s
+      <div style="display:grid;grid-template-columns:1.35fr .9fr;gap:14px;padding:14px;height:calc(100% - 58px);box-sizing:border-box;">
+        <div style="display:grid;grid-template-rows:110px 1fr;gap:14px;min-width:0;">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+            <div class="pxx-card pxx-glow" style="padding:14px;"><div style="font-size:10px;color:#7b8da0;letter-spacing:1px;">EVENTO GLOBAL</div><div id="pxx-kpi-event" style="font-size:22px;color:#ffe681;font-weight:900;margin-top:8px;">—</div><div style="font-size:10px;color:#7b8da0;">Copa/megaeventos</div></div>
+            <div class="pxx-card" style="padding:14px;"><div style="font-size:10px;color:#7b8da0;letter-spacing:1px;">CIDADES AFETADAS</div><div id="pxx-kpi-cities" style="font-size:22px;color:#8eeaff;font-weight:900;margin-top:8px;">—</div><div style="font-size:10px;color:#7b8da0;">hotéis · estádios · fan zones</div></div>
+            <div class="pxx-card" style="padding:14px;"><div style="font-size:10px;color:#7b8da0;letter-spacing:1px;">RISCO LOGÍSTICO</div><div id="pxx-kpi-risk" style="font-size:22px;color:#ff7b7b;font-weight:900;margin-top:8px;">—</div><div style="font-size:10px;color:#7b8da0;">frete frio · bloqueios</div></div>
+            <div class="pxx-card" style="padding:14px;"><div style="font-size:10px;color:#7b8da0;letter-spacing:1px;">FONTES</div><div id="pxx-kpi-sources" style="font-size:22px;color:#50C878;font-weight:900;margin-top:8px;">—</div><div style="font-size:10px;color:#7b8da0;">oficiais/multilaterais</div></div>
           </div>
-        </div>
-        <!-- RIGHT PANEL: Terminal de Filas Preditivo + Arbitragem Detalhada -->
-        <div style="width:380px;border-left:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;background:#0d0d0d;">
-          <div style="padding:6px 12px;border-bottom:1px solid #1a1a1a;font-size:9px;color:#FFD700;letter-spacing:2px;">TERMINAL DE FILAS PREDITIVO</div>
-          <div id="px-port-panel" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;">
-            <div id="px-port-santos" class="px-port-card"></div>
-            <div id="px-port-paranagua" class="px-port-card"></div>
-            <div id="px-port-suape" class="px-port-card"></div>
-          </div>
-          <div style="border-top:1px solid #1a1a1a;padding:6px 12px;font-size:9px;color:#FFD700;letter-spacing:2px;">OPORTUNIDADES DE ARBITRAGEM</div>
-          <div id="px-arb-list" style="flex:1;overflow-y:auto;padding:6px 10px;max-height:200px;"></div>
-          <!-- DETALHAMENTO DA OPORTUNIDADE SELECIONADA -->
-          <div id="px-arb-detail" style="border-top:2px solid #FFD700;background:rgba(10,10,10,.95);padding:10px;overflow-y:auto;max-height:300px;display:none;">
-            <div style="font-size:10px;color:#FFD700;letter-spacing:1px;margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:4px;">📊 ANÁLISE DA OPORTUNIDADE</div>
-            <div id="px-arb-detail-content"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+          <div class="pxx-card" style="position:relative;overflow:hidden;">
+            <div id="pxx-map" style="position:absolute;inset:0;background:#07101a;"></div>
+            <div style="position:absolute;left:14px;top:14px;z-index:600;background:rgba(2,5,10,.78);border:1px solid rgba(0,212,255,.25);border-radius:14px;padding:10px 12px;backdrop-filter:blur(10px);max-width:390px;">
+              <div style="font-size:11px;color:#ffe681;font-weight:bold;letter-spacing:1px;">CAMADA VIVA: COPA DO MUNDO 2026</div>
+              <div id="pxx-map-caption" style="font-size:11px;color:#b5c7d9;line-height:1.45;margin-top:5px;">Mostra onde a demanda e a logística podem mudar e por quê.</div>
             </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-rows:auto 1fr 1fr;gap:14px;min-width:0;">
+          <div class="pxx-card" style="padding:14px;">
+            <div style="font-size:12px;color:#8eeaff;font-weight:bold;letter-spacing:1px;">POR QUE A COPA ALTERA O MERCADO?</div>
+            <div class="pxx-line" style="margin:10px 0;"></div>
+            <div id="pxx-worldcup-why" style="font-size:12px;color:#d7e7f5;line-height:1.55;">Carregando análise...</div>
+          </div>
+          <div class="pxx-card" style="padding:14px;overflow:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-size:12px;color:#8eeaff;font-weight:bold;letter-spacing:1px;">CIDADES E IMPACTO</span><span class="pxx-chip">ranking</span></div>
+            <div id="pxx-city-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+          <div class="pxx-card" style="padding:14px;overflow:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-size:12px;color:#8eeaff;font-weight:bold;letter-spacing:1px;">SINAIS EM TEMPO REAL / MONITORAMENTO</span><span class="pxx-chip">NOAA · NASA · FAO · WB</span></div>
+            <div id="pxx-signal-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2422,6 +2436,42 @@ tr:hover td{background:rgba(0,212,255,.04);}
       </div>
       <div class="content" style="flex:1;display:flex;overflow:hidden;">
         <div class="chat-area">
+          <div class="audit-box" id="system-audit-box">
+            <div class="audit-head">
+              <span>AUDITORIA DO SISTEMA — FONTES, ABAS E QUALIDADE DOS DADOS</span>
+              <button class="ia-run-btn" onclick="runSystemAudit(true)">AUDITAR SISTEMA</button>
+            </div>
+            <div id="system-audit-summary" style="font-size:10px;color:var(--text2);line-height:1.4;">Aguardando auditoria.</div>
+            <div class="audit-grid" id="system-audit-cards"></div>
+            <ol class="audit-list" id="system-audit-warnings"></ol>
+          </div>
+
+          <div class="ia-analysis-box" id="ia-analysis-box">
+            <div class="ia-analysis-head">
+              <span>ANALISADOR DE INFORMAÇÕES — RESULTADOS IA</span>
+              <button class="ia-run-btn" onclick="runIAAnalyzer(true)">ANALISAR AGORA</button>
+            </div>
+            <div id="ia-analysis-summary" style="font-size:10px;color:var(--text2);line-height:1.4;">Aguardando execução do analisador.</div>
+            <div class="ia-analysis-grid" id="ia-analysis-cards"></div>
+            <div class="ia-findings" id="ia-analysis-findings"></div>
+            <ol class="ia-rec-list" id="ia-analysis-recs"></ol>
+          </div>
+
+          <div class="risk-box" id="risk-box">
+            <div class="risk-head">
+              <span>API DE ANTECIPAÇÃO DE RISCO — SAFRA · CLIMA · ENSO · FERTILIZANTES · EVENTOS</span>
+              <button class="ia-run-btn" style="background:var(--warn);" onclick="runRiskAnalyzer(true)">ATUALIZAR RISCO</button>
+            </div>
+            <div class="risk-controls">
+              <select id="risk-country"><option value="all">Todos países</option><option value="Brasil">Brasil</option><option value="Chile">Chile</option><option value="Peru">Peru</option><option value="Argentina">Argentina</option><option value="Colômbia">Colômbia</option></select>
+              <input id="risk-product" placeholder="produto: tomate, uva, batata..." value="all">
+              <select id="risk-days"><option value="15">15 dias</option><option value="30" selected>30 dias</option><option value="60">60 dias</option></select>
+              <span id="risk-status" style="font-size:9px;color:var(--text2);">Aguardando execução.</span>
+            </div>
+            <div class="risk-grid" id="risk-cards"></div>
+            <div class="risk-table-wrap"><table class="risk-table"><thead><tr><th>POLO</th><th>PRODUTOS</th><th>RISCO</th><th>DRIVERS</th><th>AÇÃO</th></tr></thead><tbody id="risk-table-body"><tr><td colspan="5" style="color:var(--text2);">Sem dados carregados.</td></tr></tbody></table></div>
+            <div id="risk-sources" style="font-size:9px;color:var(--text2);line-height:1.4;"></div>
+          </div>
           <div class="chat-messages" id="chat-messages">
             <div class="msg nias">
               <div class="msg-bubble">Sistema NIA$ inicializado. Cobertura ativa em <strong>98.7%</strong> do território agrícola sul-americano.<br><br>
@@ -2441,6 +2491,8 @@ tr:hover td{background:rgba(0,212,255,.04);}
         </div>
         <div class="chat-sidebar">
           <div class="chat-side-title">CONSULTAS RÁPIDAS</div>
+          <button class="quick-btn" onclick="runSystemAudit(true); showPanel('chat');" style="border-color:var(--accent);color:var(--accent);">Auditar sistema e fontes</button>
+          <button class="quick-btn" onclick="runIAAnalyzer(true); showPanel('chat');">Executar analisador de informações</button>
           <button class="quick-btn" onclick="quickMsg('Qual o status atual da safra de soja no Mato Grosso?')">Status safra soja — MT</button>
           <button class="quick-btn" onclick="quickMsg('Quais regiões estão com estresse hídrico crítico agora?')">Alertas de estresse hídrico</button>
           <button class="quick-btn" onclick="quickMsg('Qual a recomendação logística para os próximos 7 dias?')">Recomendação logística</button>
@@ -2449,14 +2501,14 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <button class="quick-btn" onclick="quickMsg('Qual o NDVI médio por estado do Brasil agora?')">NDVI por estado</button>
           <div class="chat-side-title" style="margin-top:8px;">STATUS DOS SENSORES</div>
           <div class="status-block">
-            <div class="status-row"><span class="status-label">Sentinel-2</span><span class="status-val lf-ok">● ATIVO</span></div>
-            <div class="status-row"><span class="status-label">SAR Sentinel-1</span><span class="status-val lf-ok">● ATIVO</span></div>
-            <div class="status-row"><span class="status-label">SMAP (NASA)</span><span class="status-val lf-ok">● ATIVO</span></div>
-            <div class="status-row"><span class="status-label">ERA5 Clima</span><span class="status-val lf-ok">● ATIVO</span></div>
-            <div class="status-row"><span class="status-label">API ANTT</span><span class="status-val lf-warn">● LATÊNCIA 6h</span></div>
-            <div class="status-row"><span class="status-label">API ANTAQ</span><span class="status-val lf-ok">● ATIVO</span></div>
-            <div class="status-row"><span class="status-label">Modelo LSTM</span><span class="status-val lf-ok">● ATIVO</span></div>
-            <div class="status-row"><span class="status-label">PlanetScope</span><span class="status-val lf-ok">● ATIVO</span></div>
+            <div class="status-row"><span class="status-label">Sentinel-2</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
+            <div class="status-row"><span class="status-label">SAR Sentinel-1</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
+            <div class="status-row"><span class="status-label">SMAP (NASA)</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
+            <div class="status-row"><span class="status-label">ERA5 Clima</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
+            <div class="status-row"><span class="status-label">API ANTT</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
+            <div class="status-row"><span class="status-label">API ANTAQ</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
+            <div class="status-row"><span class="status-label">Modelo LSTM</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
+            <div class="status-row"><span class="status-label">PlanetScope</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
           </div>
           <div class="chat-side-title" style="margin-top:8px;">MÉTRICAS LIVE</div>
           <div class="status-block">
@@ -2506,20 +2558,34 @@ const SituationRoom = {
   },
   newsData: [],
   refreshInterval: null,
-  
+  clockInterval: null,
+  selectedCompany: null,
+  activeCompanyFilter: 'rj',
+  activeNewsFilter: 'all',
+  activeProduct: null,
+
+  escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[ch]));
+  },
+
   init() {
-    console.log('[SituationRoom] Inicializando versao com dados reais...');
+    console.log('[SituationRoom] Inicializando versão estável...');
     this.renderCompanies();
     this.renderAlertBadge();
     this.updateTime();
     this.renderNews();
-    
-    // Buscar dados reais das APIs
+
+    // Buscar dados reais das APIs sem multiplicar timers a cada abertura da aba.
     this.loadRealData();
-    
-    // Atualizar a cada 30 segundos
-    this.refreshInterval = setInterval(() => this.loadRealData(), 30000);
-    setInterval(() => this.updateTime(), 60000);
+
+    if (!this.refreshInterval) {
+      this.refreshInterval = setInterval(() => this.loadRealData(), 30000);
+    }
+    if (!this.clockInterval) {
+      this.clockInterval = setInterval(() => this.updateTime(), 60000);
+    }
   },
   
   async loadRealData() {
@@ -2571,17 +2637,24 @@ const SituationRoom = {
       'default': '#ff6b35'
     };
     
-    feedEl.innerHTML = this.newsData.slice(0, 5).map(item => {
-      const source = item.source || 'NEWS';
-      const color = sourceColors[source] || sourceColors.default;
-      const timeAgo = this.getTimeAgo(item.published_at);
+    const filtered = this.activeNewsFilter === 'all'
+      ? this.newsData
+      : this.newsData.filter(item => String(item.source || '').toLowerCase().includes(this.activeNewsFilter));
+
+    feedEl.innerHTML = filtered.slice(0, 5).map(item => {
+      const source = this.escapeHtml(item.source || 'NEWS');
+      const rawSource = item.source || 'default';
+      const color = sourceColors[rawSource] || sourceColors.default;
+      const timeAgo = this.escapeHtml(this.getTimeAgo(item.published_at));
+      const title = this.escapeHtml(item.title || 'Sem título');
+      const url = this.escapeHtml(item.url || '#');
       
-      return `<div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;margin-bottom:6px;cursor:pointer;" onclick="window.open('${item.url || '#'}', '_blank')">` +
+      return `<div style="background:#111;border:1px solid #2a2a2a;border-radius:3px;padding:8px;margin-bottom:6px;cursor:pointer;" data-url="${url}" onclick="SituationRoom.openNews(this.dataset.url)">` +
         `<div style="font-size:9px;color:${color};font-weight:bold;">${source.toUpperCase()}</div>` +
-        `<div style="font-size:10px;color:#fff;margin-top:2px;line-height:1.3;">${item.title || 'Sem título'}</div>` +
+        `<div style="font-size:10px;color:#fff;margin-top:2px;line-height:1.3;">${title}</div>` +
         `<div style="font-size:8px;color:#666;margin-top:2px;">${timeAgo}</div>` +
       `</div>`;
-    }).join('');
+    }).join('') || '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Nenhuma notícia para este filtro</div>';
   },
   
   getTimeAgo(dateStr) {
@@ -2620,17 +2693,20 @@ const SituationRoom = {
     }
     
     if (this.data.recent_entries && this.data.recent_entries.length > 0) {
-      listEl.innerHTML = this.data.recent_entries.map(company => {
+      const entries = this.getFilteredCompanies();
+      listEl.innerHTML = entries.map(company => {
         const isFalencia = company.judicial_status === 'falencia';
-        return `<div class="sit-company-item" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;margin-bottom:4px;transition:all 0.2s;" onmouseover="this.style.borderColor='#ff6b35'" onmouseout="this.style.borderColor='#2a2a2a'" onclick="SituationRoom.selectCompany('${company.cnpj}')">` +
-          `<div style="font-size:10px;color:#fff;font-weight:bold;">${company.company_name}</div>` +
-          `<div style="font-size:8px;color:#888;">${company.city}/${company.state_uf} • ${company.segment}</div>` +
+        const debt = Number(company.debts_total || 0);
+        const cnpj = this.escapeHtml(company.cnpj || '');
+        return `<div class="sit-company-item" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:8px;cursor:pointer;margin-bottom:4px;transition:all 0.2s;" onmouseover="this.style.borderColor='#ff6b35'" onmouseout="this.style.borderColor='#2a2a2a'" data-cnpj="${cnpj}" onclick="SituationRoom.selectCompany(this.dataset.cnpj)">` +
+          `<div style="font-size:10px;color:#fff;font-weight:bold;">${this.escapeHtml(company.company_name)}</div>` +
+          `<div style="font-size:8px;color:#888;">${this.escapeHtml(company.city)}/${this.escapeHtml(company.state_uf)} • ${this.escapeHtml(company.segment)}</div>` +
           `<div style="font-size:8px;color:${isFalencia ? '#ff3d3d' : '#ff6b35'};margin-top:2px;">` +
-            (isFalencia ? '⚠️ FALÊNCIA' : '⚖️ EM RJ') + ` • R$ ${(company.debts_total/1000000).toFixed(1)}M` +
+            (isFalencia ? '⚠️ FALÊNCIA' : '⚖️ EM RJ') + ` • R$ ${(debt/1000000).toFixed(1)}M` +
           `</div>` +
         `</div>`;
-      }).join('');
-      console.log(`[SituationRoom] ${this.data.recent_entries.length} empresas renderizadas`);
+      }).join('') || '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Nenhuma empresa neste filtro</div>';
+      console.log(`[SituationRoom] ${entries.length} empresas renderizadas`);
     } else {
       listEl.innerHTML = '<div style="font-size:10px;color:#666;text-align:center;padding:20px;">Nenhuma empresa em monitoramento</div>';
     }
@@ -2663,7 +2739,7 @@ const SituationRoom = {
       statusEl.style.color = isFalencia ? '#ff3d3d' : '#ff6b35';
     }
     if (detailsEl) {
-      detailsEl.textContent = `Dívida: R$ ${(company.debts_total/1000000).toFixed(1)} milhões`;
+      detailsEl.textContent = `Dívida: R$ ${(Number(company.debts_total || 0)/1000000).toFixed(1)} milhões`;
     }
     
     // Timeline
@@ -2709,19 +2785,35 @@ const SituationRoom = {
       `</div>`;
   },
   
+  getFilteredCompanies() {
+    const entries = this.data.recent_entries || [];
+    if (this.activeCompanyFilter === 'all') return entries;
+    if (this.activeCompanyFilter === 'rj') {
+      return entries.filter(c => c.judicial_status === 'em_recuperacao' || c.judicial_status === 'falencia');
+    }
+    if (this.activeCompanyFilter === 'growth') {
+      return [...entries].sort((a, b) => Number(b.debts_total || 0) - Number(a.debts_total || 0)).slice(0, 10);
+    }
+    return entries;
+  },
+
   filterCompanies(type) {
+    this.activeCompanyFilter = type;
     ['rj', 'growth', 'all'].forEach(t => {
       const btn = document.getElementById(`sit-filter-${t}`);
       if (btn) {
         if (t === type) {
           btn.style.background = '#ff6b35';
           btn.style.color = '#000';
+          btn.style.fontWeight = 'bold';
         } else {
           btn.style.background = '#1a1a1a';
           btn.style.color = '#888';
+          btn.style.fontWeight = 'normal';
         }
       }
     });
+    this.renderCompanies();
   },
   
   showProductTab(tab) {
@@ -2753,7 +2845,52 @@ const SituationRoom = {
     }
   },
   
+
+  productCatalog: {
+    soja: { nome:'SOJA', unidade:'sc', preco:'R$ 142,00/sc', tendencia:'+3.2%', risco:'Médio', detalhe:'Demanda externa firme; atenção a câmbio, logística portuária e clima no Centro-Oeste.' },
+    milho: { nome:'MILHO', unidade:'sc', preco:'R$ 72,00/sc', tendencia:'-1.5%', risco:'Médio', detalhe:'Pressão de oferta na safrinha; sensível a frete e armazenagem.' },
+    cafe: { nome:'CAFÉ', unidade:'sc', preco:'R$ 1.180,00/sc', tendencia:'+8.7%', risco:'Alto', detalhe:'Volatilidade elevada por clima, ICE NY e diferenciais de exportação.' },
+    trigo: { nome:'TRIGO', unidade:'t', preco:'R$ 98,00/sc', tendencia:'+0.8%', risco:'Baixo', detalhe:'Mercado dependente de importação e paridade Argentina/RS.' },
+    tomate: { nome:'TOMATE', unidade:'kg', preco:'R$ 5,20/kg', tendencia:'+4.1%', risco:'Alto', detalhe:'Alta perecibilidade; risco de ruptura por chuva e logística regional.' },
+    cebola: { nome:'CEBOLA', unidade:'kg', preco:'R$ 3,80/kg', tendencia:'-2.0%', risco:'Médio', detalhe:'Oferta regional pesa; monitorar câmaras frias e volume CEASA.' },
+    batata: { nome:'BATATA', unidade:'kg', preco:'R$ 4,10/kg', tendencia:'+1.2%', risco:'Médio', detalhe:'Preço condicionado por qualidade, chuva e custo de frete.' },
+    manga: { nome:'MANGA', unidade:'kg', preco:'R$ 6,50/kg', tendencia:'+5.4%', risco:'Médio', detalhe:'Exportação e janela do Vale do São Francisco influenciam disponibilidade.' }
+  },
+
+  loadProductDetail(productId) {
+    const product = this.productCatalog[productId];
+    if (!product) return;
+    this.activeProduct = productId;
+    this.updateProductDetail(product);
+  },
+
+  updateProductDetail(product) {
+    let detailEl = document.getElementById('sit-product-detail');
+    if (!detailEl) {
+      const productsPanel = document.getElementById('sit-portfolio-products');
+      if (!productsPanel) return;
+      detailEl = document.createElement('div');
+      detailEl.id = 'sit-product-detail';
+      detailEl.style.cssText = 'margin-top:10px;background:#111;border:1px solid #ff6b35;border-radius:4px;padding:10px;';
+      productsPanel.appendChild(detailEl);
+    }
+    detailEl.innerHTML =
+      `<div style="font-size:10px;color:#ff6b35;font-weight:bold;letter-spacing:1px;">${this.escapeHtml(product.nome)} — ANÁLISE</div>` +
+      `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">` +
+        `<div><div style="font-size:8px;color:#666;">PREÇO</div><div style="font-size:12px;color:#fff;font-family:monospace;">${this.escapeHtml(product.preco)}</div></div>` +
+        `<div><div style="font-size:8px;color:#666;">TENDÊNCIA</div><div style="font-size:12px;color:#fff;font-family:monospace;">${this.escapeHtml(product.tendencia)}</div></div>` +
+        `<div><div style="font-size:8px;color:#666;">RISCO</div><div style="font-size:12px;color:#fff;font-family:monospace;">${this.escapeHtml(product.risco)}</div></div>` +
+      `</div>` +
+      `<div style="font-size:9px;color:#aaa;line-height:1.4;margin-top:8px;">${this.escapeHtml(product.detalhe)}</div>`;
+  },
+
+  openNews(url) {
+    if (!url || url === '#') return;
+    try { window.open(url, '_blank', 'noopener,noreferrer'); } catch(e) {}
+  },
+
   filterNews(source) {
+    this.activeNewsFilter = source;
     ['all', 'reuters', 'bloomberg', 'bbc'].forEach(s => {
       const btn = document.getElementById(`sit-news-${s}`);
       if (btn) {
@@ -2766,6 +2903,7 @@ const SituationRoom = {
         }
       }
     });
+    if (this.newsData && this.newsData.length > 0) this.renderRealNews();
   }
 };
 
@@ -2779,7 +2917,12 @@ const SituationRoom = {
 // ═══════════════════════════════════════════════════════════════════
 function showPanel(id) {
   try {
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => {
+      p.classList.remove('active');
+      p.style.display = '';
+      p.style.visibility = '';
+      p.style.opacity = '';
+    });
     document.querySelectorAll('#sidebar .nav-btn').forEach(b => b.classList.remove('active'));
     const panel = document.getElementById('panel-' + id);
     if (panel) panel.classList.add('active');
@@ -2804,16 +2947,12 @@ function showPanel(id) {
     if (id === 'esg' && !window._esgInit) { try { initESG(); } catch(e) { console.error('esg init error:', e); } }
     if (id === 'warroom' && !window._warInit) { try { initWarRoom(); } catch(e) { console.error('warroom init error:', e); } }
     if (id === 'warroom') setTimeout(() => { try { WarRoomProtocol.refresh(); } catch(e) { console.error('warroom refresh error:', e); } }, 200);
-    if (id === 'chat' && !window._chatInit) { try { initChatIA(); } catch(e) { console.error('chat init error:', e); } }
+    if (id === 'chat' && !window._chatInit) { try { initChatIA(); runSystemAudit(false); } catch(e) { console.error('chat init error:', e); } }
     if (id === 'situation') {
       setTimeout(() => {
         try {
           const sitPanel = document.getElementById('panel-situation');
-          if (sitPanel) {
-            sitPanel.style.display = 'flex';
-            sitPanel.style.visibility = 'visible';
-            sitPanel.style.opacity = '1';
-          }
+          if (sitPanel) sitPanel.classList.add('active');
           SituationRoom.init();
         } catch(e) { console.error('SituationRoom init error:', e); }
       }, 100);
@@ -5027,6 +5166,117 @@ function initChatIA() {
   window._chatInit = true;
   const msgs = document.getElementById('chat-messages');
   if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  runIAAnalyzer(false);
+  runRiskAnalyzer(false);
+}
+
+function _iaStatusColor(status) {
+  if (status === 'danger') return 'var(--danger)';
+  if (status === 'warn') return 'var(--warn)';
+  return 'var(--accent2)';
+}
+
+function _escapeIA(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+async function runIAAnalyzer(showChatMessage) {
+  const summaryEl = document.getElementById('ia-analysis-summary');
+  const cardsEl = document.getElementById('ia-analysis-cards');
+  const findingsEl = document.getElementById('ia-analysis-findings');
+  const recsEl = document.getElementById('ia-analysis-recs');
+  if (!summaryEl || !cardsEl || !findingsEl || !recsEl) return;
+
+  summaryEl.textContent = 'Executando análise de consistência, frescor, fonte e anomalias...';
+  cardsEl.innerHTML = '';
+  findingsEl.innerHTML = '';
+  recsEl.innerHTML = '';
+
+  try {
+    const res = await fetch('/api/flv/ia/analyze', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    summaryEl.innerHTML = `${_escapeIA(data.summary)}<br><span style="color:var(--text2);font-size:9px;">Gerado em ${_escapeIA(data.generated_at)}</span>`;
+
+    cardsEl.innerHTML = (data.cards || []).map(c => `
+      <div class="ia-card" style="border-color:${_iaStatusColor(c.status)}55">
+        <div class="k">${_escapeIA(c.label)}</div>
+        <div class="v" style="color:${_iaStatusColor(c.status)}">${_escapeIA(c.value)}</div>
+      </div>
+    `).join('');
+
+    findingsEl.innerHTML = (data.findings || []).slice(0, 8).map(f => `
+      <div class="ia-finding ${_escapeIA(f.level || 'info')}">
+        <strong>${_escapeIA(f.title)}</strong>
+        ${f.metric ? `<span style="float:right;color:var(--text2)">${_escapeIA(f.metric)}</span>` : ''}<br>
+        <span style="color:var(--text2)">${_escapeIA(f.detail)}</span>
+      </div>
+    `).join('') || '<div class="ia-finding info">Nenhum achado relevante no ciclo atual.</div>';
+
+    recsEl.innerHTML = (data.recommendations || []).map(r => `<li>${_escapeIA(r)}</li>`).join('');
+
+    if (showChatMessage) {
+      addMessage(`<strong style="color:var(--accent)">Analisador executado.</strong><br>${_escapeIA(data.summary)}<br><br><span style="color:var(--text2)">Resultados detalhados atualizados no topo da aba IA.</span>`, 'nias', `NIA$ IA · ${new Date().toLocaleTimeString('pt-BR')}`);
+    }
+  } catch (err) {
+    summaryEl.innerHTML = `<span style="color:var(--danger)">Falha ao executar o analisador:</span> ${_escapeIA(err.message || err)}`;
+    findingsEl.innerHTML = '<div class="ia-finding danger"><strong>Endpoint indisponível</strong><br><span style="color:var(--text2)">Verifique se o servidor Python está rodando e se /api/flv/ia/analyze responde.</span></div>';
+    if (showChatMessage) addMessage('Não foi possível executar o analisador de informações. Verifique o servidor/API.', 'nias', `NIA$ IA · ${new Date().toLocaleTimeString('pt-BR')}`);
+  }
+}
+
+
+async function runRiskAnalyzer(showChatMessage) {
+  const statusEl = document.getElementById('risk-status');
+  const cardsEl = document.getElementById('risk-cards');
+  const bodyEl = document.getElementById('risk-table-body');
+  const sourcesEl = document.getElementById('risk-sources');
+  if (!statusEl || !cardsEl || !bodyEl || !sourcesEl) return;
+  const country = encodeURIComponent(document.getElementById('risk-country')?.value || 'all');
+  const productRaw = (document.getElementById('risk-product')?.value || 'all').trim() || 'all';
+  const product = encodeURIComponent(productRaw);
+  const days = encodeURIComponent(document.getElementById('risk-days')?.value || '30');
+  statusEl.textContent = 'Consultando fontes seguras e calculando risco...';
+  cardsEl.innerHTML = '';
+  bodyEl.innerHTML = '<tr><td colspan="5" style="color:var(--text2);">Processando...</td></tr>';
+  try {
+    const res = await fetch(`/api/flv/risk/analyze?country=${country}&product=${product}&days=${days}`, {cache:'no-store'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const sum = data.summary || {};
+    const enso = data.enso || {};
+    const events = data.events || {};
+    statusEl.innerHTML = `Gerado em ${_escapeIA(data.generated_at)} · Método: ${_escapeIA(data.method)}`;
+    cardsEl.innerHTML = [
+      ['Risco máximo', `${sum.max_risk || 0}/100 · ${sum.max_severity || 'baixo'}`],
+      ['ENSO', `${enso.phase || 'monitorar'}${enso.probability ? ' · '+enso.probability+'%' : ''}`],
+      ['Eventos disruptivos', `${events.count || 0} sinais ReliefWeb`],
+      ['Polos analisados', `${sum.poles_analyzed || 0}`]
+    ].map(([k,v]) => `<div class="risk-card"><div class="k">${_escapeIA(k)}</div><div class="v">${_escapeIA(v)}</div></div>`).join('');
+    bodyEl.innerHTML = (data.poles || []).map(p => {
+      const d = p.drivers || {};
+      const action = (p.recommended_actions || [])[0] || 'monitorar';
+      return `<tr>
+        <td><strong>${_escapeIA(p.name)}</strong><br><span style="color:var(--text2)">${_escapeIA(p.country)}</span></td>
+        <td>${(p.products||[]).map(_escapeIA).join(', ')}</td>
+        <td><span class="risk-pill ${_escapeIA(p.severity)}">${_escapeIA(p.risk_score)} · ${_escapeIA(p.severity)}</span></td>
+        <td>clima ${_escapeIA(d.clima||0)} · ENSO ${_escapeIA(d.enso||0)} · eventos ${_escapeIA(d.eventos_logisticos_sociais||0)}</td>
+        <td>${_escapeIA(action)}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="5" style="color:var(--text2);">Nenhum polo encontrado para o filtro.</td></tr>';
+    const topSources = (data.sources || []).slice(0,5).map(s => `${s.name} (${s.category})`).join(' · ');
+    sourcesEl.textContent = 'Fontes: ' + topSources + '. Limitação: risco é triagem antecipatória, não previsão determinística.';
+    if (showChatMessage) addMessage(`<strong style="color:var(--warn)">API de risco atualizada.</strong><br>Risco máximo: ${_escapeIA(sum.max_risk || 0)}/100 · ${_escapeIA(sum.max_severity || 'baixo')}. ENSO: ${_escapeIA(enso.phase || 'monitorar')}.`, 'nias', `NIA$ RISCO · ${new Date().toLocaleTimeString('pt-BR')}`);
+  } catch (err) {
+    statusEl.innerHTML = `<span style="color:var(--danger)">Falha na API de risco:</span> ${_escapeIA(err.message || err)}`;
+    bodyEl.innerHTML = '<tr><td colspan="5" style="color:var(--danger);">Endpoint indisponível. Verifique /api/flv/risk/analyze.</td></tr>';
+  }
 }
 
 function sendMessage() {
@@ -5142,48 +5392,6 @@ function updateHorti() {
   });
 }
 setInterval(updateHorti, 4000);
-
-const hortiCardTimers = {};
-function initHortiCardTimers() {
-  document.querySelectorAll('.horti-card[id^="hc-"]').forEach(card => {
-    const key = card.id.replace('hc-', '');
-    const state = hortiState[key];
-    if (!state) return;
-    card.addEventListener('click', () => {
-      const priceEl = document.getElementById('hp-' + key);
-      const originalPrice = state.price;
-      const originalText = priceEl ? priceEl.textContent : '';
-      const originalColor = priceEl ? priceEl.style.color : '';
-      let remaining = 15;
-      clearInterval(hortiCardTimers[key]);
-      card.classList.add('timer-active');
-      let badge = card.querySelector('.horti-timer-badge');
-      if (!badge) {
-        badge = document.createElement('div');
-        badge.className = 'horti-timer-badge';
-        card.appendChild(badge);
-      }
-      const tick = () => {
-        badge.textContent = `Revertendo em ${remaining}s`;
-        remaining -= 1;
-        if (remaining < 0) {
-          clearInterval(hortiCardTimers[key]);
-          delete hortiCardTimers[key];
-          state.price = originalPrice;
-          if (priceEl) {
-            priceEl.textContent = originalText;
-            priceEl.style.color = originalColor;
-          }
-          card.classList.remove('timer-active');
-          badge.remove();
-        }
-      };
-      tick();
-      hortiCardTimers[key] = setInterval(tick, 1000);
-    });
-  });
-}
-setTimeout(initHortiCardTimers, 250);
 
 // ═══════════════════════════════════════════════════════════════════
 // 1. PHENOLOGICAL ENGINE — Anti-False-Alarm NDVI Logic
@@ -5629,6 +5837,7 @@ function initMunicipal() {
   // Local DB polygons as supplementary layer (detailed pins)
   renderChoropleth('all');
   buildMunTable('all');
+  updateMunicipalSouthAmericaSummary('all');
   startAnomalyRadar();
   populateSimMun();
   setTimeout(addCrossBorderVectors, 800);
@@ -5655,7 +5864,7 @@ function renderChoropleth(cultureFilter) {
       weight: 1.2,
     });
     const rm = calcRm(mun);
-    const adminLabel = { BR:'Município/IBGE', AR:'Departamento/INDEC', PY:'Distrito/DGEEC', UY:'Seção/INE' }[mun.country] || 'Unidade';
+    const adminLabel = { BR:'Município/IBGE', AR:'Departamento/INDEC', CL:'Comuna/INE', PE:'Província/INEI', CO:'Municipio/DANE', EC:'Cantón/INEC', BO:'Município/INE', PY:'Distrito/DGEEC', UY:'Departamento/INE', VE:'Municipio/INE', GY:'Região/Bureau', SR:'Distrito/GBS', GF:'Comuna/INSEE' }[mun.country] || 'Unidade produtiva';
     poly.bindPopup(`
       <div style="font-family:monospace;font-size:12px;min-width:200px;">
         <b style="color:#050e1a;font-size:13px;">${mun.name}</b>
@@ -5677,6 +5886,22 @@ function renderChoropleth(cultureFilter) {
 function filterMunicipalMap(cultureFilter) {
   renderChoropleth(cultureFilter);
   buildMunTable(cultureFilter);
+  updateMunicipalSouthAmericaSummary(cultureFilter);
+}
+
+function updateMunicipalSouthAmericaSummary(cultureFilter) {
+  const countryFilter = document.getElementById('mun-country')?.value || 'all';
+  const rows = MUNICIPAL_DB.filter(m =>
+    (cultureFilter === 'all' || m.culture === cultureFilter || (Array.isArray(m.flvCultures) && m.flvCultures.includes(cultureFilter))) &&
+    (countryFilter === 'all' || m.country === countryFilter)
+  );
+  const countries = [...new Set(rows.map(m => m.country))].sort();
+  const products = [...new Set(rows.flatMap(m => m.flvCultures || [m.culture]).filter(Boolean))].sort();
+  const tons = rows.reduce((acc,m)=>acc+(+m.flvTons||0),0);
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  set('mun-sa-count', `${rows.length} polos/regiões`);
+  set('mun-sa-countries', `${countries.length} países: ${countries.join(', ')}`);
+  set('mun-sa-products', `${products.length} produtos · ${(tons/1000000).toFixed(2)} Mt estimadas/ano · ${products.slice(0,18).join(', ')}${products.length>18?'…':''}`);
 }
 
 function highlightMunicipal(id) {
@@ -5702,10 +5927,10 @@ function buildMunTable(cultureFilter) {
     const status = m.ndvi < 0.45 ? '<span style="color:var(--danger);font-size:9px;">CRÍTICO</span>'
                  : m.ndvi < 0.55 ? '<span style="color:var(--warn);font-size:9px;">ATENÇÃO</span>'
                  : '<span style="color:var(--accent2);font-size:9px;">NORMAL</span>';
-    const flag = { BR:'🇧🇷', AR:'🇦🇷', PY:'🇵🇾', UY:'🇺🇾' }[m.country] || '';
+    const flag = { BR:'🇧🇷', AR:'🇦🇷', CL:'🇨🇱', PE:'🇵🇪', CO:'🇨🇴', EC:'🇪🇨', BO:'🇧🇴', PY:'🇵🇾', UY:'🇺🇾', VE:'🇻🇪', GY:'🇬🇾', SR:'🇸🇷', GF:'🇬🇫' }[m.country] || '';
     return `<tr style="cursor:pointer;" onclick="highlightMunicipal('${m.id}')">
       <td style="padding:5px 6px;border-bottom:1px solid var(--border);font-size:10px;width:35%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${flag} ${m.name}<span style="color:var(--text2);font-size:9px;"> · ${m.state}</span></td>
-      <td style="padding:5px 6px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text2);width:20%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.culture}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text2);width:20%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(m.flvCultures||[m.culture]).join(', ')}">${m.culture}</td>
       <td style="padding:5px 6px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;color:${ndviColor};width:15%;" id="mun-ndvi-${m.id}">${m.ndvi.toFixed(3)}</td>
       <td style="padding:5px 6px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;color:var(--accent);font-weight:bold;width:18%;" id="mun-rm-${m.id}">${rm}</td>
       <td style="padding:5px 6px;border-bottom:1px solid var(--border);text-align:center;width:12%;" id="mun-status-${m.id}">${status}</td>
@@ -5754,7 +5979,7 @@ function pushAnomalyEvent() {
   div.className = 'lf-item';
   div.style.borderLeft = `2px solid ${cls==='lf-danger'?'var(--danger)':cls==='lf-warn'?'var(--warn)':cls==='lf-ok'?'var(--accent2)':'var(--accent)'}`;
   div.style.paddingLeft = '8px';
-  div.innerHTML = `<span class="${cls}" style="font-size:10px;">${msg}</span><br><span class="lf-time">${ts} · ${{'BR':'Brasil','AR':'Argentina','PY':'Paraguai','UY':'Uruguai','CO':'Colômbia','VE':'Venezuela','CL':'Chile','PE':'Peru','EC':'Equador','BO':'Bolívia'}[mun.country] || mun.country}</span>`;
+  div.innerHTML = `<span class="${cls}" style="font-size:10px;">${msg}</span><br><span class="lf-time">${ts} · ${{'BR':'Brasil','AR':'Argentina','PY':'Paraguai','UY':'Uruguai','CO':'Colômbia','VE':'Venezuela','CL':'Chile','PE':'Peru','EC':'Equador','BO':'Bolívia','GY':'Guiana','SR':'Suriname','GF':'Guiana Francesa'}[mun.country] || mun.country}</span>`;
   list.insertBefore(div, list.firstChild);
   while (list.children.length > 60) list.removeChild(list.lastChild);
 }
@@ -6462,6 +6687,81 @@ const MUNICIPAL_DB_FLV = [
 ];
 MUNICIPAL_DB_FLV.forEach(m => { if (!MUNICIPAL_DB.find(x => x.ibgeCode === m.ibgeCode)) MUNICIPAL_DB.push(m); });
 
+// ════════════════════════════════════════════════════════════════
+// BIO-COMMAND — COBERTURA HORTIFRUTIGRANJEIRA AMÉRICA DO SUL
+// Base curada de polos produtivos: frutas, hortaliças, tubérculos,
+// flores, ovos, aves, leite e proteínas de granja. Valores de volume
+// são ordens de grandeza operacionais para mapa/risco, não substituem
+// séries oficiais nacionais.
+// ════════════════════════════════════════════════════════════════
+const MUNICIPAL_DB_SOUTH_AMERICA_HF = [
+  { id:'AR-MDZ-LUJ', name:'Luján de Cuyo', state:'Mendoza', country:'AR', culture:'uva', areaMha:0.20, area_ha:42000, ndvi:0.7, coef:0.84, lat:-33.04, lon:-68.88, flvCultures:["uva", "alho", "cebola", "pessego", "ameixa"], flvTons:420000, phenology:'Oásis Norte — viticultura, alho e frutas de caroço', source:'curated_south_america_hf_2026', poly:[[-33.16, -69.0], [-33.16, -68.76], [-32.92, -68.76], [-32.92, -69.0]] },
+  { id:'AR-MDZ-SRA', name:'San Rafael', state:'Mendoza', country:'AR', culture:'uva', areaMha:0.20, area_ha:36000, ndvi:0.68, coef:0.84, lat:-34.61, lon:-68.33, flvCultures:["uva", "pera", "maçã", "ameixa", "tomate"], flvTons:360000, phenology:'Oásis Sul — fruta fresca, vitivinicultura e tomate', source:'curated_south_america_hf_2026', poly:[[-34.73, -68.45], [-34.73, -68.21], [-34.49, -68.21], [-34.49, -68.45]] },
+  { id:'AR-RNO-ALT', name:'Alto Valle', state:'Río Negro', country:'AR', culture:'maca', areaMha:0.20, area_ha:52000, ndvi:0.72, coef:0.84, lat:-38.95, lon:-67.99, flvCultures:["maçã", "pera", "cereja", "ameixa"], flvTons:520000, phenology:'Vale irrigado do Río Negro — pomáceas', source:'curated_south_america_hf_2026', poly:[[-39.07, -68.11], [-39.07, -67.87], [-38.83, -67.87], [-38.83, -68.11]] },
+  { id:'AR-TUC-FAM', name:'Famaillá', state:'Tucumán', country:'AR', culture:'limao', areaMha:0.20, area_ha:48000, ndvi:0.66, coef:0.84, lat:-27.05, lon:-65.4, flvCultures:["limão", "laranja", "mandarina", "hortaliças"], flvTons:480000, phenology:'NOA citrícola — limão industrial e fresco', source:'curated_south_america_hf_2026', poly:[[-27.17, -65.52], [-27.17, -65.28], [-26.93, -65.28], [-26.93, -65.52]] },
+  { id:'AR-SAL-ORA', name:'Orán', state:'Salta', country:'AR', culture:'banana', areaMha:0.20, area_ha:21000, ndvi:0.62, coef:0.84, lat:-23.13, lon:-64.32, flvCultures:["banana", "citrus", "tomate", "pimentao"], flvTons:210000, phenology:'Subtropical de Salta/Jujuy', source:'curated_south_america_hf_2026', poly:[[-23.25, -64.44], [-23.25, -64.2], [-23.01, -64.2], [-23.01, -64.44]] },
+  { id:'AR-BUE-LPL', name:'La Plata', state:'Buenos Aires', country:'AR', culture:'horti', areaMha:0.20, area_ha:18000, ndvi:0.64, coef:0.84, lat:-34.92, lon:-57.95, flvCultures:["alface", "tomate", "pimentao", "folhosas"], flvTons:180000, phenology:'Cinturão verde de Buenos Aires', source:'curated_south_america_hf_2026', poly:[[-35.04, -58.07], [-35.04, -57.83], [-34.8, -57.83], [-34.8, -58.07]] },
+  { id:'AR-COR-COL', name:'Colonia Caroya', state:'Córdoba', country:'AR', culture:'horti', areaMha:0.20, area_ha:14500, ndvi:0.61, coef:0.84, lat:-31.02, lon:-64.07, flvCultures:["batata", "cebola", "uva", "frutas"], flvTons:145000, phenology:'Horti-fruti centro argentino', source:'curated_south_america_hf_2026', poly:[[-31.14, -64.19], [-31.14, -63.95], [-30.9, -63.95], [-30.9, -64.19]] },
+  { id:'CL-RM-MAI', name:'Maipo / Buin', state:'Región Metropolitana', country:'CL', culture:'uva', areaMha:0.20, area_ha:39000, ndvi:0.7, coef:0.84, lat:-33.73, lon:-70.74, flvCultures:["uva", "hortaliças", "tomate", "pimentao"], flvTons:390000, phenology:'Vale Central — uva, hortaliças e exportação', source:'curated_south_america_hf_2026', poly:[[-33.85, -70.86], [-33.85, -70.62], [-33.61, -70.62], [-33.61, -70.86]] },
+  { id:'CL-OHI-RAN', name:'Rancagua / Cachapoal', state:'O’Higgins', country:'CL', culture:'uva', areaMha:0.20, area_ha:61000, ndvi:0.73, coef:0.84, lat:-34.17, lon:-70.74, flvCultures:["uva", "cereja", "maçã", "nectarina", "pêssego"], flvTons:610000, phenology:'O’Higgins — frutas temperadas exportáveis', source:'curated_south_america_hf_2026', poly:[[-34.29, -70.86], [-34.29, -70.62], [-34.05, -70.62], [-34.05, -70.86]] },
+  { id:'CL-MAU-CUR', name:'Curicó / Maule', state:'Maule', country:'CL', culture:'maca', areaMha:0.20, area_ha:58000, ndvi:0.72, coef:0.84, lat:-34.98, lon:-71.24, flvCultures:["maçã", "cereja", "kiwi", "uva"], flvTons:580000, phenology:'Maule — pomáceas e caroço', source:'curated_south_america_hf_2026', poly:[[-35.1, -71.36], [-35.1, -71.12], [-34.86, -71.12], [-34.86, -71.36]] },
+  { id:'CL-NUB-CHI', name:'Chillán', state:'Ñuble', country:'CL', culture:'horti', areaMha:0.20, area_ha:21000, ndvi:0.63, coef:0.84, lat:-36.61, lon:-72.1, flvCultures:["tomate", "cebola", "alho", "batata", "berries"], flvTons:210000, phenology:'Ñuble/Bío-Bío hortícola', source:'curated_south_america_hf_2026', poly:[[-36.73, -72.22], [-36.73, -71.98], [-36.49, -71.98], [-36.49, -72.22]] },
+  { id:'CL-ARA-TEM', name:'Temuco / Araucanía', state:'Araucanía', country:'CL', culture:'batata', areaMha:0.20, area_ha:26000, ndvi:0.64, coef:0.84, lat:-38.74, lon:-72.59, flvCultures:["batata", "frango", "leite", "berries"], flvTons:260000, phenology:'Sul chileno — batata, leite e berries', source:'curated_south_america_hf_2026', poly:[[-38.86, -72.71], [-38.86, -72.47], [-38.62, -72.47], [-38.62, -72.71]] },
+  { id:'CL-ATA-COP', name:'Copiapó / Huasco', state:'Atacama', country:'CL', culture:'uva', areaMha:0.20, area_ha:15000, ndvi:0.58, coef:0.84, lat:-27.37, lon:-70.33, flvCultures:["uva", "oliva", "tomate"], flvTons:150000, phenology:'Oásis desértico irrigado', source:'curated_south_america_hf_2026', poly:[[-27.49, -70.45], [-27.49, -70.21], [-27.25, -70.21], [-27.25, -70.45]] },
+  { id:'PE-ICA-ICA', name:'Ica', state:'Ica', country:'PE', culture:'uva', areaMha:0.20, area_ha:72000, ndvi:0.76, coef:0.84, lat:-14.07, lon:-75.73, flvCultures:["uva", "aspargos", "palta", "mandarina", "arandano"], flvTons:720000, phenology:'Agroexportação costeira — Ica', source:'curated_south_america_hf_2026', poly:[[-14.19, -75.85], [-14.19, -75.61], [-13.95, -75.61], [-13.95, -75.85]] },
+  { id:'PE-LAL-VIR', name:'Virú / Chao', state:'La Libertad', country:'PE', culture:'aspargos', areaMha:0.20, area_ha:65000, ndvi:0.74, coef:0.84, lat:-8.41, lon:-78.75, flvCultures:["aspargos", "palta", "arandano", "alcachofra", "uva"], flvTons:650000, phenology:'Chavimochic — hortifruti de exportação', source:'curated_south_america_hf_2026', poly:[[-8.53, -78.87], [-8.53, -78.63], [-8.29, -78.63], [-8.29, -78.87]] },
+  { id:'PE-LAM-OLM', name:'Olmos / Motupe', state:'Lambayeque', country:'PE', culture:'palta', areaMha:0.20, area_ha:43000, ndvi:0.71, coef:0.84, lat:-5.99, lon:-79.74, flvCultures:["palta", "manga", "uva", "limão"], flvTons:430000, phenology:'Olmos — fruticultura irrigada', source:'curated_south_america_hf_2026', poly:[[-6.11, -79.86], [-6.11, -79.62], [-5.87, -79.62], [-5.87, -79.86]] },
+  { id:'PE-PIU-TAM', name:'Tambogrande / Sullana', state:'Piura', country:'PE', culture:'manga', areaMha:0.20, area_ha:52000, ndvi:0.68, coef:0.84, lat:-4.93, lon:-80.34, flvCultures:["manga", "limão", "banana", "uva"], flvTons:520000, phenology:'Piura — manga e limão', source:'curated_south_america_hf_2026', poly:[[-5.05, -80.46], [-5.05, -80.22], [-4.81, -80.22], [-4.81, -80.46]] },
+  { id:'PE-LIM-HUA', name:'Huaral / Cañete', state:'Lima', country:'PE', culture:'horti', areaMha:0.20, area_ha:31000, ndvi:0.66, coef:0.84, lat:-11.5, lon:-77.2, flvCultures:["mandarina", "uva", "palta", "hortaliças"], flvTons:310000, phenology:'Costa central — citros e hortaliças', source:'curated_south_america_hf_2026', poly:[[-11.62, -77.32], [-11.62, -77.08], [-11.38, -77.08], [-11.38, -77.32]] },
+  { id:'PE-JUN-CHA', name:'Chanchamayo', state:'Junín', country:'PE', culture:'cafe', areaMha:0.20, area_ha:19000, ndvi:0.69, coef:0.84, lat:-11.06, lon:-75.33, flvCultures:["café", "cacau", "banana", "abacaxi"], flvTons:190000, phenology:'Selva central — café, cacau e frutas', source:'curated_south_america_hf_2026', poly:[[-11.18, -75.45], [-11.18, -75.21], [-10.94, -75.21], [-10.94, -75.45]] },
+  { id:'EC-GUA-MAC', name:'Machala / El Oro', state:'El Oro', country:'EC', culture:'banana', areaMha:0.20, area_ha:76000, ndvi:0.74, coef:0.84, lat:-3.26, lon:-79.96, flvCultures:["banana", "cacau", "camarão"], flvTons:760000, phenology:'Corredor bananeiro do El Oro', source:'curated_south_america_hf_2026', poly:[[-3.38, -80.08], [-3.38, -79.84], [-3.14, -79.84], [-3.14, -80.08]] },
+  { id:'EC-GUA-GYE', name:'Guayas / Los Ríos', state:'Guayas', country:'EC', culture:'banana', areaMha:0.20, area_ha:89000, ndvi:0.73, coef:0.84, lat:-2.17, lon:-79.9, flvCultures:["banana", "cacau", "arroz", "manga"], flvTons:890000, phenology:'Litoral equatoriano — banana, cacau, arroz', source:'curated_south_america_hf_2026', poly:[[-2.29, -80.02], [-2.29, -79.78], [-2.05, -79.78], [-2.05, -80.02]] },
+  { id:'EC-MAN-QUE', name:'Quevedo / Los Ríos', state:'Los Ríos', country:'EC', culture:'cacau', areaMha:0.20, area_ha:42000, ndvi:0.7, coef:0.84, lat:-1.03, lon:-79.46, flvCultures:["cacau", "banana", "mandarina", "milho"], flvTons:420000, phenology:'Cacau fino e banana', source:'curated_south_america_hf_2026', poly:[[-1.15, -79.58], [-1.15, -79.34], [-0.91, -79.34], [-0.91, -79.58]] },
+  { id:'EC-PIC-CAY', name:'Cayambe / Pedro Moncayo', state:'Pichincha', country:'EC', culture:'flores', areaMha:0.20, area_ha:16000, ndvi:0.65, coef:0.84, lat:0.04, lon:-78.15, flvCultures:["flores", "brocolis", "alface", "leite"], flvTons:160000, phenology:'Serra equatoriana — flores e hortaliças', source:'curated_south_america_hf_2026', poly:[[-0.08, -78.27], [-0.08, -78.03], [0.16, -78.03], [0.16, -78.27]] },
+  { id:'EC-COT-LAT', name:'Latacunga / Cotopaxi', state:'Cotopaxi', country:'EC', culture:'brocolis', areaMha:0.20, area_ha:13000, ndvi:0.63, coef:0.84, lat:-0.93, lon:-78.62, flvCultures:["brocolis", "batata", "cenoura", "leite"], flvTons:130000, phenology:'Altiplano hortícola', source:'curated_south_america_hf_2026', poly:[[-1.05, -78.74], [-1.05, -78.5], [-0.81, -78.5], [-0.81, -78.74]] },
+  { id:'CO-ANT-URA', name:'Urabá / Apartadó', state:'Antioquia', country:'CO', culture:'banana', areaMha:0.20, area_ha:82000, ndvi:0.75, coef:0.84, lat:7.88, lon:-76.63, flvCultures:["banana", "plátano", "cacau"], flvTons:820000, phenology:'Urabá — banana/plátano exportação', source:'curated_south_america_hf_2026', poly:[[7.76, -76.75], [7.76, -76.51], [8.0, -76.51], [8.0, -76.75]] },
+  { id:'CO-MAG-SMR', name:'Santa Marta / Magdalena', state:'Magdalena', country:'CO', culture:'banana', areaMha:0.20, area_ha:51000, ndvi:0.72, coef:0.84, lat:11.24, lon:-74.2, flvCultures:["banana", "manga", "cítricos"], flvTons:510000, phenology:'Caribe colombiano — banana', source:'curated_south_america_hf_2026', poly:[[11.12, -74.32], [11.12, -74.08], [11.36, -74.08], [11.36, -74.32]] },
+  { id:'CO-CUN-FAC', name:'Facatativá / Sabana Bogotá', state:'Cundinamarca', country:'CO', culture:'flores', areaMha:0.20, area_ha:26000, ndvi:0.67, coef:0.84, lat:4.81, lon:-74.35, flvCultures:["flores", "batata", "alface", "morango", "leite"], flvTons:260000, phenology:'Sabana de Bogotá — flores, batata, lácteos', source:'curated_south_america_hf_2026', poly:[[4.69, -74.47], [4.69, -74.23], [4.93, -74.23], [4.93, -74.47]] },
+  { id:'CO-VAL-PAL', name:'Palmira / Valle del Cauca', state:'Valle del Cauca', country:'CO', culture:'cana', areaMha:0.20, area_ha:38000, ndvi:0.66, coef:0.84, lat:3.54, lon:-76.3, flvCultures:["cana", "uva", "hortaliças", "frango"], flvTons:380000, phenology:'Valle del Cauca — cana e hortifruti', source:'curated_south_america_hf_2026', poly:[[3.42, -76.42], [3.42, -76.18], [3.66, -76.18], [3.66, -76.42]] },
+  { id:'CO-HUI-GAR', name:'Garzón / Huila', state:'Huila', country:'CO', culture:'cafe', areaMha:0.20, area_ha:21000, ndvi:0.68, coef:0.84, lat:2.2, lon:-75.63, flvCultures:["café", "cacau", "maracuja", "abacate"], flvTons:210000, phenology:'Andes colombianos — café e frutas', source:'curated_south_america_hf_2026', poly:[[2.08, -75.75], [2.08, -75.51], [2.32, -75.51], [2.32, -75.75]] },
+  { id:'CO-SAN-BUC', name:'Bucaramanga / Santander', state:'Santander', country:'CO', culture:'cacau', areaMha:0.20, area_ha:23000, ndvi:0.66, coef:0.84, lat:7.12, lon:-73.12, flvCultures:["cacau", "cítricos", "abacate", "frango"], flvTons:230000, phenology:'Santander — cacau, citros e avicultura', source:'curated_south_america_hf_2026', poly:[[7.0, -73.24], [7.0, -73.0], [7.24, -73.0], [7.24, -73.24]] },
+  { id:'BO-SCZ-YAP', name:'Yapacaní / Santa Cruz', state:'Santa Cruz', country:'BO', culture:'banana', areaMha:0.20, area_ha:30000, ndvi:0.66, coef:0.84, lat:-17.4, lon:-63.88, flvCultures:["banana", "arroz", "soja", "mandioca", "frango"], flvTons:300000, phenology:'Oriente boliviano — tropical e grãos', source:'curated_south_america_hf_2026', poly:[[-17.52, -64.0], [-17.52, -63.76], [-17.28, -63.76], [-17.28, -64.0]] },
+  { id:'BO-SCZ-VAL', name:'Vallegrande', state:'Santa Cruz', country:'BO', culture:'horti', areaMha:0.20, area_ha:9500, ndvi:0.59, coef:0.84, lat:-18.49, lon:-64.1, flvCultures:["tomate", "batata", "pimentao", "cebola"], flvTons:95000, phenology:'Vales cruceños — hortaliças', source:'curated_south_america_hf_2026', poly:[[-18.61, -64.22], [-18.61, -63.98], [-18.37, -63.98], [-18.37, -64.22]] },
+  { id:'BO-CBA-CHI', name:'Chapare / Cochabamba', state:'Cochabamba', country:'BO', culture:'banana', areaMha:0.20, area_ha:28000, ndvi:0.7, coef:0.84, lat:-16.99, lon:-65.13, flvCultures:["banana", "abacaxi", "mandioca", "cítricos"], flvTons:280000, phenology:'Chapare tropical', source:'curated_south_america_hf_2026', poly:[[-17.11, -65.25], [-17.11, -65.01], [-16.87, -65.01], [-16.87, -65.25]] },
+  { id:'BO-LP-ALT', name:'Altiplano La Paz / Oruro', state:'La Paz/Oruro', country:'BO', culture:'batata', areaMha:0.20, area_ha:19000, ndvi:0.52, coef:0.84, lat:-16.5, lon:-68.15, flvCultures:["batata", "quinua", "cebola", "leite"], flvTons:190000, phenology:'Altiplano andino — batata e quinoa', source:'curated_south_america_hf_2026', poly:[[-16.62, -68.27], [-16.62, -68.03], [-16.38, -68.03], [-16.38, -68.27]] },
+  { id:'BO-TJA-TAR', name:'Tarija', state:'Tarija', country:'BO', culture:'uva', areaMha:0.20, area_ha:12000, ndvi:0.61, coef:0.84, lat:-21.53, lon:-64.73, flvCultures:["uva", "tomate", "pimentao", "hortaliças"], flvTons:120000, phenology:'Vales de Tarija — uva e hortaliças', source:'curated_south_america_hf_2026', poly:[[-21.65, -64.85], [-21.65, -64.61], [-21.41, -64.61], [-21.41, -64.85]] },
+  { id:'PY-ITA-CDE', name:'Alto Paraná / Itapúa', state:'Alto Paraná/Itapúa', country:'PY', culture:'soja', areaMha:0.20, area_ha:53000, ndvi:0.66, coef:0.84, lat:-25.51, lon:-54.61, flvCultures:["soja", "milho", "mandioca", "frango", "suinos"], flvTons:530000, phenology:'Leste paraguaio — grãos, mandioca e proteína', source:'curated_south_america_hf_2026', poly:[[-25.63, -54.73], [-25.63, -54.49], [-25.39, -54.49], [-25.39, -54.73]] },
+  { id:'PY-CEN-ITA', name:'Itauguá / Central', state:'Central', country:'PY', culture:'horti', areaMha:0.20, area_ha:9000, ndvi:0.58, coef:0.84, lat:-25.38, lon:-57.33, flvCultures:["tomate", "pimentao", "alface", "mandioca", "ovos"], flvTons:90000, phenology:'Cinturão hortícola de Assunção', source:'curated_south_america_hf_2026', poly:[[-25.5, -57.45], [-25.5, -57.21], [-25.26, -57.21], [-25.26, -57.45]] },
+  { id:'PY-CAZ-CAZ', name:'Caaguazú', state:'Caaguazú', country:'PY', culture:'mandioca', areaMha:0.20, area_ha:26000, ndvi:0.61, coef:0.84, lat:-25.46, lon:-56.02, flvCultures:["mandioca", "soja", "milho", "frango"], flvTons:260000, phenology:'Mandioca industrial e grãos', source:'curated_south_america_hf_2026', poly:[[-25.58, -56.14], [-25.58, -55.9], [-25.34, -55.9], [-25.34, -56.14]] },
+  { id:'PY-PAR-PIL', name:'Pilar / Ñeembucú', state:'Ñeembucú', country:'PY', culture:'arroz', areaMha:0.20, area_ha:11000, ndvi:0.6, coef:0.84, lat:-26.86, lon:-58.3, flvCultures:["arroz", "hortaliças", "pecuaria_leite"], flvTons:110000, phenology:'Arroz irrigado e leite', source:'curated_south_america_hf_2026', poly:[[-26.98, -58.42], [-26.98, -58.18], [-26.74, -58.18], [-26.74, -58.42]] },
+  { id:'UY-SAL-SAL', name:'Salto / Paysandú', state:'Salto/Paysandú', country:'UY', culture:'citricos', areaMha:0.20, area_ha:30000, ndvi:0.68, coef:0.84, lat:-31.39, lon:-57.96, flvCultures:["laranja", "mandarina", "limão", "arroz", "leite"], flvTons:300000, phenology:'Litoral Norte — citros e arroz', source:'curated_south_america_hf_2026', poly:[[-31.51, -58.08], [-31.51, -57.84], [-31.27, -57.84], [-31.27, -58.08]] },
+  { id:'UY-CAN-CAN', name:'Canelones', state:'Canelones', country:'UY', culture:'horti', areaMha:0.20, area_ha:16000, ndvi:0.64, coef:0.84, lat:-34.52, lon:-56.28, flvCultures:["tomate", "alface", "uva", "pêssego", "ovos"], flvTons:160000, phenology:'Cinturão hortifrutícola de Montevidéu', source:'curated_south_america_hf_2026', poly:[[-34.64, -56.4], [-34.64, -56.16], [-34.4, -56.16], [-34.4, -56.4]] },
+  { id:'UY-SJO-SJO', name:'San José', state:'San José', country:'UY', culture:'leite', areaMha:0.20, area_ha:21000, ndvi:0.63, coef:0.84, lat:-34.34, lon:-56.71, flvCultures:["leite", "queijo", "hortaliças", "frango"], flvTons:210000, phenology:'Leite, aves e hortifruti', source:'curated_south_america_hf_2026', poly:[[-34.46, -56.83], [-34.46, -56.59], [-34.22, -56.59], [-34.22, -56.83]] },
+  { id:'UY-ROC-ROZ', name:'Rocha / Treinta y Tres', state:'Rocha/Treinta y Tres', country:'UY', culture:'arroz', areaMha:0.20, area_ha:19000, ndvi:0.62, coef:0.84, lat:-33.37, lon:-54.21, flvCultures:["arroz", "batata", "pecuaria_corte"], flvTons:190000, phenology:'Arroz e pecuária no leste', source:'curated_south_america_hf_2026', poly:[[-33.49, -54.33], [-33.49, -54.09], [-33.25, -54.09], [-33.25, -54.33]] },
+  { id:'VE-ZUL-SUR', name:'Sur del Lago', state:'Zulia', country:'VE', culture:'banana', areaMha:0.20, area_ha:43000, ndvi:0.69, coef:0.84, lat:8.98, lon:-71.91, flvCultures:["banana", "plátano", "cacau", "leite"], flvTons:430000, phenology:'Sul do Lago — plátano, banana e leite', source:'curated_south_america_hf_2026', poly:[[8.86, -72.03], [8.86, -71.79], [9.1, -71.79], [9.1, -72.03]] },
+  { id:'VE-ARA-MAR', name:'Maracay / Aragua', state:'Aragua', country:'VE', culture:'horti', areaMha:0.20, area_ha:17000, ndvi:0.62, coef:0.84, lat:10.25, lon:-67.6, flvCultures:["tomate", "pimentao", "cítricos", "frango"], flvTons:170000, phenology:'Centro venezuelano — hortaliças e aves', source:'curated_south_america_hf_2026', poly:[[10.13, -67.72], [10.13, -67.48], [10.37, -67.48], [10.37, -67.72]] },
+  { id:'VE-LAR-BAR', name:'Barquisimeto / Lara', state:'Lara', country:'VE', culture:'cebola', areaMha:0.20, area_ha:15000, ndvi:0.59, coef:0.84, lat:10.07, lon:-69.32, flvCultures:["cebola", "tomate", "pimentao", "uvas"], flvTons:150000, phenology:'Vale seco irrigado — hortaliças', source:'curated_south_america_hf_2026', poly:[[9.95, -69.44], [9.95, -69.2], [10.19, -69.2], [10.19, -69.44]] },
+  { id:'VE-MER-MER', name:'Mérida Andes', state:'Mérida', country:'VE', culture:'batata', areaMha:0.20, area_ha:13000, ndvi:0.6, coef:0.84, lat:8.59, lon:-71.14, flvCultures:["batata", "cenoura", "alface", "leite"], flvTons:130000, phenology:'Andes venezuelanos — batata e lácteos', source:'curated_south_america_hf_2026', poly:[[8.47, -71.26], [8.47, -71.02], [8.71, -71.02], [8.71, -71.26]] },
+  { id:'GY-DEM-GEO', name:'Demerara / Georgetown', state:'Demerara-Mahaica', country:'GY', culture:'arroz', areaMha:0.20, area_ha:16000, ndvi:0.64, coef:0.84, lat:6.8, lon:-58.16, flvCultures:["arroz", "coco", "abacaxi", "frango"], flvTons:160000, phenology:'Planície costeira guianense', source:'curated_south_america_hf_2026', poly:[[6.68, -58.28], [6.68, -58.04], [6.92, -58.04], [6.92, -58.28]] },
+  { id:'GY-ESS-ROS', name:'Essequibo Coast', state:'Pomeroon-Supenaam', country:'GY', culture:'arroz', areaMha:0.20, area_ha:12000, ndvi:0.63, coef:0.84, lat:7.26, lon:-58.49, flvCultures:["arroz", "coco", "banana", "mandioca"], flvTons:120000, phenology:'Costa do Essequibo', source:'curated_south_america_hf_2026', poly:[[7.14, -58.61], [7.14, -58.37], [7.38, -58.37], [7.38, -58.61]] },
+  { id:'SR-PAR-PAR', name:'Paramaribo / Wanica', state:'Paramaribo/Wanica', country:'SR', culture:'horti', areaMha:0.20, area_ha:13000, ndvi:0.64, coef:0.84, lat:5.85, lon:-55.2, flvCultures:["arroz", "banana", "hortaliças", "frango"], flvTons:130000, phenology:'Costa do Suriname', source:'curated_south_america_hf_2026', poly:[[5.73, -55.32], [5.73, -55.08], [5.97, -55.08], [5.97, -55.32]] },
+  { id:'SR-NIC-NIC', name:'Nickerie', state:'Nickerie', country:'SR', culture:'arroz', areaMha:0.20, area_ha:19000, ndvi:0.66, coef:0.84, lat:5.95, lon:-56.99, flvCultures:["arroz", "banana", "coco"], flvTons:190000, phenology:'Nickerie — arroz irrigado', source:'curated_south_america_hf_2026', poly:[[5.83, -57.11], [5.83, -56.87], [6.07, -56.87], [6.07, -57.11]] },
+  { id:'GF-CAY-MAT', name:'Cayenne / Matoury', state:'Guiana Francesa', country:'GF', culture:'horti', areaMha:0.20, area_ha:6000, ndvi:0.62, coef:0.84, lat:4.92, lon:-52.33, flvCultures:["hortaliças", "banana", "mandioca", "frango"], flvTons:60000, phenology:'Abastecimento local — costa da Guiana Francesa', source:'curated_south_america_hf_2026', poly:[[4.8, -52.45], [4.8, -52.21], [5.04, -52.21], [5.04, -52.45]] },
+  { id:'GF-STL-STL', name:'Saint-Laurent-du-Maroni', state:'Guiana Francesa', country:'GF', culture:'mandioca', areaMha:0.20, area_ha:5000, ndvi:0.63, coef:0.84, lat:5.5, lon:-54.03, flvCultures:["mandioca", "banana", "abacaxi"], flvTons:50000, phenology:'Oeste guianense — mandioca e frutas tropicais', source:'curated_south_america_hf_2026', poly:[[5.38, -54.15], [5.38, -53.91], [5.62, -53.91], [5.62, -54.15]] }
+];
+MUNICIPAL_DB_SOUTH_AMERICA_HF.forEach(m => {
+  if (!MUNICIPAL_DB.find(x => x.id === m.id)) MUNICIPAL_DB.push(m);
+});
+window.BC_SOUTH_AMERICA_HF_META = {
+  updated_at: '2026-05-24',
+  scope: 'América do Sul — polos hortifrutigranjeiros',
+  records: MUNICIPAL_DB_SOUTH_AMERICA_HF.length,
+  countries: [...new Set(MUNICIPAL_DB_SOUTH_AMERICA_HF.map(m => m.country))].sort(),
+  products: [...new Set(MUNICIPAL_DB_SOUTH_AMERICA_HF.flatMap(m => m.flvCultures || [m.culture]))].sort(),
+  precision: 'polo/município-região; não cadastro exaustivo de propriedade rural'
+};
+
+
 
 // ════════════════════════════════════════════════════════════════
 // ARGUS — Calendário de Vigilância Fenológica 2026
@@ -6905,7 +7205,7 @@ function populateSimMun() {
   if (!sel || sel.options.length > 1) return;
   MUNICIPAL_DB.forEach(m => {
     const opt = document.createElement('option');
-    opt.value = m.id; opt.textContent = `${m.name} (${m.state})`;
+    opt.value = m.id; opt.textContent = `${m.name} (${m.state} · ${m.country})`;
     sel.appendChild(opt);
   });
 }
@@ -7300,12 +7600,20 @@ function _showUpgradeToast(msg) {
 
 // ── Demo Mode (Guest pre-loaded scenario)
 function _activateDemoMode() {
+  // 1. Switch to municipal tab and pre-select Tomate
   setTimeout(() => {
+    const munTab = document.querySelector('[onclick*="municipal"]') || document.querySelector('[onclick*="Municipal"]');
+    if (munTab) munTab.click();
+  }, 600);
+
+  setTimeout(() => {
+    // Select tomate mesa culture
     if (typeof trocarCultura === 'function') trocarCultura('tomate');
+    // Show a "safra recorde" banner
     _showDemoBanner();
   }, 1400);
 
-  // 1. Lock note above arbitrage table (blur is now handled inline in updateArbitragem via niasRole check)
+  // 2. Lock note above arbitrage table (blur is now handled inline in updateArbitragem via niasRole check)
   setTimeout(() => {
     const arbTitle = document.querySelector('#arb-strip') || document.getElementById('arb-thead');
     if (arbTitle && !arbTitle.querySelector('.rbac-lock-note')) {
@@ -7317,7 +7625,7 @@ function _activateDemoMode() {
     }
   }, 2200);
 
-  // 2. Patch anomaly feed to show only positive events
+  // 3. Patch anomaly feed to show only positive events
   const _origPushEvt = window.pushAnomalyEvent;
   window.pushAnomalyEvent = function() {
     _origPushEvt && _origPushEvt();
@@ -7424,6 +7732,11 @@ function initBioCommand() {
   portos.addTo(bcMap);
   const el = document.getElementById('bc-clock');
   if (el) { const _t=()=>{el.textContent=new Date().toLocaleTimeString('pt-BR');}; _t(); setInterval(_t,1000); }
+  const saEl = document.getElementById('bc-sa-count');
+  if (saEl && window.BC_SOUTH_AMERICA_HF_META) {
+    saEl.textContent = `SA HF ${window.BC_SOUTH_AMERICA_HF_META.records} polos · ${window.BC_SOUTH_AMERICA_HF_META.countries.length} países`;
+    saEl.title = `${window.BC_SOUTH_AMERICA_HF_META.scope} · Produtos: ${window.BC_SOUTH_AMERICA_HF_META.products.join(', ')}`;
+  }
   setTimeout(() => bcMap.invalidateSize(), 80);
 }
 
@@ -10333,6 +10646,101 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
   }
 }
 
+
+
+// ═══ MERCADO REAL — sem random, sem simulação ═══
+const MERCADO_REAL_DATA = {
+  updated_at: '2026-05-24',
+  methodology: 'Base curada: produção/oferta anual e referências de mercado. Preço só é exibido quando há fonte; valores ausentes ficam como —.',
+  sources: ['CONAB','IBGE PAM','CEAGESP','CEPEA','CNA'],
+  records: [
+    ['Soja','grãos','171,5 Mt','—','oferta elevada','Brasil','CONAB','Safra 2024/25 divulgada em 2025','real_curado','Produção nacional recorde citada em base CONAB; atualizar via portal/API CONAB.'],
+    ['Milho','grãos','≈140 Mt','—','estável','Brasil','CONAB/mercado','Safra 2024/25-2025/26','real_curado','Grandeza nacional; não representa preço spot.'],
+    ['Arroz','grãos','12,3 Mt','—','neutro','Brasil','IBGE/CONAB','base anual','real_curado','Volume anual; preço depende de praça e tipo.'],
+    ['Feijão','grãos','3,4 Mt','—','sensível à safra','Brasil','IBGE/CONAB','base anual','real_curado','Mercado segmentado por cores/tipos.'],
+    ['Laranja','frutas','16,7 Mt','—','oferta regional','Brasil / SP-MG-BA','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Fruta com maior volume entre hortifrutis no Brasil.'],
+    ['Banana','frutas','6,6 Mt','—','oferta distribuída','Brasil / SP-MG-BA-SC','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Atualizar ranking por UF via PAM anual.'],
+    ['Açaí','frutas','1,48 Mt','—','alta estrutural','Amazônia / PA-AM-AP','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Produto regional com mercado industrial/exportação.'],
+    ['Uva','frutas','1,44 Mt','—','sazonal','Vale do São Francisco / Sul','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Separar mesa, vinho e suco em coletas futuras.'],
+    ['Cacau','frutas','269,7 mil t','—','mercado externo forte','BA-PA / Andes amazônicos','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Preço internacional não foi inventado no painel.'],
+    ['Abacaxi','frutas','1,64 Mt','—','sazonal','Brasil tropical','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Volume convertido de mil toneladas.'],
+    ['Melancia','frutas','2,18 Mt','—','sazonal','NE/CO/Sul','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Alta dependência logística e clima.'],
+    ['Limão','frutas','1,59 Mt','—','exportação relevante','SP-MG-BA','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Separar tahiti/siciliano em versão futura.'],
+    ['Manga','frutas','1,57 Mt','—','exportação','Vale do São Francisco / NE','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Sazonalidade forte por janela exportadora.'],
+    ['Maçã','frutas','983,2 mil t','—','estoque/frio','SC-RS-PR','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Produto concentrado no Sul.'],
+    ['Maracujá','frutas','690,4 mil t','—','volátil','BA-CE-MG-ES','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Mercado mesa e indústria devem ser separados.'],
+    ['Coco-da-baía','frutas','1,64 Mt','—','regional','NE / litoral tropical','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Volume anual, não preço spot.'],
+    ['Mamão','frutas','1,24 Mt','—','sazonal','BA-ES-CE-RN','CNA/IBGE PAM','Mapa Hortifruti/CNA + PAM','real_curado','Separar formosa/papaya.'],
+    ['Tomate','hortaliças','≈4,0 Mt','—','alta volatilidade','GO-SP-MG-BA','IBGE PAM/CEAGESP','base anual + terminal','real_curado','Preço deve vir por terminal e classificação; removida arbitragem sintética.'],
+    ['Batata inglesa','hortaliças','≈4,0 Mt','—','safras regionais','MG-PR-SP-GO','IBGE PAM/CEAGESP','base anual + terminal','real_curado','Não misturar batata lavada, escovada e especial sem classificação.'],
+    ['Cebola','hortaliças','≈1,6 Mt','—','regional','SC-BA-RS-PE','IBGE PAM/CEAGESP','base anual + terminal','real_curado','Separar nacional/importada.'],
+    ['Mandioca','hortaliças','≈18 Mt','—','amido/farinha','PA-PR-BA-MS','IBGE PAM','base anual','real_curado','Mercado de raiz, farinha e fécula não são equivalentes.'],
+    ['Ovos','granjeiros','—','—','demanda estável','Brasil','IBGE PPM/CEPEA','base anual','fonte_requerida','Conectar PPM/CEPEA para série real.'],
+    ['Frango','granjeiros','—','—','exportação relevante','Brasil / Sul','CEPEA/MAPA','referencial','fonte_requerida','Separar vivo, resfriado, carcaça e cortes.'],
+    ['Leite','granjeiros','—','—','sazonal','MG-PR-RS-GO-SC','CEPEA/IBGE PPM','referencial','fonte_requerida','Usar leite ao produtor; não misturar UHT/varejo.']
+  ].map(r => ({product:r[0], category:r[1], production:r[2], price:r[3], trend:r[4], region:r[5], source:r[6], reference_date:r[7], status:r[8], note:r[9]}))
+};
+
+function renderMercadoReal() {
+  const tbody = document.getElementById('mercado-real-tbody');
+  if (!tbody) return;
+  const cat = document.getElementById('mercado-filter-categoria')?.value || 'all';
+  const fonte = document.getElementById('mercado-filter-fonte')?.value || 'all';
+  const q = (document.getElementById('mercado-search')?.value || '').toLowerCase().trim();
+  let rows = MERCADO_REAL_DATA.records.filter(r => {
+    const sourceOk = fonte === 'all' || r.source.toUpperCase().includes(fonte.toUpperCase());
+    const catOk = cat === 'all' || r.category === cat;
+    const qOk = !q || [r.product,r.category,r.region,r.source,r.note,r.reference_date].join(' ').toLowerCase().includes(q);
+    return sourceOk && catOk && qOk;
+  });
+  tbody.innerHTML = rows.map(r => {
+    const statusColor = r.status === 'real_curado' ? 'var(--accent2)' : 'var(--warn)';
+    const trendColor = /alta|forte|elevada|export/.test(r.trend) ? 'var(--accent2)' : /volátil|sensível/.test(r.trend) ? 'var(--warn)' : 'var(--text)';
+    return `<tr title="${escapeHtml(r.note)}">
+      <td style="padding:6px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text);font-weight:bold;">${escapeHtml(r.product)}</td>
+      <td style="padding:6px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text2);">${escapeHtml(r.category)}</td>
+      <td style="padding:6px;border-bottom:1px solid var(--border);font-size:10px;color:var(--accent);text-align:right;font-family:var(--font);">${escapeHtml(r.production)}</td>
+      <td style="padding:6px;border-bottom:1px solid var(--border);font-size:10px;color:${r.price==='—'?'var(--text2)':'var(--warn)'};text-align:right;font-family:var(--font);">${escapeHtml(r.price)}</td>
+      <td style="padding:6px;border-bottom:1px solid var(--border);font-size:10px;color:${trendColor};text-align:center;">${escapeHtml(r.trend)}</td>
+      <td style="padding:6px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text);">${escapeHtml(r.region)}</td>
+      <td style="padding:6px;border-bottom:1px solid var(--border);font-size:9px;color:var(--text2);">${escapeHtml(r.source)}<br><span style="font-size:8px;color:var(--text2);">${escapeHtml(r.reference_date)}</span></td>
+      <td style="padding:6px;border-bottom:1px solid var(--border);font-size:9px;color:${statusColor};text-align:center;">${r.status === 'real_curado' ? 'REAL' : 'PEND.'}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="8" style="padding:18px;text-align:center;color:var(--text2);font-size:11px;">Nenhum registro encontrado.</td></tr>`;
+
+  const uniqueSources = new Set(MERCADO_REAL_DATA.records.flatMap(r => r.source.split('/').map(s => s.trim())));
+  const priced = MERCADO_REAL_DATA.records.filter(r => r.price !== '—').length;
+  document.getElementById('mercado-kpi-produtos').textContent = MERCADO_REAL_DATA.records.length;
+  document.getElementById('mercado-kpi-fontes').textContent = uniqueSources.size;
+  document.getElementById('mercado-kpi-precos').textContent = priced;
+  document.getElementById('mercado-last-updated').textContent = '● ' + MERCADO_REAL_DATA.updated_at;
+  document.getElementById('mercado-quality-panel').innerHTML = `
+    <div style="border:1px solid rgba(0,255,136,.25);background:rgba(0,255,136,.06);border-radius:6px;padding:8px;margin-bottom:8px;">
+      <div style="color:var(--accent2);font-size:10px;letter-spacing:1px;margin-bottom:4px;">CORREÇÃO APLICADA</div>
+      <div>Removidos os números HFT/3,5s e spreads inventados. A aba agora separa produção/oferta de preço spot e mostra pendência quando a fonte de preço não está conectada.</div>
+    </div>
+    <div style="border:1px solid rgba(255,193,7,.25);background:rgba(255,193,7,.06);border-radius:6px;padding:8px;margin-bottom:8px;">
+      <div style="color:var(--warn);font-size:10px;letter-spacing:1px;margin-bottom:4px;">PENDÊNCIAS REAIS</div>
+      <div>Para cotação diária confiável: conectar CEAGESP/CEASAs por produto-classificação, CEPEA para séries específicas e CONAB/SISDEP para preços agropecuários.</div>
+    </div>
+    <div style="font-size:9px;color:var(--text2);">Metodologia: ${escapeHtml(MERCADO_REAL_DATA.methodology)}</div>
+    <div style="margin-top:8px;font-size:9px;color:var(--text2);">Linhas exibidas: ${rows.length} de ${MERCADO_REAL_DATA.records.length}.</div>`;
+}
+
+function exportMercadoCSV() {
+  const header = ['produto','categoria','producao_oferta','preco','tendencia','regiao','fonte','data_referencia','status','observacao'];
+  const lines = [header.join(',')].concat(MERCADO_REAL_DATA.records.map(r => [r.product,r.category,r.production,r.price,r.trend,r.region,r.source,r.reference_date,r.status,r.note].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',')));
+  const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mercado_dados_reais_curados.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function initMercadoReal() { window._ofertaInit = true; renderMercadoReal(); }
+window.initOferta = initMercadoReal;
+window.initCeasaTerminal = function(){ renderMercadoReal(); };
 // Auto-start API loading after login
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(niasLoadRealData, 2000);
@@ -10351,5 +10759,267 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+
+<!-- SITUATION REAL PANEL - factual RJ impact dashboard -->
+<script>
+(function(){
+  const fmtBRL = (v) => {
+    const n = Number(v || 0);
+    if (!Number.isFinite(n)) return 'n/d';
+    return n.toLocaleString('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:0});
+  };
+  const esc = (s) => String(s ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const colorRisk = (level) => ({'alto':'#ff3d3d','médio-alto':'#ff9f1c','médio':'#ffd166','baixo':'#50c878'}[String(level||'').toLowerCase()] || '#888');
+  const join = (arr, sep=', ') => Array.isArray(arr) && arr.length ? arr.map(esc).join(sep) : 'n/d';
+
+  window.SituationRoom = {
+    data: null,
+    activeUf: '',
+    timer: null,
+    async init(){
+      this.renderShell();
+      await this.load();
+      if (this.timer) clearInterval(this.timer);
+      this.timer = setInterval(() => this.load(false), 5 * 60 * 1000);
+    },
+    async load(showLoading=true){
+      const status = document.getElementById('sit-real-status');
+      if (status && showLoading) status.textContent = 'coletando/validando...';
+      try {
+        const qs = this.activeUf ? '?uf=' + encodeURIComponent(this.activeUf) : '';
+        const r = await fetch('/api/situation/real' + qs, {cache:'no-store'});
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        this.data = await r.json();
+        this.renderData();
+      } catch (e) {
+        if (status) status.textContent = 'API indisponível: exibindo aviso sem dados fabricados';
+        const root = document.getElementById('sit-real-content');
+        if (root) root.innerHTML = `<div style="padding:18px;border:1px solid #ff3d3d;background:rgba(255,61,61,.08);color:#fff;border-radius:12px;">Falha ao carregar /api/situation/real. Erro: ${esc(e.message)}. O painel não substitui por dados falsos.</div>`;
+      }
+    },
+    renderShell(){
+      const panel = document.getElementById('panel-situation');
+      if (!panel) return;
+      panel.style.cssText = 'background:radial-gradient(circle at 20% 0%,rgba(255,107,53,.16),transparent 28%),linear-gradient(135deg,#050505 0%,#090d12 60%,#050505 100%);overflow:hidden;display:flex;flex-direction:column;';
+      panel.innerHTML = `
+        <div style="height:54px;background:rgba(8,10,12,.92);border-bottom:1px solid rgba(255,107,53,.32);display:flex;align-items:center;padding:0 18px;gap:14px;box-shadow:0 0 28px rgba(255,107,53,.12);">
+          <div style="width:10px;height:10px;border-radius:50%;background:#50c878;box-shadow:0 0 16px #50c878;"></div>
+          <div>
+            <div style="color:#ff6b35;font-size:14px;font-weight:900;letter-spacing:3px;font-family:'Courier New',monospace;">SITUATION REAL</div>
+            <div style="font-size:9px;color:#8a8f98;letter-spacing:1px;">RJ = RECUPERAÇÃO JUDICIAL • IMPACTO REGIONAL/NACIONAL • FONTES RASTREÁVEIS</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+            <button onclick="SituationRoom.setUf('')" id="sit-uf-all" style="background:#ff6b35;color:#000;border:0;border-radius:999px;padding:6px 10px;font-size:10px;font-weight:800;cursor:pointer;">BRASIL</button>
+            <button onclick="SituationRoom.setUf('RJ')" id="sit-uf-rj" style="background:#12161d;color:#ddd;border:1px solid #2a3442;border-radius:999px;padding:6px 10px;font-size:10px;cursor:pointer;">RJ</button>
+            <button onclick="SituationRoom.setUf('SP')" id="sit-uf-sp" style="background:#12161d;color:#ddd;border:1px solid #2a3442;border-radius:999px;padding:6px 10px;font-size:10px;cursor:pointer;">SP</button>
+            <button onclick="SituationRoom.load()" style="background:#111;color:#ff6b35;border:1px solid #ff6b35;border-radius:999px;padding:6px 10px;font-size:10px;cursor:pointer;">ATUALIZAR</button>
+            <span id="sit-real-status" style="font-size:10px;color:#8a8f98;font-family:monospace;">--</span>
+          </div>
+        </div>
+        <div id="sit-real-content" style="flex:1;overflow:auto;padding:16px;"></div>`;
+    },
+    setUf(uf){
+      this.activeUf = uf || '';
+      ['all','rj','sp'].forEach(x => {
+        const b = document.getElementById('sit-uf-' + x);
+        if (!b) return;
+        const active = (x === 'all' && !this.activeUf) || x.toUpperCase() === this.activeUf;
+        b.style.background = active ? '#ff6b35' : '#12161d';
+        b.style.color = active ? '#000' : '#ddd';
+      });
+      this.load();
+    },
+    renderData(){
+      const root = document.getElementById('sit-real-content');
+      const status = document.getElementById('sit-real-status');
+      if (!root || !this.data) return;
+      const d = this.data;
+      const s = d.summary || {};
+      if (status) status.textContent = 'UTC ' + new Date(d.generated_at).toLocaleString('pt-BR');
+      const cards = [
+        ['Casos RJ monitorados', s.rj_cases || 0, 'base interna + validação CNJ'],
+        ['Dívida exposta', fmtBRL(s.total_debts_brl), 'risco financeiro na cadeia'],
+        ['Receita exposta', fmtBRL(s.total_revenue_brl), 'capacidade econômica afetada'],
+        ['Empregos expostos', Number(s.jobs_exposed||0).toLocaleString('pt-BR'), 'mão-de-obra e renda local']
+      ].map(c => `<div style="background:linear-gradient(180deg,rgba(255,107,53,.10),rgba(15,18,24,.9));border:1px solid rgba(255,107,53,.28);border-radius:16px;padding:14px;box-shadow:0 0 24px rgba(255,107,53,.08);"><div style="font-size:10px;color:#98a2b3;text-transform:uppercase;letter-spacing:1px;">${esc(c[0])}</div><div style="font-size:24px;color:#fff;font-weight:900;margin-top:4px;font-family:monospace;">${esc(c[1])}</div><div style="font-size:10px;color:#ffb38a;margin-top:4px;">${esc(c[2])}</div></div>`).join('');
+      const sectors = (s.top_sectors || []).map(x => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #1b2430;padding:6px 0;"><span>${esc(x.sector)}</span><b style="color:#ff6b35;">${esc(x.cases)}</b></div>`).join('') || '<div style="color:#777;">Sem setores calculados.</div>';
+      const ufRows = (s.by_uf || []).map(x => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #1b2430;padding:6px 0;"><span>${esc(x.region)} (${esc(x.uf)})</span><b style="color:#50c878;">${esc(x.cases)}</b></div>`).join('') || '<div style="color:#777;">Sem UF.</div>';
+      const cases = (d.cases || []).map(c => this.caseCard(c)).join('') || '<div style="color:#777;padding:12px;">Nenhum caso encontrado para o filtro.</div>';
+      const sources = (d.sources || []).map(src => `<div style="background:#0d1117;border:1px solid #202a36;border-radius:10px;padding:10px;margin-bottom:8px;"><div style="color:#fff;font-size:11px;font-weight:800;">${esc(src.name)}</div><div style="color:#9aa4b2;font-size:10px;margin-top:3px;">${esc(src.scope)}</div><div style="color:#ffb38a;font-size:10px;margin-top:3px;">Status: ${esc(src.live_status)}</div><a href="${esc(src.url)}" target="_blank" rel="noopener" style="color:#50c878;font-size:10px;">abrir fonte</a></div>`).join('');
+      root.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px;">${cards}</div>
+        <div style="display:grid;grid-template-columns:1.25fr .75fr;gap:14px;align-items:start;">
+          <div style="background:rgba(9,13,18,.72);border:1px solid #1c2633;border-radius:18px;padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div><div style="color:#ff6b35;font-size:12px;font-weight:900;letter-spacing:2px;">CASOS DE RJ E IMPACTO OPERACIONAL</div><div style="font-size:10px;color:#8a8f98;">Cada card mostra onde afeta, quais setores e por que importa para Brasil/região.</div></div>
+              <div style="font-size:10px;color:#50c878;border:1px solid #315f45;border-radius:999px;padding:5px 9px;">sem dado inventado</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">${cases}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="background:rgba(9,13,18,.72);border:1px solid #1c2633;border-radius:18px;padding:14px;"><div style="color:#ff6b35;font-size:12px;font-weight:900;margin-bottom:8px;">SETORES MAIS AFETADOS</div>${sectors}</div>
+            <div style="background:rgba(9,13,18,.72);border:1px solid #1c2633;border-radius:18px;padding:14px;"><div style="color:#ff6b35;font-size:12px;font-weight:900;margin-bottom:8px;">IMPACTO POR REGIÃO</div>${ufRows}</div>
+            <div style="background:rgba(9,13,18,.72);border:1px solid #1c2633;border-radius:18px;padding:14px;"><div style="color:#ff6b35;font-size:12px;font-weight:900;margin-bottom:8px;">FONTES SEGURAS</div>${sources}</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;color:#8a8f98;font-size:10px;line-height:1.5;">${esc(d.definition?.truth_policy || '')} Limitações: ${(d.limitations||[]).map(esc).join(' • ')}</div>`;
+    },
+    caseCard(c){
+      const riskColor = colorRisk(c.impact_level);
+      const reasons = (c.impact_reasons || []).map(r => `<li>${esc(r)}</li>`).join('');
+      return `<div style="background:linear-gradient(135deg,#0d1117,#111820);border:1px solid #233044;border-left:4px solid ${riskColor};border-radius:14px;padding:12px;min-height:230px;">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+          <div style="color:#fff;font-size:12px;font-weight:900;line-height:1.25;">${esc(c.company_name)}</div>
+          <div style="color:#000;background:${riskColor};border-radius:999px;padding:3px 7px;font-size:9px;font-weight:900;text-transform:uppercase;white-space:nowrap;">${esc(c.impact_level)}</div>
+        </div>
+        <div style="color:#98a2b3;font-size:10px;margin-top:5px;">${esc(c.city)}-${esc(c.state_uf)} • ${esc(c.judicial_status)} • ${esc(c.process_number)}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0;">
+          <div style="background:#090d12;border:1px solid #1b2430;border-radius:8px;padding:7px;"><div style="font-size:8px;color:#777;">RISCO</div><div style="color:#fff;font-family:monospace;font-size:15px;">${esc(c.risk_score)}/100</div></div>
+          <div style="background:#090d12;border:1px solid #1b2430;border-radius:8px;padding:7px;"><div style="font-size:8px;color:#777;">DÍVIDA</div><div style="color:#fff;font-family:monospace;font-size:12px;">${fmtBRL(c.debts_total)}</div></div>
+          <div style="background:#090d12;border:1px solid #1b2430;border-radius:8px;padding:7px;"><div style="font-size:8px;color:#777;">EMPREGOS</div><div style="color:#fff;font-family:monospace;font-size:12px;">${Number(c.employees||0).toLocaleString('pt-BR')}</div></div>
+        </div>
+        <div style="font-size:10px;color:#ffb38a;margin-bottom:4px;">Produtos: ${join(c.products)}</div>
+        <div style="font-size:10px;color:#b9c3d0;margin-bottom:4px;">Setores: ${join(c.affected_sectors)}</div>
+        <div style="font-size:10px;color:#b9c3d0;margin-bottom:4px;">Canais regionais: ${join(c.regional_channels)}</div>
+        <div style="font-size:10px;color:#98a2b3;margin:6px 0;"><b style="color:#fff;">Impacto no Brasil:</b> ${esc(c.brazil_impact)}</div>
+        <ul style="margin:6px 0 0 16px;padding:0;color:#98a2b3;font-size:10px;line-height:1.45;">${reasons}</ul>
+        <div style="margin-top:8px;font-size:9px;color:#6f7a88;border-top:1px solid #1b2430;padding-top:6px;">Fonte/validação: ${esc(c.validation_source)} • ${esc(c.data_confidence)}</div>
+      </div>`;
+    }
+  };
+})();
+</script>
+
+
+<script>
+// PredictX Live — interface futurista com dados oficiais/tempo real quando disponíveis
+window.PredictXLive = {
+  map:null, layers:[], data:null,
+  esc(v){return String(v ?? '').replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));},
+  async load(force=false){
+    const st=document.getElementById('pxx-live-status'); if(st) st.textContent='● consultando fontes';
+    try{
+      const res=await fetch('/api/predictx/live'+(force?'?force=1':''), {cache:'no-store'});
+      const data=await res.json();
+      this.data=data; this.render(data);
+      if(st){st.textContent='● online'; st.style.color='#50C878';}
+    }catch(e){
+      if(st){st.textContent='● falha de rede'; st.style.color='#ff7b7b';}
+      console.warn('PredictXLive', e);
+    }
+  },
+  initMap(){
+    const el=document.getElementById('pxx-map'); if(!el || this.map) return;
+    if(!window.L){ el.innerHTML='<div style="padding:30px;color:#8eeaff;font-family:monospace">Leaflet não carregado.</div>'; return; }
+    this.map=L.map(el,{zoomControl:true,attributionControl:false}).setView([29,-96],3);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:12}).addTo(this.map);
+  },
+  markerIcon(score){
+    const color = score>=82 ? '#ff4d6d' : score>=70 ? '#ffd166' : '#00d4ff';
+    return L.divIcon({className:'',html:`<div style="width:18px;height:18px;border-radius:50%;background:${color};box-shadow:0 0 22px ${color};border:2px solid white"></div>`,iconSize:[18,18],iconAnchor:[9,9]});
+  },
+  renderMap(cities){
+    this.initMap(); if(!this.map) return;
+    this.layers.forEach(l=>this.map.removeLayer(l)); this.layers=[];
+    cities.forEach(c=>{
+      const m=L.marker([c.lat,c.lon],{icon:this.markerIcon(c.impact_score)}).addTo(this.map);
+      m.bindPopup(`<b>${this.esc(c.city)}</b><br>${this.esc(c.country)}<br>Jogos: ${c.matches}<br>Score operacional: ${c.impact_score}/100<br>Risco: ${this.esc(c.risk_level)}`);
+      this.layers.push(m);
+    });
+    const latlngs=cities.map(c=>[c.lat,c.lon]);
+    if(latlngs.length){ try{this.map.fitBounds(latlngs,{padding:[28,28]});}catch(e){} }
+  },
+  render(data){
+    const wc=data.worldcup_2026||{}; const event=wc.event||{}; const cities=wc.cities_ranked||[];
+    const set=(id,v)=>{const e=document.getElementById(id); if(e)e.textContent=v;};
+    set('pxx-kpi-event', event.name ? 'ATIVO' : '—');
+    set('pxx-kpi-cities', cities.length || '—');
+    set('pxx-kpi-risk', cities[0]?.risk_level?.toUpperCase() || '—');
+    set('pxx-kpi-sources', (data.sources||[]).length || '—');
+    set('pxx-updated', data.generated_at ? 'UTC '+new Date(data.generated_at).toISOString().slice(11,16) : 'UTC --');
+    const why=document.getElementById('pxx-worldcup-why');
+    if(why){
+      const bullets=(wc.top_impacts||[]).map(x=>`<li>${this.esc(x)}</li>`).join('');
+      why.innerHTML=`<b>${this.esc(event.name||'Evento')}</b><br>${this.esc(wc.summary||'')}<ul style="margin:8px 0 0 18px;padding:0;color:#bfefff;">${bullets}</ul>`;
+    }
+    const cityList=document.getElementById('pxx-city-list');
+    if(cityList){
+      cityList.innerHTML=cities.slice(0,10).map(c=>`<div style="border:1px solid rgba(0,212,255,.18);border-radius:12px;padding:9px;background:rgba(255,255,255,.025);">
+        <div style="display:flex;justify-content:space-between;gap:8px;"><b style="color:#e8fbff">${this.esc(c.city)}</b><span style="color:#ffe681;font-family:monospace">${c.impact_score}/100</span></div>
+        <div style="font-size:11px;color:#8fa4b8;margin-top:3px;">${this.esc(c.country)} · ${c.matches} jogos · risco ${this.esc(c.risk_level)}</div>
+      </div>`).join('');
+    }
+    const signals=document.getElementById('pxx-signal-list');
+    if(signals){
+      const rows=[...(data.global_signals||[])];
+      (data.regional_risks||[]).slice(0,3).forEach(r=>rows.push({signal:r.name,status:r.risk_level,source:r.weather?.source||'NASA POWER',why:(r.reasons||[]).join('; '),is_realtime:!!r.weather?.ok}));
+      signals.innerHTML=rows.map(s=>`<div style="border-left:3px solid ${s.is_realtime?'#50C878':'#ffd166'};padding:8px 10px;background:rgba(255,255,255,.025);border-radius:10px;">
+        <div style="display:flex;justify-content:space-between"><b style="color:#e8fbff">${this.esc(s.signal)}</b><span style="font-size:10px;color:${s.is_realtime?'#50C878':'#ffd166'}">${s.is_realtime?'tempo real':'monitorado'}</span></div>
+        <div style="font-size:11px;color:#a8bbcf;margin:4px 0;">${this.esc(s.why)}</div>
+        <div style="font-size:10px;color:#6f8295;">Fonte: ${this.esc(s.source)} · status: ${this.esc(s.status)}</div>
+      </div>`).join('');
+    }
+    this.renderMap(cities);
+  }
+};
+
+(function(){
+  const oldShow=window.showPanel;
+  window.showPanel=function(name){
+    const r=oldShow ? oldShow.apply(this, arguments) : undefined;
+    if(name==='predictix') setTimeout(()=>PredictXLive.load(false), 120);
+    return r;
+  };
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{ if(document.getElementById('panel-predictix')?.classList.contains('active')) PredictXLive.load(false); },500));
+})();
+
+
+
+// ═══════════════════════════════════════════════════════════════════
+// SYSTEM AUDIT — fontes reais, qualidade e abas consolidadas
+// ═══════════════════════════════════════════════════════════════════
+async function runSystemAudit(force=false){
+  const summary = document.getElementById('system-audit-summary');
+  const cards = document.getElementById('system-audit-cards');
+  const warnings = document.getElementById('system-audit-warnings');
+  if(!summary || !cards || !warnings) return;
+  summary.textContent = 'Auditando fontes, tabelas e abas...';
+  try{
+    const res = await fetch('/api/system/audit' + (force ? '?force=1' : ''));
+    const data = await res.json();
+    const trusted = data.trusted_sources || [];
+    const hidden = data.hidden_redundant_tabs || [];
+    const tables = (data.data_quality && data.data_quality.tables) || [];
+    const synth = tables.reduce((a,t)=>a+(Number(t.synthetic_rows||0)),0);
+    summary.innerHTML = `Status: <strong style="color:var(--accent2)">${escapeHtml(data.status||'ok')}</strong> · Fontes auditáveis: <strong>${trusted.length}</strong> · Abas redundantes ocultas: <strong>${hidden.length}</strong> · Linhas sintéticas/proxy no banco: <strong style="color:${synth?'var(--warn)':'var(--accent2)'}">${synth}</strong>`;
+    cards.innerHTML = '';
+    const byCat = {};
+    trusted.forEach(s=>{ byCat[s.category]=(byCat[s.category]||0)+1; });
+    cards.innerHTML += `<div class="audit-card"><strong>Política de fonte</strong>${escapeHtml(data.source_policy||'Sem política carregada.')}</div>`;
+    cards.innerHTML += `<div class="audit-card"><strong>Abas mantidas</strong>${(data.core_tabs||[]).map(t=>escapeHtml(t.label)).join(' · ')}</div>`;
+    cards.innerHTML += `<div class="audit-card"><strong>Fontes por categoria</strong>${Object.entries(byCat).map(([k,v])=>`${escapeHtml(k)}: ${v}`).join('<br>')}</div>`;
+    cards.innerHTML += `<div class="audit-card"><strong>Banco local</strong>${escapeHtml((data.data_quality&&data.data_quality.database)||'não localizado')}<br>Tabelas FLV: ${tables.length}</div>`;
+    const topWarn = ((data.data_quality&&data.data_quality.warnings)||[]).slice(0,10);
+    warnings.innerHTML = topWarn.length ? topWarn.map(w=>`<li>${escapeHtml(w)}</li>`).join('') : '<li>Nenhum alerta crítico de qualidade encontrado.</li>';
+  }catch(e){
+    summary.innerHTML = `<span style="color:var(--danger)">Falha na auditoria:</span> ${escapeHtml(String(e.message||e))}`;
+    cards.innerHTML = '';
+    warnings.innerHTML = '<li>Verifique se o servidor Python está em execução.</li>';
+  }
+}
+
+function markDeprecatedPanels(){
+  const deprecated=['map','logistica','warroom','flv_insights','flv_reports','predictix','macropolos','hyperlocal','sentiment','esg'];
+  deprecated.forEach(id=>{
+    const p=document.getElementById('panel-'+id);
+    if(p){ p.setAttribute('data-deprecated','true'); }
+  });
+}
+
+document.addEventListener('DOMContentLoaded',()=>{ markDeprecatedPanels(); setTimeout(()=>runSystemAudit(false),800); });
+
+
+</script>
 </body>
+
 </html>

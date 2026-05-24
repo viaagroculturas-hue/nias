@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 # ═══════════════════════════════════════════════════════════════════
 # SISTEMA AUTÔNOMO NIA$ v6.0
 # ═══════════════════════════════════════════════════════════════════
-AUTONOMOUS_MODE = os.environ.get('AUTONOMOUS_MODE', 'true').lower() in {'1', 'true', 'yes', 'on'}
+AUTONOMOUS_MODE = os.environ.get("NIAS_AUTONOMOUS_MODE", "0") == "1"  # seguro por padrão
 autonomous_thread = None
 
 def start_autonomous_system():
@@ -47,14 +47,6 @@ except ImportError:
 
 PORT = int(os.environ.get('PORT', 8080))
 DIR = os.path.dirname(os.path.abspath(__file__))
-NIA_DB_PATH = os.environ.get('NIA_DB_PATH') or os.path.join(DIR, 'nia_flv.db')
-ALLOWED_CORS_ORIGINS = {
-    'https://nias.onrender.com',
-    'http://localhost:5000',
-    'http://127.0.0.1:5000',
-    'http://localhost:8080',
-    'http://127.0.0.1:8080',
-}
 
 _cepea_cache = {}
 _cepea_ttl = 900
@@ -277,6 +269,12 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path.startswith('/api/distributors'):
             self._serve_distributors_api()
             return
+        if self.path.startswith('/api/situation/real'):
+            self._serve_situation_real_api()
+            return
+        if self.path.startswith('/api/system/audit') or self.path.startswith('/api/system/sources'):
+            self._serve_system_audit_api()
+            return
         if self.path.startswith('/api/dossier'):
             self._serve_dossier_api()
             return
@@ -288,6 +286,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
         if self.path.startswith('/api/autonomous'):
             self._serve_autonomous_api()
+            return
+        if self.path.startswith('/api/predictx/live') or self.path.startswith('/api/predictx/events'):
+            self._serve_predictx_live_api()
             return
         if self.path.startswith('/api/predictix/intel'):
             self._serve_predictix_intelligence_api()
@@ -383,7 +384,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         import sqlite3
         import os
         
-        db_path = NIA_DB_PATH
+        db_path = os.path.join(os.path.dirname(__file__), 'nia_flv.db')
         result = {'data': [], 'meta': {'total': 0, 'states': []}}
         
         try:
@@ -453,7 +454,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         import sqlite3
         import os
         
-        db_path = NIA_DB_PATH
+        db_path = os.path.join(os.path.dirname(__file__), 'nia_flv.db')
         result = {'data': [], 'meta': {'total': 0, 'cities': [], 'statuses': []}}
         
         try:
@@ -519,10 +520,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(result, ensure_ascii=False).encode())
 
     def _cors(self):
-        origin = self.headers.get('Origin')
-        allowed_origin = origin if origin in ALLOWED_CORS_ORIGINS else 'https://nias.onrender.com'
-        self.send_header('Access-Control-Allow-Origin', allowed_origin)
-        self.send_header('Vary', 'Origin')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
@@ -641,7 +639,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     # Lista todos
                     import sqlite3
-                    conn = sqlite3.connect(NIA_DB_PATH)
+                    conn = sqlite3.connect(os.path.join(DIR, 'nia_flv.db'))
                     conn.row_factory = sqlite3.Row
                     cursor = conn.cursor()
                     cursor.execute("SELECT * FROM flv_distributors WHERE status='ativo' ORDER BY annual_revenue DESC")
@@ -682,7 +680,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/dossier', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = NIA_DB_PATH
+            db_path = os.path.join(DIR, 'nia_flv.db')
             result = {}
             
             if path.startswith('company/'):
@@ -763,7 +761,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/news', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = NIA_DB_PATH
+            db_path = os.path.join(DIR, 'nia_flv.db')
             result = {}
             
             conn = sqlite3.connect(db_path)
@@ -843,7 +841,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/reports', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = NIA_DB_PATH
+            db_path = os.path.join(DIR, 'nia_flv.db')
             result = {}
             
             conn = sqlite3.connect(db_path)
@@ -915,7 +913,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/autonomous', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = NIA_DB_PATH
+            db_path = os.path.join(DIR, 'nia_flv.db')
             result = {}
             
             conn = sqlite3.connect(db_path)
@@ -1061,6 +1059,55 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({'error': str(e)}).encode())
 
+
+    def _serve_system_audit_api(self):
+        """API de auditoria, fontes confiáveis e consolidação de abas."""
+        import json
+        try:
+            from flv.system_audit_api import build_audit_payload, build_sources_payload
+            if self.path.startswith('/api/system/sources'):
+                data = build_sources_payload()
+            else:
+                data = build_audit_payload()
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'status':'error','error':str(e),'module':'system_audit_api'}, ensure_ascii=False).encode())
+
+    def _serve_predictx_live_api(self):
+        """API PredictX Live: eventos, riscos climáticos/logísticos e fontes."""
+        import json
+        from urllib.parse import urlparse, parse_qs
+        try:
+            import sys
+            import os
+            flv_dir = os.path.join(DIR, 'flv')
+            if flv_dir not in sys.path:
+                sys.path.insert(0, flv_dir)
+            import predictx_live_api
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            force = params.get('force', ['0'])[0] in ('1', 'true', 'yes')
+            data = predictx_live_api.build_live_payload(force=force)
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'status':'error','error':str(e),'module':'predictx_live_api'}, ensure_ascii=False).encode())
+
     def _serve_predictix_intelligence_api(self):
         """API PREDICTIX INTELLIGENCE v2.0 - 5 novas funcionalidades"""
         import json
@@ -1172,7 +1219,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         """
         import sqlite3
         from datetime import datetime, timedelta
-        db_path = NIA_DB_PATH
+        db_path = os.path.join(DIR, 'nia_flv.db')
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()

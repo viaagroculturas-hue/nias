@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS flv_ceasa_prices (
     price_max   REAL,
     volume_kg   REAL,
     source      TEXT DEFAULT 'CONAB',
+    is_synthetic INTEGER DEFAULT 0,
+    data_quality TEXT DEFAULT 'official_or_observed',
     created_at  TEXT DEFAULT (datetime('now')),
     UNIQUE(culture_id, terminal, price_date)
 );
@@ -64,6 +66,8 @@ CREATE TABLE IF NOT EXISTS flv_climate (
     wind_ms     REAL,
     insolation_h REAL,
     source      TEXT DEFAULT 'INMET',
+    is_synthetic INTEGER DEFAULT 0,
+    data_quality TEXT DEFAULT 'official_or_observed',
     UNIQUE(mun_id, obs_date, source)
 );
 
@@ -75,6 +79,8 @@ CREATE TABLE IF NOT EXISTS flv_ndvi (
     ndvi_value  REAL NOT NULL,
     ndvi_anomaly REAL,
     source      TEXT DEFAULT 'SATVeg',
+    is_synthetic INTEGER DEFAULT 0,
+    data_quality TEXT DEFAULT 'official_or_observed',
     UNIQUE(mun_id, obs_date, source)
 );
 
@@ -86,6 +92,8 @@ CREATE TABLE IF NOT EXISTS flv_production (
     area_harvested_ha REAL,
     production_tons   REAL,
     source      TEXT DEFAULT 'SIDRA',
+    is_synthetic INTEGER DEFAULT 0,
+    data_quality TEXT DEFAULT 'official_or_observed',
     UNIQUE(mun_id, culture_id, year)
 );
 
@@ -137,10 +145,16 @@ CREATE TABLE IF NOT EXISTS flv_macro_indicators (
     obs_date    TEXT NOT NULL UNIQUE,
     diesel_brl_l REAL,
     diesel_change_pct REAL,
+    brent_usd   REAL,
+    brent_change_pct REAL,
+    wti_usd     REAL,
+    wti_change_pct REAL,
     usd_brl     REAL,
     selic_pct   REAL,
     ipca_yoy_pct REAL,
     source      TEXT DEFAULT 'BCB/ANP',
+    is_synthetic INTEGER DEFAULT 0,
+    data_quality TEXT DEFAULT 'official_or_observed',
     created_at  TEXT DEFAULT (datetime('now'))
 );
 
@@ -149,6 +163,8 @@ CREATE TABLE IF NOT EXISTS flv_news_events (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     obs_ts      TEXT NOT NULL,
     source      TEXT,
+    is_synthetic INTEGER DEFAULT 0,
+    data_quality TEXT DEFAULT 'official_or_observed',
     title       TEXT,
     url         TEXT,
     risk_score  REAL,
@@ -172,6 +188,8 @@ CREATE TABLE IF NOT EXISTS flv_global_climate (
     oni         REAL,
     atl_north_warm_idx REAL,
     source      TEXT DEFAULT 'NOAA/ESRL',
+    is_synthetic INTEGER DEFAULT 0,
+    data_quality TEXT DEFAULT 'official_or_observed',
     created_at  TEXT DEFAULT (datetime('now'))
 );
 
@@ -360,39 +378,6 @@ CREATE INDEX IF NOT EXISTS idx_supply_supplier ON flv_supply_chain(supplier_cnpj
 CREATE INDEX IF NOT EXISTS idx_supply_client ON flv_supply_chain(client_cnpj);
 CREATE INDEX IF NOT EXISTS idx_supply_risk ON flv_supply_chain(supply_risk_score);
 
--- Snapshot operacional do War Room
-CREATE TABLE IF NOT EXISTS flv_sovereign_entities (
-    entity_type      TEXT NOT NULL,
-    entity_id        TEXT NOT NULL,
-    name             TEXT NOT NULL,
-    lat              REAL,
-    lon              REAL,
-    country          TEXT,
-    state_uf         TEXT,
-    score_soberano   REAL NOT NULL,
-    components_json  TEXT,
-    status_color     TEXT,
-    updated_at       TEXT DEFAULT (datetime('now')),
-    PRIMARY KEY (entity_type, entity_id)
-);
-
-CREATE TABLE IF NOT EXISTS flv_change_log (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    obs_ts          TEXT NOT NULL,
-    domain          TEXT NOT NULL,
-    entity_type     TEXT,
-    entity_id       TEXT,
-    change_type     TEXT NOT NULL,
-    severity        TEXT,
-    score_before    REAL,
-    score_after     REAL,
-    payload_json    TEXT
-);
-
-CREATE INDEX IF NOT EXISTS idx_sovereign_entities_score ON flv_sovereign_entities(score_soberano);
-CREATE INDEX IF NOT EXISTS idx_change_log_obs ON flv_change_log(obs_ts);
-CREATE INDEX IF NOT EXISTS idx_change_log_entity ON flv_change_log(entity_type, entity_id);
-
 -- Tabela de Feeds de Notícias Globais (News Pulse)
 CREATE TABLE IF NOT EXISTS flv_news_global (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -545,3 +530,44 @@ CREATE TABLE IF NOT EXISTS flv_satellite_imagery (
 CREATE INDEX IF NOT EXISTS idx_satellite_type ON flv_satellite_imagery(image_type);
 CREATE INDEX IF NOT EXISTS idx_satellite_date ON flv_satellite_imagery(capture_date);
 CREATE INDEX IF NOT EXISTS idx_satellite_country ON flv_satellite_imagery(country);
+
+-- ═══════════════════════════════════════════════════════════════
+-- WAR ROOM (Living Dashboard) — Deltas + Score Soberano v2.0
+-- ═══════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS flv_change_log (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    obs_ts        TEXT NOT NULL,                  -- timestamp ISO
+    domain        TEXT NOT NULL,                  -- 'news','satellite','judicial','supply_chain','score','logistics','retail'
+    entity_type   TEXT,                          -- 'company','distributor','corridor','port','municipality'
+    entity_id     TEXT,                          -- cnpj/id
+    change_type   TEXT NOT NULL,                  -- 'insert','update','delete','signal'
+    severity      TEXT CHECK(severity IN ('azul','amarelo','laranja','vermelho')),
+    score_before  REAL,
+    score_after   REAL,
+    payload_json  TEXT,
+    created_at    TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_change_log_ts ON flv_change_log(obs_ts);
+CREATE INDEX IF NOT EXISTS idx_change_log_domain ON flv_change_log(domain);
+CREATE INDEX IF NOT EXISTS idx_change_log_entity ON flv_change_log(entity_type, entity_id);
+
+CREATE TABLE IF NOT EXISTS flv_sovereign_entities (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_type     TEXT NOT NULL,               -- 'producer_rj','growth_company','distributor','port','corridor'
+    entity_id       TEXT NOT NULL,               -- cnpj/id
+    name            TEXT,
+    lat             REAL,
+    lon             REAL,
+    country         TEXT,
+    state_uf        TEXT,
+    score_soberano  REAL,                        -- 0..10
+    components_json TEXT,                        -- {Volume_Operacional,Importancia_Geografica,Risco_Insumo,Growth_Potential}
+    status_color    TEXT,                        -- 'vermelho','azul','neutro'
+    updated_at      TEXT DEFAULT (datetime('now')),
+    UNIQUE(entity_type, entity_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sov_entities_score ON flv_sovereign_entities(score_soberano);
+CREATE INDEX IF NOT EXISTS idx_sov_entities_type ON flv_sovereign_entities(entity_type);

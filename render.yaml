@@ -4,16 +4,8 @@ services:
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: python server.py
-    disk:
-      name: nias-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: PORT
-        value: 5000
-      - key: NIA_DB_PATH
-        value: /var/data/nia_flv.db
-      - key: AUTONOMOUS_MODE
-        value: false
+        value: 8080
       - key: PYTHON_VERSION
-        value: 3.12.3
+        value: 3.13.0

@@ -15,10 +15,11 @@ import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple
 import logging
-from flv.db import DB_PATH
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+DB_PATH = 'nia_flv.db'
 
 class PredictixIntelligence:
     """Motor de inteligência do PREDICTIX"""
