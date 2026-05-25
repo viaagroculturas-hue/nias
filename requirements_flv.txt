@@ -1,0 +1,10 @@
+prophet>=1.1.5
+pandas>=2.0
+numpy>=1.24
+scipy>=1.10
+statsmodels>=0.14
+feedparser==6.0.11
+yfinance==0.2.36
+google-generativeai==0.8.3
+
+# Para ativar o relatório via Gemini, defina a env var GEMINI_API_KEY no servidor.
