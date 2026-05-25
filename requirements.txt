@@ -1,7 +1,0 @@
-curl_cffi
-beautifulsoup4
-lxml
-python-dotenv
-requests
-pandas
-numpy
