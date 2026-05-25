@@ -1,12 +1,32 @@
 """FLV Database Layer — SQLite WAL mode, thread-safe."""
 import sqlite3, os, json, time
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nia_flv.db')
-SCHEMA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'flv_schema.sql')
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Prefer the populated production database under /data. Older builds left empty
+# nia_flv.db files in the root and inside /flv, which caused HTTP 500 in IA/Audit.
+def _select_db_path():
+    candidates = [
+        os.environ.get('NIAS_DB_PATH'),
+        os.path.join(ROOT_PATH, 'data', 'nia_flv.db'),
+        os.path.join(ROOT_PATH, 'nia_flv.db'),
+        os.path.join(ROOT_PATH, 'flv', 'nia_flv.db'),
+    ]
+    for cand in candidates:
+        if cand and os.path.exists(cand) and os.path.getsize(cand) > 8192:
+            return cand
+    return os.path.join(ROOT_PATH, 'data', 'nia_flv.db')
+
+DB_PATH = _select_db_path()
+SCHEMA_PATH = os.path.join(ROOT_PATH, 'data', 'flv_schema.sql')
+if not os.path.exists(SCHEMA_PATH):
+    SCHEMA_PATH = os.path.join(ROOT_PATH, 'flv_schema.sql')
 
 _conn_cache = {}
+_schema_checked = False
+
 
 def get_conn():
+    global _schema_checked
     tid = id(os.getpid())
     if tid not in _conn_cache:
         conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=10)
@@ -14,6 +34,13 @@ def get_conn():
         conn.execute("PRAGMA busy_timeout=5000")
         conn.execute("PRAGMA foreign_keys=ON")
         conn.row_factory = sqlite3.Row
+        if not _schema_checked:
+            try:
+                from flv.db_migration import ensure_runtime_schema
+                ensure_runtime_schema(conn)
+                _schema_checked = True
+            except Exception as e:
+                print(f'[FLV] schema migration warning: {e}')
         _conn_cache[tid] = conn
     return _conn_cache[tid]
 
@@ -213,10 +240,28 @@ def upsert_global_climate(obs_date, oni=None, atl_north_warm_idx=None, source="N
 
 def query(sql, params=()):
     conn = get_conn()
-    rows = conn.execute(sql, params).fetchall()
+    try:
+        rows = conn.execute(sql, params).fetchall()
+    except sqlite3.OperationalError as e:
+        # Old deployments may have a populated DB without quality columns.
+        # Apply migration once and retry, so APIs do not fail with HTTP 500.
+        if 'no such column' in str(e).lower():
+            from flv.db_migration import ensure_runtime_schema
+            ensure_runtime_schema(conn)
+            rows = conn.execute(sql, params).fetchall()
+        else:
+            raise
     return [dict(r) for r in rows]
 
 def execute(sql, params=()):
     conn = get_conn()
-    conn.execute(sql, params)
+    try:
+        conn.execute(sql, params)
+    except sqlite3.OperationalError as e:
+        if 'no such column' in str(e).lower():
+            from flv.db_migration import ensure_runtime_schema
+            ensure_runtime_schema(conn)
+            conn.execute(sql, params)
+        else:
+            raise
     conn.commit()

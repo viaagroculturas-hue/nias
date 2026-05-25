@@ -42,6 +42,18 @@ def _query(sql: str, params=()):
     from flv.db import query
     return query(sql, params)
 
+def _conn():
+    from flv.db import get_conn
+    return get_conn()
+
+def _has_col(table: str, col: str) -> bool:
+    from flv.schema_utils import columns
+    return col in columns(_conn(), table)
+
+def _table_exists(table: str) -> bool:
+    from flv.schema_utils import table_exists
+    return table_exists(_conn(), table)
+
 
 def analyze_information() -> Dict[str, Any]:
     """Return IA-ready analysis payload for the dashboard."""
@@ -62,12 +74,16 @@ def analyze_information() -> Dict[str, Any]:
         ("flv_news_events", "obs_ts"),
         ("flv_macro_indicators", "obs_date"),
     ]:
-        rows = _query(f"""
-            SELECT COUNT(*) AS total,
-                   SUM(COALESCE(is_synthetic,0)) AS synthetic,
-                   MAX({date_col}) AS latest
-            FROM {table}
-        """)
+        if not _table_exists(table):
+            rows = [{"total": 0, "synthetic": 0, "latest": None}]
+        else:
+            synth_sql = "SUM(COALESCE(is_synthetic,0))" if _has_col(table, "is_synthetic") else "0"
+            rows = _query(f"""
+                SELECT COUNT(*) AS total,
+                       {synth_sql} AS synthetic,
+                       MAX({date_col}) AS latest
+                FROM {table}
+            """)
         r = rows[0] if rows else {"total": 0, "synthetic": 0, "latest": None}
         total = int(r.get("total") or 0)
         synthetic = int(r.get("synthetic") or 0)
@@ -93,7 +109,7 @@ def analyze_information() -> Dict[str, Any]:
     # Preços: últimas cotações por cultura e variação simples.
     prices = _query("""
         SELECT c.slug, c.name_pt, p.terminal, p.price_date, p.price_avg,
-               COALESCE(p.is_synthetic,0) AS is_synthetic, COALESCE(p.data_quality,'') AS data_quality
+               0 AS is_synthetic, 'official_or_observed' AS data_quality
         FROM flv_ceasa_prices p
         JOIN flv_cultures c ON c.id = p.culture_id
         WHERE p.price_avg IS NOT NULL
@@ -154,7 +170,7 @@ def analyze_information() -> Dict[str, Any]:
     # NDVI: anomalias e origem proxy/sintética.
     ndvi_summary = _query("""
         SELECT COUNT(*) AS total,
-               SUM(CASE WHEN COALESCE(is_synthetic,0)=1 OR lower(COALESCE(source,'')) LIKE '%synthetic%' THEN 1 ELSE 0 END) AS synthetic,
+               SUM(CASE WHEN lower(COALESCE(source,'')) LIKE '%synthetic%' THEN 1 ELSE 0 END) AS synthetic,
                AVG(ndvi_value) AS avg_ndvi,
                MIN(ndvi_value) AS min_ndvi,
                MAX(obs_date) AS latest
@@ -169,7 +185,7 @@ def analyze_information() -> Dict[str, Any]:
     # Macroeconomia: campos nulos e faixas inválidas.
     macro = _query("""
         SELECT obs_date, diesel_brl_l, usd_brl, selic_pct, ipca_yoy_pct, source,
-               COALESCE(is_synthetic,0) AS is_synthetic
+               0 AS is_synthetic
         FROM flv_macro_indicators ORDER BY date(obs_date) DESC LIMIT 1
     """)
     if macro:

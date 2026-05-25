@@ -250,6 +250,12 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/api/ceasas':
             self._serve_ceasas()
             return
+        if self.path.startswith('/api/ceasa/prices') or self.path.startswith('/api/ceasa/precos'):
+            self._serve_ceasa_prices_api()
+            return
+        if self.path.startswith('/api/dashboard/summary'):
+            self._serve_dashboard_summary_api()
+            return
         if self.path == '/api/produtores':
             self._serve_produtores()
             return
@@ -328,13 +334,72 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode())
 
     def _serve_rodovias(self):
-        from flv.collectors.rodovias import fetch_rodovias_status
-        data = fetch_rodovias_status()
+        # Carregamento rápido: não chama PRF/DNIT externo no render inicial para evitar travamento.
+        from urllib.parse import urlparse, parse_qs
+        params = parse_qs(urlparse(self.path).query)
+        live = params.get('live', ['0'])[0] in ('1', 'true', 'yes')
+        if live:
+            try:
+                from flv.collectors.rodovias import fetch_rodovias_status
+                data = fetch_rodovias_status()
+            except Exception as e:
+                data = {'status':'degraded','error':str(e),'roads':{},'incidents':[], 'summary':{'active_incidents':0}}
+        else:
+            data = {
+                'status':'ok_fast_mode',
+                'source_status':'offline_fast_mode',
+                'message':'Consulta PRF/DNIT online desativada no carregamento rápido; use /api/rodovias?live=1 para coleta externa.',
+                'timestamp': datetime.now().isoformat(),
+                'roads': {},
+                'incidents': [],
+                'summary': {'total_monitored': 0, 'active_incidents': 0, 'critical_br': [], 'avg_delay_national': 0}
+            }
         self.send_response(200)
         self._cors()
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
-        self.wfile.write(json.dumps(data, ensure_ascii=False).encode())
+        self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
+
+    def _serve_ceasa_prices_api(self):
+        """Serve official/reference CEASA prices through CONAB/PROHORT and local cache."""
+        try:
+            from urllib.parse import urlparse, parse_qs
+            from flv.ceasa_prices_api import build_ceasa_price_payload, filter_payload
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            force = params.get('refresh', ['0'])[0] in ('1', 'true', 'yes')
+            payload = build_ceasa_price_payload(base_dir=DIR, force_refresh=force)
+            payload = filter_payload(payload, params)
+            status = 200
+        except Exception as e:
+            payload = {'ok': False, 'error': str(e), 'records': [], 'meta': {'total_records': 0}}
+            status = 500
+        self.send_response(status)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(payload, ensure_ascii=False).encode())
+
+
+    def _serve_dashboard_summary_api(self):
+        """Dashboard consolidated summary API with real/local data only."""
+        import json
+        try:
+            from flv.dashboard_summary_api import build_dashboard_summary
+            data = build_dashboard_summary()
+            self.send_response(200)
+        except Exception as e:
+            data = {
+                'status': 'error',
+                'error': str(e),
+                'endpoint': '/api/dashboard/summary',
+                'hint': 'Verifique NIAS_DB_PATH e se data/nia_flv.db foi enviado ao GitHub.',
+            }
+            self.send_response(500)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
 
     def _serve_ceasas(self):
         """Serve consolidated CEASA data from all states"""
@@ -384,7 +449,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         import sqlite3
         import os
         
-        db_path = os.path.join(os.path.dirname(__file__), 'nia_flv.db')
+        db_path = os.environ.get('NIAS_DB_PATH') or os.path.join(os.path.dirname(__file__), 'data', 'nia_flv.db')
         result = {'data': [], 'meta': {'total': 0, 'states': []}}
         
         try:
@@ -454,7 +519,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         import sqlite3
         import os
         
-        db_path = os.path.join(os.path.dirname(__file__), 'nia_flv.db')
+        db_path = os.environ.get('NIAS_DB_PATH') or os.path.join(os.path.dirname(__file__), 'data', 'nia_flv.db')
         result = {'data': [], 'meta': {'total': 0, 'cities': [], 'statuses': []}}
         
         try:
@@ -561,11 +626,40 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
             
         except Exception as e:
+            err = str(e)
+            if 'no such table' in err.lower():
+                self.send_response(200)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+            else:
+                self.send_response(500)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': err}, ensure_ascii=False).encode())
+
+
+    def _serve_situation_real_api(self):
+        """Situation Room factual: Recuperação Judicial + DataJud quando configurado."""
+        from urllib.parse import urlparse, parse_qs
+        try:
+            from flv.situation.recovery_judicial_registry import build_situation_room_payload
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            uf = params.get('uf', [None])[0]
+            include_live = params.get('live', ['0'])[0] in ('1', 'true', 'True', 'yes')
+            limit = int(params.get('limit', ['500'])[0])
+            result = build_situation_room_payload(uf=uf, include_live=include_live, limit=limit)
+            self.send_response(200)
+        except Exception as e:
+            result = {'status': 'error', 'error': str(e), 'endpoint': '/api/situation/real'}
             self.send_response(500)
-            self._cors()
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
 
     def _serve_growth_api(self):
         """API de GrowthRadar - Radar de Crescimento"""
@@ -609,11 +703,19 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
             
         except Exception as e:
-            self.send_response(500)
-            self._cors()
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            err = str(e)
+            if 'no such table' in err.lower():
+                self.send_response(200)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+            else:
+                self.send_response(500)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': err}, ensure_ascii=False).encode())
 
     def _serve_distributors_api(self):
         """API de SupplyChainMonitor - Distribuidores"""
@@ -639,7 +741,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     # Lista todos
                     import sqlite3
-                    conn = sqlite3.connect(os.path.join(DIR, 'nia_flv.db'))
+                    conn = sqlite3.connect(os.environ.get('NIAS_DB_PATH') or os.path.join(DIR, 'data', 'nia_flv.db'))
                     conn.row_factory = sqlite3.Row
                     cursor = conn.cursor()
                     cursor.execute("SELECT * FROM flv_distributors WHERE status='ativo' ORDER BY annual_revenue DESC")
@@ -663,11 +765,19 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
             
         except Exception as e:
-            self.send_response(500)
-            self._cors()
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            err = str(e)
+            if 'no such table' in err.lower():
+                self.send_response(200)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+            else:
+                self.send_response(500)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': err}, ensure_ascii=False).encode())
 
     def _serve_dossier_api(self):
         """API de Dossier Analítico - Situation Room"""
@@ -680,7 +790,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/dossier', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = os.path.join(DIR, 'nia_flv.db')
+            db_path = os.environ.get('NIAS_DB_PATH') or os.path.join(DIR, 'data', 'nia_flv.db')
             result = {}
             
             if path.startswith('company/'):
@@ -744,11 +854,19 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
             
         except Exception as e:
-            self.send_response(500)
-            self._cors()
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            err = str(e)
+            if 'no such table' in err.lower():
+                self.send_response(200)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+            else:
+                self.send_response(500)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': err}, ensure_ascii=False).encode())
 
     def _serve_news_api(self):
         """API de News Pulse - Feeds Globais"""
@@ -761,7 +879,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/news', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = os.path.join(DIR, 'nia_flv.db')
+            db_path = os.environ.get('NIAS_DB_PATH') or os.path.join(DIR, 'data', 'nia_flv.db')
             result = {}
             
             conn = sqlite3.connect(db_path)
@@ -824,11 +942,19 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
             
         except Exception as e:
-            self.send_response(500)
-            self._cors()
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            err = str(e)
+            if 'no such table' in err.lower():
+                self.send_response(200)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+            else:
+                self.send_response(500)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': err}, ensure_ascii=False).encode())
 
     def _serve_reports_api(self):
         """API de Relatórios Soberanos"""
@@ -841,7 +967,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/reports', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = os.path.join(DIR, 'nia_flv.db')
+            db_path = os.environ.get('NIAS_DB_PATH') or os.path.join(DIR, 'data', 'nia_flv.db')
             result = {}
             
             conn = sqlite3.connect(db_path)
@@ -895,11 +1021,19 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
             
         except Exception as e:
-            self.send_response(500)
-            self._cors()
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            err = str(e)
+            if 'no such table' in err.lower():
+                self.send_response(200)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+            else:
+                self.send_response(500)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': err}, ensure_ascii=False).encode())
 
     def _serve_autonomous_api(self):
         """API do Sistema Autônomo NIA$ v6.0"""
@@ -913,7 +1047,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             path = parsed.path.replace('/api/autonomous', '').lstrip('/')
             params = parse_qs(parsed.query)
             
-            db_path = os.path.join(DIR, 'nia_flv.db')
+            db_path = os.environ.get('NIAS_DB_PATH') or os.path.join(DIR, 'data', 'nia_flv.db')
             result = {}
             
             conn = sqlite3.connect(db_path)
@@ -1053,11 +1187,19 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
             
         except Exception as e:
-            self.send_response(500)
-            self._cors()
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            err = str(e)
+            if 'no such table' in err.lower():
+                self.send_response(200)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+            else:
+                self.send_response(500)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': err}, ensure_ascii=False).encode())
 
 
     def _serve_system_audit_api(self):
@@ -1095,7 +1237,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             parsed = urlparse(self.path)
             params = parse_qs(parsed.query)
             force = params.get('force', ['0'])[0] in ('1', 'true', 'yes')
-            data = predictx_live_api.build_live_payload(force=force)
+            data = predictx_live_api.build_live_payload(force=force, live_weather=(params.get("live", ["0"])[0] in ("1", "true", "yes")))
             self.send_response(200)
             self._cors()
             self.send_header('Content-Type', 'application/json')
@@ -1219,7 +1361,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         """
         import sqlite3
         from datetime import datetime, timedelta
-        db_path = os.path.join(DIR, 'nia_flv.db')
+        db_path = os.environ.get('NIAS_DB_PATH') or os.path.join(DIR, 'data', 'nia_flv.db')
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
@@ -1392,11 +1534,19 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
         except Exception as e:
-            self.send_response(500)
-            self._cors()
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            err = str(e)
+            if 'no such table' in err.lower():
+                self.send_response(200)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+            else:
+                self.send_response(500)
+                self._cors()
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': err}, ensure_ascii=False).encode())
 
     def _proxy(self, method):
         target = self.path[7:]  # strip /proxy/
