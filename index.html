@@ -300,9 +300,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .wx-status{font-size:9px;margin-top:1px;}
 
 /* MAP */
-#map-container{flex:1;position:relative;}
-#map{position:absolute !important;inset:34px 0 0 0;z-index:1;}
+#map-container{flex:1;position:relative;display:flex;min-width:0;min-height:0;}
+#map{position:relative !important;inset:auto !important;z-index:1;width:100%;height:calc(100% - 34px);margin-top:34px;flex:1;min-width:0;min-height:0;}
 #map-municipal{width:100%;flex:1;min-height:300px;}
+.sidebar-left,.sidebar-right{display:flex;position:absolute;z-index:1100;width:260px;max-width:min(260px,35vw);flex:0 0 260px;}
 
 /* SONAR MARKERS */
 .sonar-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
@@ -1197,7 +1198,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <span id="bc-clock" style="font-size:9px;color:var(--text2);margin-left:8px;font-family:monospace;"></span>
         </div>
       </div>
-      <div class="bc-sidebar" id="bc-left">
+      <div class="bc-sidebar sidebar-left" id="bc-left">
         <div class="bc-sh">⬡ FILTRO MULTICULTURAL</div>
         <div class="bc-body">
           <div style="font-size:9px;color:var(--text2);margin-bottom:5px;letter-spacing:1px;">GRÃOS E FIBRAS</div>
@@ -1265,7 +1266,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
         </div>
       </div>
       <div id="bc-map"></div>
-      <div class="bc-sidebar" id="bc-right">
+      <div class="bc-sidebar sidebar-right" id="bc-right">
         <div class="bc-sh" style="justify-content:space-between;">
           <span id="bc-right-title">⬢ BIÓPSIA GEOESPACIAL</span>
           <button class="bc-close" onclick="bcCloseRight()">✕</button>
