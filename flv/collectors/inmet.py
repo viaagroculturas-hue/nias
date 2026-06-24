@@ -1,5 +1,5 @@
 """FLV INMET Climate Collector — Weather stations + Open-Meteo fallback."""
-import urllib.request, json, time
+import urllib.request, urllib.error, json, time
 from datetime import datetime, timedelta
 
 _last_errors = []
@@ -25,7 +25,7 @@ def fetch_all():
         except Exception as e:
             _last_errors.append(f'ERRO {mun["name"]}: {e}')
             print(f'[FLV-INMET] Erro {mun["name"]}: {e}')
-        time.sleep(0.3)
+        time.sleep(1)  # Respeitar rate limit Open-Meteo
 
     conn.commit()
     _last_errors.append(f'Total inserido: {inserted}')
@@ -33,14 +33,27 @@ def fetch_all():
     return inserted
 
 def _fetch_openmeteo(conn, mun):
-    """Fetch 7-day historical + current from Open-Meteo."""
+    """Fetch 7-day historical + current from Open-Meteo with retry."""
     url = (f"https://api.open-meteo.com/v1/forecast?"
            f"latitude={mun['lat']}&longitude={mun['lon']}"
            f"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relative_humidity_2m_mean,wind_speed_10m_max"
            f"&timezone=America/Sao_Paulo&past_days=7&forecast_days=1")
     req = urllib.request.Request(url, headers={'User-Agent': 'NIA$-FLV/1.0'})
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        data = json.loads(resp.read())
+
+    # Retry com backoff para 429
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read())
+            break
+        except urllib.error.HTTPError as he:
+            if he.code == 429 and attempt < 2:
+                wait = (attempt + 1) * 10  # 10s, 20s
+                time.sleep(wait)
+                continue
+            raise
+    else:
+        return 0
 
     daily = data.get('daily', {})
     dates = daily.get('time', [])
