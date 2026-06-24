@@ -7689,8 +7689,11 @@ function niasFillEmptyFields(root=document) {
     '#main-boundary-status','#system-audit-summary','#ia-analysis-summary'
   ];
   root.querySelectorAll(selectors.join(',')).forEach(el => {
+    if (el.getAttribute('data-nias-filled')) return;
+    if (el.closest('.panel:not(.active)')) return;
     const txt = (el.textContent || '').trim();
-    if (!txt || txt === '—' || txt === '-' || txt === 'undefined' || txt === 'null' || txt === 'NaN') {
+    if (txt === 'aguardando API' || txt === 'carregando...' || txt === 'Fonte: carregando...') return;
+    if (!txt || txt === 'undefined' || txt === 'null' || txt === 'NaN') {
       if (el.tagName === 'TD') el.textContent = 'sem dado';
       else if (el.id && el.id.includes('status')) el.textContent = 'fonte não carregada';
       else el.textContent = 'sem dado disponível';
@@ -7710,8 +7713,8 @@ function niasRenderApiFailure(containerId, endpoint, err) {
   </div>`;
 }
 document.addEventListener('DOMContentLoaded',()=>{
-  setTimeout(()=>niasFillEmptyFields(), 1500);
-  setInterval(()=>niasFillEmptyFields(), 30000);
+  setTimeout(()=>niasFillEmptyFields(), 12000);
+  setInterval(()=>niasFillEmptyFields(), 60000);
 });
 
 
@@ -11506,45 +11509,8 @@ document.addEventListener('DOMContentLoaded',()=>{ markDeprecatedPanels(); setTi
 
 
 // ═══════════════════════════════════════════════════════════════════
-// GUARDA DE CAMPOS SEM RESPOSTA — evita célula/cartão vazio no NIAS
+// GUARDA DE CAMPOS — duplicata removida, usa definição principal acima
 // ═══════════════════════════════════════════════════════════════════
-function niasSafeText(value, fallback='sem dado disponível') {
-  const s = String(value == null ? '' : value).trim();
-  if (!s || s === 'undefined' || s === 'null' || s === 'NaN') return fallback;
-  return s;
-}
-function niasFillEmptyFields(root=document) {
-  const selectors = [
-    '.kpi-value','.kpi-delta','.wx-temp','.wx-hum','.wx-wind','.wx-status',
-    '.metric-value','.metric-label','.audit-card','td','th','.ia-card .v','.ia-finding',
-    '#mercado-kpi-produtos','#mercado-kpi-fontes','#mercado-kpi-precos','#mercado-last-updated',
-    '#main-boundary-status','#system-audit-summary','#ia-analysis-summary'
-  ];
-  root.querySelectorAll(selectors.join(',')).forEach(el => {
-    const txt = (el.textContent || '').trim();
-    if (!txt || txt === '—' || txt === '-' || txt === 'undefined' || txt === 'null' || txt === 'NaN') {
-      if (el.tagName === 'TD') el.textContent = 'sem dado';
-      else if (el.id && el.id.includes('status')) el.textContent = 'fonte não carregada';
-      else el.textContent = 'sem dado disponível';
-      el.title = (el.title ? el.title + ' | ' : '') + 'Campo preenchido automaticamente pelo guarda anti-vazio NIAS.';
-      el.setAttribute('data-nias-filled','true');
-    }
-  });
-}
-function niasRenderApiFailure(containerId, endpoint, err) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = `<div style="border:1px solid var(--warn);background:rgba(255,193,7,.06);border-radius:8px;padding:10px;color:var(--text);font-size:10px;">
-    <strong style="color:var(--warn)">Fonte indisponível</strong><br>
-    Endpoint: <code>${escapeHtml(endpoint)}</code><br>
-    Status: ${escapeHtml(String(err && (err.message || err) || 'sem resposta'))}<br>
-    A interface não exibirá valores inventados; verifique Render Logs, NIAS_DB_PATH e deploy mais recente.
-  </div>`;
-}
-document.addEventListener('DOMContentLoaded',()=>{
-  setTimeout(()=>niasFillEmptyFields(), 1500);
-  setInterval(()=>niasFillEmptyFields(), 30000);
-});
 
 // ═══════════════════════════════════════════════════════════════════════
 // NiasIntelFrontend — Conecta Motor de Inteligência ao Dashboard
