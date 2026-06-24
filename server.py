@@ -237,6 +237,12 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404)
 
     def do_GET(self):
+        if self.path == '/api/health':
+            self._serve_health()
+            return
+        if self.path.startswith('/api/intelligence/'):
+            self._serve_intelligence_api()
+            return
         if self.path.startswith('/api/flv/'):
             from flv.api.routes import handle_flv
             handle_flv(self, self.path)
@@ -583,6 +589,106 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(result, ensure_ascii=False).encode())
+
+    # ═══════════════════════════════════════════════════════════════════
+    # HEALTH CHECK + INTELLIGENCE ENGINE
+    # ═══════════════════════════════════════════════════════════════════
+
+    _start_time = time.time()
+
+    def _serve_health(self):
+        import os
+        uptime_s = int(time.time() - ProxyHandler._start_time)
+        h, m = divmod(uptime_s // 60, 60)
+        uptime_str = f"{h}h {m}m {uptime_s % 60}s"
+
+        # Verificar módulos
+        modules = {'server': 'ok'}
+        try:
+            from flv.db import get_conn
+            get_conn().execute("SELECT 1")
+            modules['data'] = 'ok'
+        except Exception as e:
+            modules['data'] = f'error: {e}'
+        try:
+            from flv.intelligence_engine import get_engine
+            get_engine()
+            modules['intelligence'] = 'ok'
+        except Exception as e:
+            modules['intelligence'] = f'error: {e}'
+        modules['flv'] = 'ok'
+
+        result = {
+            'status': 'ok',
+            'service': 'NIAS',
+            'version': '3.0',
+            'timestamp': datetime.now().isoformat(),
+            'uptime': uptime_str,
+            'modules': modules
+        }
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(result, ensure_ascii=False).encode())
+
+    def _serve_intelligence_api(self):
+        """API do Motor de Inteligência NIA$"""
+        from urllib.parse import urlparse, parse_qs
+        try:
+            from flv.intelligence_engine import get_engine
+            engine = get_engine()
+
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/intelligence/', '').rstrip('/')
+            params = parse_qs(parsed.query)
+
+            if path == 'health' or path == '':
+                result = {
+                    'status': 'active',
+                    'version': '3.0',
+                    'capabilities': ['opportunities', 'predictions', 'alerts', 'report', 'memory'],
+                    'accuracy': engine.get_accuracy_stats()
+                }
+            elif path == 'opportunities':
+                result = {'opportunities': engine.generate_opportunities()}
+            elif path == 'predictions':
+                result = {'predictions': engine.generate_predictions()}
+            elif path == 'alerts':
+                result = {'alerts': engine.generate_alerts()}
+            elif path == 'report':
+                result = engine.generate_executive_report()
+            elif path == 'cycle':
+                result = engine.run_full_cycle()
+            elif path == 'memory':
+                result = {
+                    'accuracy': engine.get_accuracy_stats(),
+                    'recent_checks': engine.check_prediction_accuracy()
+                }
+            else:
+                result = {
+                    'error': 'Endpoint não encontrado',
+                    'available': [
+                        '/api/intelligence/opportunities',
+                        '/api/intelligence/predictions',
+                        '/api/intelligence/alerts',
+                        '/api/intelligence/report',
+                        '/api/intelligence/cycle',
+                        '/api/intelligence/memory',
+                    ]
+                }
+
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'status': 'error', 'error': str(e), 'module': 'intelligence_engine'}).encode())
 
     def _cors(self):
         self.send_header('Access-Control-Allow-Origin', '*')

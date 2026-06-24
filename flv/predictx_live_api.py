@@ -174,7 +174,7 @@ def build_regional_risks():
     return rows
 
 
-def build_live_payload(force: bool = False):
+def build_live_payload(force: bool = False, live_weather: bool = False):
     now = time.time()
     if not force and CACHE["live"] and now - CACHE["ts"] < CACHE_TTL_SECONDS:
         return CACHE["live"]

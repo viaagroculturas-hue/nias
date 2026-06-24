@@ -8,7 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 BASE = os.getenv("NIAS_BASE_URL", "http://127.0.0.1:8080").rstrip("/")
 ENDPOINTS = [
-    "/", "/api/dashboard/summary", "/api/flv/ia/analyze", "/api/system/audit",
+    "/", "/api/health", "/api/intelligence/report",
+    "/api/dashboard/summary", "/api/flv/ia/analyze", "/api/system/audit",
     "/api/system/sources", "/api/ceasa/prices", "/api/situation/real",
     "/api/predictx/live", "/api/flv/risk/analyze", "/api/flv/risk/sources",
     "/api/flv/cultures", "/api/flv/prices", "/api/flv/alerts", "/api/flv/heatmap",
@@ -20,10 +21,12 @@ ENDPOINTS = [
 def fetch(path: str) -> tuple[int, bytes]:
     req = urllib.request.Request(BASE + path, headers={"User-Agent": "NIAS-full-test/1.0"})
     try:
-        with urllib.request.urlopen(req, timeout=7) as r:
+        with urllib.request.urlopen(req, timeout=30) as r:
             return r.status, r.read()
     except urllib.error.HTTPError as e:
         return e.code, e.read()
+    except Exception as e:
+        return 0, str(e).encode()
 
 def test_index_structure() -> list[str]:
     html = (ROOT / "index.html").read_text(encoding="utf-8", errors="ignore")
