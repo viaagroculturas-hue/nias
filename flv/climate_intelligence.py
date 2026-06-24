@@ -96,20 +96,34 @@ class NiasClimate:
     # ─── DADOS CLIMÁTICOS ──────────────────────────────────────────────
 
     def _get_recent_climate(self) -> list[dict]:
-        """Busca dados climáticos recentes do banco (Open-Meteo)."""
+        """Busca dados climáticos recentes do banco (Open-Meteo/INMET)."""
         try:
             max_row = self.conn.execute("SELECT MAX(obs_date) as d FROM flv_climate").fetchone()
             if not max_row or not max_row['d']:
                 return []
             max_date = max_row['d']
             rows = self.conn.execute("""
-                SELECT region_id, obs_date, temp_max_c, temp_min_c, precip_mm,
-                       wind_max_kmh, humidity_pct, et0_mm
+                SELECT mun_id, obs_date, temp_max_c, temp_min_c, precip_mm,
+                       wind_ms, humidity_pct, source
                 FROM flv_climate
                 WHERE obs_date >= date(?, '-7 days')
                 ORDER BY obs_date DESC
             """, (max_date,)).fetchall()
-            return [dict(r) for r in rows]
+            # Converter para formato padronizado
+            result = []
+            for r in rows:
+                wind_kmh = (r['wind_ms'] or 0) * 3.6  # m/s → km/h
+                result.append({
+                    'region_id': str(r['mun_id']),
+                    'obs_date': r['obs_date'],
+                    'temp_max_c': r['temp_max_c'],
+                    'temp_min_c': r['temp_min_c'],
+                    'precip_mm': r['precip_mm'],
+                    'wind_max_kmh': wind_kmh,
+                    'humidity_pct': r['humidity_pct'],
+                    'et0_mm': None,
+                })
+            return result
         except Exception:
             return []
 
@@ -669,9 +683,18 @@ class NiasClimate:
 # SINGLETON
 # ═══════════════════════════════════════════════════════════════════════════
 _instance = None
+_instance_ts = 0
 
 def get_climate_engine() -> NiasClimate:
-    global _instance
-    if _instance is None:
+    global _instance, _instance_ts
+    import time
+    # Recriar instância a cada 5 min para evitar conexão stale
+    if _instance is None or (time.time() - _instance_ts) > 300:
+        try:
+            if _instance and _instance.conn:
+                _instance.conn.close()
+        except Exception:
+            pass
         _instance = NiasClimate()
+        _instance_ts = time.time()
     return _instance
