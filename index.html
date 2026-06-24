@@ -10791,12 +10791,16 @@ async function niasLoadRealData() {
     if (fsEl) { fsEl.textContent = `SIDRA: API REAL (${sidraBase.length} mun.)`; fsEl.style.color = 'var(--accent2)'; }
   } else {
     // Also try via fetchSidraProduction (v3 endpoint)
-    const v3data = await fetchSidraProduction('soja', 'last');
-    if (v3data && v3data.length > 0) {
-      window._bcSidraData = {};
-      v3data.forEach(d => { window._bcSidraData[d.D1C] = { vbp: +d.V, name: d.NC }; });
-      NiasAPI._logSource('SIDRA-v3', 'api');
-    }
+    try {
+      if (typeof fetchSidraProduction === 'function') {
+        const v3data = await fetchSidraProduction('soja', 'last');
+        if (v3data && v3data.length > 0) {
+          window._bcSidraData = {};
+          v3data.forEach(d => { window._bcSidraData[d.D1C] = { vbp: +d.V, name: d.NC }; });
+          NiasAPI._logSource('SIDRA-v3', 'api');
+        }
+      }
+    } catch(e) { console.warn('SIDRA v3 fallback error:', e); }
   }
 
   // ── Open-Meteo MULTI — atualiza clima real em todos os polos ────
