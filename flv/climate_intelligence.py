@@ -88,31 +88,37 @@ class NiasClimate:
     """Motor de inteligência climática — cruza clima com preço e produção."""
 
     def __init__(self):
-        self.conn = sqlite3.connect(str(get_db_path()), check_same_thread=False, timeout=10)
-        self.conn.row_factory = sqlite3.Row
+        self._db_path = str(get_db_path())
         self._last_update = None
         self._state = {}
+
+    @property
+    def conn(self):
+        """Conexão fresca a cada uso para evitar stale reads."""
+        c = sqlite3.connect(self._db_path, check_same_thread=False, timeout=10)
+        c.row_factory = sqlite3.Row
+        return c
 
     # ─── DADOS CLIMÁTICOS ──────────────────────────────────────────────
 
     def _get_recent_climate(self) -> list[dict]:
         """Busca dados climáticos recentes do banco (Open-Meteo/INMET)."""
         try:
-            max_row = self.conn.execute("SELECT MAX(obs_date) as d FROM flv_climate").fetchone()
+            conn = self.conn
+            max_row = conn.execute("SELECT MAX(obs_date) as d FROM flv_climate").fetchone()
             if not max_row or not max_row['d']:
                 return []
             max_date = max_row['d']
-            rows = self.conn.execute("""
+            rows = conn.execute("""
                 SELECT mun_id, obs_date, temp_max_c, temp_min_c, precip_mm,
                        wind_ms, humidity_pct, source
                 FROM flv_climate
                 WHERE obs_date >= date(?, '-7 days')
                 ORDER BY obs_date DESC
             """, (max_date,)).fetchall()
-            # Converter para formato padronizado
             result = []
             for r in rows:
-                wind_kmh = (r['wind_ms'] or 0) * 3.6  # m/s → km/h
+                wind_kmh = (r['wind_ms'] or 0) * 3.6
                 result.append({
                     'region_id': str(r['mun_id']),
                     'obs_date': r['obs_date'],
@@ -123,6 +129,7 @@ class NiasClimate:
                     'humidity_pct': r['humidity_pct'],
                     'et0_mm': None,
                 })
+            conn.close()
             return result
         except Exception:
             return []
@@ -688,13 +695,8 @@ _instance_ts = 0
 def get_climate_engine() -> NiasClimate:
     global _instance, _instance_ts
     import time
-    # Recriar instância a cada 5 min para evitar conexão stale
+    # Recriar instância a cada 5 min para limpar state cache
     if _instance is None or (time.time() - _instance_ts) > 300:
-        try:
-            if _instance and _instance.conn:
-                _instance.conn.close()
-        except Exception:
-            pass
         _instance = NiasClimate()
         _instance_ts = time.time()
     return _instance
