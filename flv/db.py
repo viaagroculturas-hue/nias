@@ -5,21 +5,26 @@ ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Prefer the populated production database under /data. Older builds left empty
 # nia_flv.db files in the root and inside /flv, which caused HTTP 500 in IA/Audit.
 def _select_db_path():
+    # Se NIAS_DB_PATH está definido, usar sempre (Persistent Disk / produção)
+    env_path = os.environ.get('NIAS_DB_PATH')
+    if env_path:
+        os.makedirs(os.path.dirname(env_path), exist_ok=True)
+        return env_path
+    # Fallback local: procurar banco existente com dados
     candidates = [
-        os.environ.get('NIAS_DB_PATH'),
         os.path.join(ROOT_PATH, 'data', 'nia_flv.db'),
         os.path.join(ROOT_PATH, 'nia_flv.db'),
         os.path.join(ROOT_PATH, 'flv', 'nia_flv.db'),
     ]
     for cand in candidates:
-        if cand and os.path.exists(cand) and os.path.getsize(cand) > 8192:
+        if os.path.exists(cand) and os.path.getsize(cand) > 8192:
             return cand
     return os.path.join(ROOT_PATH, 'data', 'nia_flv.db')
 
 DB_PATH = _select_db_path()
-SCHEMA_PATH = os.path.join(ROOT_PATH, 'data', 'flv_schema.sql')
+SCHEMA_PATH = os.path.join(ROOT_PATH, 'flv', 'flv_schema.sql')
 if not os.path.exists(SCHEMA_PATH):
-    SCHEMA_PATH = os.path.join(ROOT_PATH, 'flv_schema.sql')
+    SCHEMA_PATH = os.path.join(ROOT_PATH, 'data', 'flv_schema.sql')
 
 _conn_cache = {}
 _schema_checked = False
