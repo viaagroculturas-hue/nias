@@ -240,6 +240,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/api/health':
             self._serve_health()
             return
+        if self.path.startswith('/api/nias/'):
+            self._serve_nias_api()
+            return
         if self.path.startswith('/api/intelligence/'):
             self._serve_intelligence_api()
             return
@@ -861,6 +864,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'error': str(e), 'module': 'climate_intelligence'}).encode())
+
+    def _serve_nias_api(self):
+        """NIAS API Core v1 — /api/nias/*"""
+        from flv.nias_api.router import handle_nias_api
+        handle_nias_api(self, self.path)
 
     def _cors(self):
         self.send_header('Access-Control-Allow-Origin', '*')

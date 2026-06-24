@@ -1,0 +1,470 @@
+"""
+NIAS API Core v1 — Router principal.
+Despacha todas as rotas /api/nias/* para os handlers corretos.
+"""
+import json
+from datetime import datetime
+from urllib.parse import urlparse, parse_qs
+
+from flv.nias_api import API_VERSION, API_NAME
+from flv.nias_api import responses as R
+
+
+def handle_nias_api(handler, raw_path: str):
+    """Entry point chamado pelo server.py para /api/nias/*."""
+    parsed = urlparse(raw_path)
+    path = parsed.path.replace('/api/nias/', '').rstrip('/')
+    params = parse_qs(parsed.query)
+
+    try:
+        result = _dispatch(path, params)
+        status_code = 200
+    except Exception as e:
+        result = R.error(str(e), details='Erro interno no NIAS API Core')
+        status_code = 500
+
+    handler.send_response(status_code)
+    handler.send_header('Access-Control-Allow-Origin', '*')
+    handler.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    handler.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    handler.send_header('Content-Type', 'application/json')
+    handler.end_headers()
+    handler.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+
+
+def _dispatch(path: str, params: dict) -> dict:
+    """Mapeia path para handler."""
+    # Status / Health
+    if path in ('status', ''):
+        return _status()
+    if path == 'health':
+        return _health()
+    if path == 'docs':
+        return _docs()
+
+    # Preços
+    if path == 'prices/latest':
+        return _prices_latest(params)
+    if path == 'prices/history':
+        return _prices_history(params)
+
+    # Clima
+    if path == 'weather/latest':
+        return _weather_latest(params)
+    if path == 'weather/risk':
+        return _weather_risk()
+
+    # Inteligência
+    if path == 'intelligence/weather-price':
+        return _intelligence_weather_price()
+    if path == 'intelligence/opportunities':
+        return _intelligence_opportunities()
+    if path == 'intelligence/predictions':
+        return _intelligence_predictions()
+    if path == 'intelligence/alerts':
+        return _intelligence_alerts()
+
+    # Relatório
+    if path == 'report/daily':
+        return _report_daily()
+
+    # Fontes e pipeline
+    if path == 'sources/status':
+        return _sources_status()
+    if path == 'pipeline/status':
+        return _pipeline_status()
+    if path == 'pipeline/freshness':
+        return _pipeline_freshness()
+    if path == 'pipeline/runs':
+        return _pipeline_runs()
+
+    # 404
+    return R.error(
+        f'Endpoint /api/nias/{path} não encontrado',
+        details='Consulte /api/nias/docs para lista completa de endpoints.'
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════
+# HANDLERS
+# ═══════════════════════════════════════════════════════════════════
+
+def _status():
+    from flv.paths import get_storage_info
+    storage = get_storage_info()
+    return R.ok({
+        'service': 'NIAS',
+        'api': API_NAME,
+        'version': API_VERSION,
+        'timestamp': datetime.now().isoformat(),
+        'storage': {
+            'persistent': storage['persistent'],
+            'type': storage['type'],
+        },
+        'endpoints_count': 16,
+    }, sources=['NIAS'], confidence='alta')
+
+
+def _health():
+    modules = {'server': 'ok'}
+    try:
+        from flv.db import get_conn
+        get_conn().execute("SELECT 1")
+        modules['database'] = 'ok'
+    except Exception as e:
+        modules['database'] = f'error: {e}'
+    try:
+        from flv.intelligence_engine import get_engine
+        get_engine()
+        modules['intelligence'] = 'ok'
+    except Exception as e:
+        modules['intelligence'] = f'error: {e}'
+    try:
+        from flv.climate_intelligence import get_climate_engine
+        get_climate_engine()
+        modules['climate'] = 'ok'
+    except Exception as e:
+        modules['climate'] = f'error: {e}'
+
+    all_ok = all(v == 'ok' for v in modules.values())
+    return R.ok({
+        'healthy': all_ok,
+        'modules': modules,
+        'timestamp': datetime.now().isoformat(),
+    }, sources=['NIAS'], confidence='alta')
+
+
+# ─── PREÇOS ───────────────────────────────────────────────────────
+
+def _prices_latest(params: dict):
+    import sqlite3
+    from flv.paths import get_db_path
+    db = str(get_db_path())
+    conn = sqlite3.connect(db, check_same_thread=False, timeout=10)
+    conn.row_factory = sqlite3.Row
+
+    max_row = conn.execute("SELECT MAX(price_date) as d FROM flv_ceasa_prices").fetchone()
+    if not max_row or not max_row['d']:
+        conn.close()
+        return R.partial({'items': []}, 'Sem dados de preço no banco.', missing=['preços CEASA'])
+
+    max_date = max_row['d']
+    rows = conn.execute("""
+        SELECT c.slug, c.name_pt as product, p.terminal as market,
+               p.price_avg as price, p.price_min, p.price_max,
+               c.unit, p.price_date as date, p.source,
+               'CONAB/PROHORT' as api_source
+        FROM flv_ceasa_prices p
+        JOIN flv_cultures c ON c.id = p.culture_id
+        WHERE p.price_date = ?
+        ORDER BY c.name_pt, p.terminal
+    """, (max_date,)).fetchall()
+    conn.close()
+
+    items = []
+    for r in rows:
+        items.append({
+            'product': r['product'],
+            'slug': r['slug'],
+            'market': r['market'] or 'Nacional',
+            'price': round(r['price'], 2),
+            'price_min': round(r['price_min'], 2) if r['price_min'] else None,
+            'price_max': round(r['price_max'], 2) if r['price_max'] else None,
+            'unit': r['unit'] or 'R$/kg',
+            'date': r['date'],
+            'source': r['api_source'],
+            'confidence': 'alta',
+        })
+
+    return R.ok(
+        {'items': items, 'total': len(items), 'date': max_date},
+        sources=['CONAB/PROHORT'],
+        confidence='alta',
+    )
+
+
+def _prices_history(params: dict):
+    import sqlite3
+    from flv.paths import get_db_path
+    db = str(get_db_path())
+    conn = sqlite3.connect(db, check_same_thread=False, timeout=10)
+    conn.row_factory = sqlite3.Row
+
+    product = (params.get('product', ['']) or [''])[0]
+    limit = int((params.get('limit', ['50']) or ['50'])[0])
+    limit = min(limit, 200)
+
+    query = """
+        SELECT c.slug, c.name_pt as product, p.terminal as market,
+               p.price_avg as price, c.unit, p.price_date as date
+        FROM flv_ceasa_prices p
+        JOIN flv_cultures c ON c.id = p.culture_id
+    """
+    args = []
+    if product:
+        query += " WHERE c.slug LIKE ? OR c.name_pt LIKE ?"
+        args.extend([f'%{product}%', f'%{product}%'])
+    query += " ORDER BY p.price_date DESC LIMIT ?"
+    args.append(limit)
+
+    rows = conn.execute(query, args).fetchall()
+    conn.close()
+    items = [dict(r) for r in rows]
+
+    return R.ok(
+        {'items': items, 'total': len(items)},
+        sources=['CONAB/PROHORT'],
+        confidence='alta',
+    )
+
+
+# ─── CLIMA ────────────────────────────────────────────────────────
+
+def _weather_latest(params: dict):
+    import sqlite3
+    from flv.paths import get_db_path
+    db = str(get_db_path())
+    conn = sqlite3.connect(db, check_same_thread=False, timeout=10)
+    conn.row_factory = sqlite3.Row
+
+    max_row = conn.execute("SELECT MAX(obs_date) as d FROM flv_climate").fetchone()
+    if not max_row or not max_row['d']:
+        conn.close()
+        return R.partial({'items': []}, 'Sem dados climáticos no banco.', missing=['clima Open-Meteo'])
+
+    max_date = max_row['d']
+    rows = conn.execute("""
+        SELECT mun_id, obs_date, temp_max_c, temp_min_c, precip_mm,
+               wind_ms, humidity_pct, source
+        FROM flv_climate
+        WHERE obs_date = ?
+        ORDER BY mun_id
+    """, (max_date,)).fetchall()
+    conn.close()
+
+    items = []
+    for r in rows:
+        items.append({
+            'region_id': str(r['mun_id']),
+            'date': r['obs_date'],
+            'temp_max_c': r['temp_max_c'],
+            'temp_min_c': r['temp_min_c'],
+            'precip_mm': r['precip_mm'],
+            'wind_kmh': round((r['wind_ms'] or 0) * 3.6, 1),
+            'humidity_pct': r['humidity_pct'],
+            'source': r['source'] or 'Open-Meteo',
+        })
+
+    return R.ok(
+        {'items': items, 'total': len(items), 'date': max_date},
+        sources=['Open-Meteo'],
+        confidence='alta',
+    )
+
+
+def _weather_risk():
+    from flv.climate_intelligence import get_climate_engine
+    engine = get_climate_engine()
+    events = engine.detect_extreme_events()
+    alerts = engine.generate_climate_alerts()
+
+    return R.ok(
+        {
+            'events': events,
+            'alerts': alerts,
+            'total_events': len(events),
+            'total_alerts': len(alerts),
+        },
+        sources=['Open-Meteo', 'CONAB'],
+        confidence='alta' if events else 'media',
+    )
+
+
+# ─── INTELIGÊNCIA ─────────────────────────────────────────────────
+
+def _intelligence_weather_price():
+    from flv.climate_intelligence import get_climate_engine
+    engine = get_climate_engine()
+    engine.detect_extreme_events()
+    result = engine.analyze_weather_price_correlation()
+
+    mode = result.get('mode', 'real_data')
+    if mode == 'insufficient_data':
+        return R.partial(
+            {'items': result.get('items', [])},
+            result.get('message', 'Dados insuficientes.'),
+            missing=result.get('missing', []),
+            sources=['Open-Meteo', 'CONAB/PROHORT'],
+        )
+
+    return R.ok(
+        {
+            'items': result.get('items', []),
+            'total': len(result.get('items', [])),
+            'data_quality': result.get('data_quality', {}),
+        },
+        mode=mode,
+        sources=['Open-Meteo', 'CONAB/PROHORT'],
+        confidence='media',
+    )
+
+
+def _intelligence_opportunities():
+    from flv.intelligence_engine import get_engine
+    engine = get_engine()
+    opps = engine.generate_opportunities()
+    return R.ok(
+        {'opportunities': opps, 'total': len(opps)},
+        sources=['CONAB', 'Open-Meteo', 'NewsAPI'],
+        confidence='media',
+    )
+
+
+def _intelligence_predictions():
+    from flv.intelligence_engine import get_engine
+    engine = get_engine()
+    preds = engine.generate_predictions()
+    return R.ok(
+        {'predictions': preds, 'total': len(preds)},
+        sources=['CONAB', 'Open-Meteo'],
+        confidence='media',
+    )
+
+
+def _intelligence_alerts():
+    from flv.intelligence_engine import get_engine
+    engine = get_engine()
+    alerts = engine.generate_alerts()
+    return R.ok(
+        {'alerts': alerts, 'total': len(alerts)},
+        sources=['CONAB', 'Open-Meteo', 'NewsAPI'],
+        confidence='media',
+    )
+
+
+# ─── RELATÓRIO ────────────────────────────────────────────────────
+
+def _report_daily():
+    from flv.intelligence_engine import get_engine
+    engine = get_engine()
+    report = engine.generate_executive_report()
+    return R.ok(
+        report,
+        sources=['CONAB', 'Open-Meteo', 'NewsAPI', 'BCB'],
+        confidence=report.get('confianca_geral', 'media'),
+    )
+
+
+# ─── FONTES ───────────────────────────────────────────────────────
+
+def _sources_status():
+    from flv.intelligence_engine import get_engine
+    from flv.climapi_client import get_climapi_status
+    from flv.paths import get_storage_info
+
+    engine = get_engine()
+    freshness = engine.get_data_freshness()
+    climapi = get_climapi_status()
+    storage = get_storage_info()
+
+    sources = {
+        'conab': {
+            'status': freshness['source_status'].get('ceasa', 'fallback'),
+            'last_success': freshness.get('last_price_update'),
+            'description': 'CONAB/CEASA Preços',
+        },
+        'cepea': {
+            'status': 'fallback',
+            'reason': 'Sem API pública oficial. WAF bloqueia scraping.',
+            'replacement': 'CONAB/PROHORT',
+        },
+        'climapi': {
+            'status': climapi.get('status', 'fallback'),
+            'credentials_present': climapi.get('credentials_present', False),
+            'replacement': 'Open-Meteo',
+        },
+        'open_meteo': {
+            'status': freshness['source_status'].get('open_meteo', 'fallback'),
+            'last_success': freshness.get('last_weather_update'),
+            'description': 'Open-Meteo Clima',
+        },
+        'news': {
+            'status': freshness['source_status'].get('news', 'fallback'),
+            'last_success': freshness.get('last_news_update'),
+        },
+        'macro': {
+            'status': freshness['source_status'].get('macro', 'fallback'),
+            'last_success': freshness.get('last_macro_update'),
+        },
+    }
+
+    return R.ok(
+        {'sources': sources, 'storage': storage},
+        sources=['NIAS'],
+        confidence='alta',
+    )
+
+
+# ─── PIPELINE ─────────────────────────────────────────────────────
+
+def _pipeline_status():
+    from flv.scheduler import get_pipeline_status
+    status = get_pipeline_status()
+    return R.ok(status, sources=['NIAS'], confidence='alta')
+
+
+def _pipeline_freshness():
+    from flv.scheduler import get_pipeline_freshness
+    freshness = get_pipeline_freshness()
+    return R.ok(freshness, sources=['NIAS'], confidence='alta')
+
+
+def _pipeline_runs():
+    from flv.scheduler import get_pipeline_runs
+    runs = get_pipeline_runs(20)
+    return R.ok(
+        {'runs': runs, 'total': len(runs)},
+        sources=['NIAS'],
+        confidence='alta',
+    )
+
+
+# ─── DOCUMENTAÇÃO ─────────────────────────────────────────────────
+
+def _docs():
+    endpoints = [
+        {'path': '/api/nias/status', 'method': 'GET', 'description': 'Status geral da API', 'legacy': None},
+        {'path': '/api/nias/health', 'method': 'GET', 'description': 'Health check com módulos', 'legacy': '/api/health'},
+        {'path': '/api/nias/prices/latest', 'method': 'GET', 'description': 'Preços mais recentes por produto/mercado', 'legacy': None, 'params': 'Nenhum'},
+        {'path': '/api/nias/prices/history', 'method': 'GET', 'description': 'Histórico de preços', 'legacy': None, 'params': '?product=tomate&limit=50'},
+        {'path': '/api/nias/weather/latest', 'method': 'GET', 'description': 'Dados climáticos mais recentes', 'legacy': None},
+        {'path': '/api/nias/weather/risk', 'method': 'GET', 'description': 'Riscos climáticos e alertas', 'legacy': '/api/climate/alerts'},
+        {'path': '/api/nias/intelligence/weather-price', 'method': 'GET', 'description': 'Correlação clima × preço', 'legacy': '/api/climate/price-impact'},
+        {'path': '/api/nias/intelligence/opportunities', 'method': 'GET', 'description': 'Oportunidades de mercado', 'legacy': '/api/intelligence/opportunities'},
+        {'path': '/api/nias/intelligence/predictions', 'method': 'GET', 'description': 'Previsões de preço', 'legacy': '/api/intelligence/predictions'},
+        {'path': '/api/nias/intelligence/alerts', 'method': 'GET', 'description': 'Alertas acionáveis', 'legacy': '/api/intelligence/alerts'},
+        {'path': '/api/nias/report/daily', 'method': 'GET', 'description': 'Relatório executivo diário', 'legacy': '/api/intelligence/report'},
+        {'path': '/api/nias/sources/status', 'method': 'GET', 'description': 'Status de todas as fontes de dados', 'legacy': '/api/sources/status'},
+        {'path': '/api/nias/pipeline/status', 'method': 'GET', 'description': 'Status do pipeline', 'legacy': '/api/pipeline/status'},
+        {'path': '/api/nias/pipeline/freshness', 'method': 'GET', 'description': 'Freshness dos dados', 'legacy': '/api/pipeline/freshness'},
+        {'path': '/api/nias/pipeline/runs', 'method': 'GET', 'description': 'Histórico de execuções do pipeline', 'legacy': '/api/pipeline/runs'},
+        {'path': '/api/nias/docs', 'method': 'GET', 'description': 'Esta documentação', 'legacy': None},
+    ]
+
+    return R.ok(
+        {
+            'title': 'NIAS API Core v1',
+            'description': 'API oficial do NIA$ — Inteligência agrocomercial para o mercado de hortifrúti.',
+            'base_url': '/api/nias',
+            'response_format': {
+                'success': '{ status: "ok", api, version, mode, data, meta: { sources, updated_at, confidence } }',
+                'error': '{ status: "error", api, version, message, details }',
+                'partial': '{ status: "partial", api, version, mode: "insufficient_data", message, missing, data, meta }',
+            },
+            'modes': ['real_data', 'partial', 'fallback', 'insufficient_data'],
+            'endpoints': endpoints,
+            'total_endpoints': len(endpoints),
+        },
+        sources=['NIAS'],
+        confidence='alta',
+    )

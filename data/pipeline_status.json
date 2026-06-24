@@ -1,0 +1,10 @@
+{
+  "running": false,
+  "started_at": "2026-06-24T08:10:39.426841",
+  "last_success": "2026-06-24T08:14:29.620571",
+  "last_error": null,
+  "duration_seconds": 230.1,
+  "runs_total": 10,
+  "runs_success": 10,
+  "runs_failed": 0
+}
