@@ -705,19 +705,26 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         """API de status/execução do pipeline."""
         from urllib.parse import urlparse
         try:
-            from flv.scheduler import get_pipeline_status, run_pipeline_once
+            from flv.scheduler import get_pipeline_status, run_pipeline_once, get_pipeline_runs, get_pipeline_logs, get_pipeline_freshness
             parsed = urlparse(self.path)
             path = parsed.path.replace('/api/pipeline/', '').rstrip('/')
 
             if path == 'status' or path == '':
                 result = get_pipeline_status()
             elif path == 'run':
-                # Execução manual — rodar em thread para não bloquear
                 import threading
                 result = {'status': 'started', 'message': 'Pipeline iniciado em background'}
-                threading.Thread(target=run_pipeline_once, daemon=True).start()
+                threading.Thread(target=run_pipeline_once, args=('api_manual',), daemon=True).start()
+            elif path == 'runs':
+                runs = get_pipeline_runs(20)
+                result = {'runs': runs, 'total': len(runs)}
+            elif path == 'logs':
+                lines = get_pipeline_logs(50)
+                result = {'lines': lines, 'total': len(lines)}
+            elif path == 'freshness':
+                result = get_pipeline_freshness()
             else:
-                result = {'error': 'Endpoint não encontrado', 'available': ['/api/pipeline/status', '/api/pipeline/run']}
+                result = {'error': 'Endpoint não encontrado', 'available': ['/api/pipeline/status', '/api/pipeline/run', '/api/pipeline/runs', '/api/pipeline/logs', '/api/pipeline/freshness']}
 
             self.send_response(200)
             self._cors()
@@ -735,10 +742,14 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         """API de status de todas as fontes de dados."""
         try:
             from flv.intelligence_engine import get_engine
+            from flv.climapi_client import get_climapi_status
+            from flv.paths import get_storage_info
             engine = get_engine()
             freshness = engine.get_data_freshness()
 
-            # Complementar com CEPEA e CLIMAPI
+            # Diagnóstico CLIMAPI real
+            climapi_status = get_climapi_status()
+
             sources = {
                 'conab': {
                     'status': freshness['source_status'].get('ceasa', 'fallback'),
@@ -748,24 +759,18 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 },
                 'cepea': {
                     'status': 'fallback',
-                    'reason': 'Cloudflare/WAF bloqueando scraping direto. Retorna 403 ou challenge JS.',
+                    'reason': 'Sem API pública oficial. Cloudflare/WAF bloqueia scraping. Acesso requer parceria/licenciamento.',
                     'last_success': None,
                     'fallback_active': True,
-                    'recommendation': 'Usar dados CONAB/Prohort como fonte primária de preços.'
+                    'replacement': 'CONAB/PROHORT',
+                    'recommendation': 'Buscar parceria CEPEA/ESALQ para acesso estruturado a dados.'
                 },
-                'climapi': {
-                    'status': 'fallback',
-                    'reason': 'Credenciais Embrapa expiradas ou quota excedida. Token OAuth2 invalido.',
-                    'credentials_present': bool(os.environ.get('AGROAPI_KEY')),
-                    'last_success': None,
-                    'fallback_active': True,
-                    'replacement': 'Open-Meteo (gratuito, sem chave, cobertura global)'
-                },
+                'climapi': climapi_status,
                 'open_meteo': {
                     'status': freshness['source_status'].get('open_meteo', 'fallback'),
                     'last_success': freshness.get('last_weather_update'),
                     'freshness': 'fresh' if freshness['source_status'].get('open_meteo') == 'real' else 'stale',
-                    'description': 'Open-Meteo Clima (gratuito)'
+                    'description': 'Open-Meteo Clima (gratuito, substitui ClimAPI)'
                 },
                 'sidra': {
                     'status': freshness['source_status'].get('sidra', 'fallback'),
@@ -787,6 +792,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             result = {
                 'sources': sources,
                 'data_freshness': freshness['data_freshness'],
+                'storage': get_storage_info(),
                 'checked_at': freshness.get('checked_at')
             }
 
@@ -1880,11 +1886,11 @@ try:
     def _flv_scheduler():
         time.sleep(10)  # Wait for server startup
         from flv.scheduler import run_pipeline_once
-        run_pipeline_once()
+        run_pipeline_once(trigger='startup')
         while True:
             time.sleep(6 * 3600)
             try:
-                run_pipeline_once()
+                run_pipeline_once(trigger='scheduler_6h')
             except Exception as e:
                 print(f'[FLV-Scheduler] Erro: {e}')
 

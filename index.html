@@ -1094,6 +1094,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <div id="climate-alerts-panel" style="margin-top:4px;"></div>
           </div>
           <div id="sources-status-bar" style="margin-top:6px;border-top:1px solid var(--border);padding-top:4px;"></div>
+          <div id="pipeline-status-bar" style="margin-top:3px;"></div>
         </div>
         <div class="ov-right" style="display:flex;flex-direction:column;">
           <div class="ov-chart-area" style="flex:1;min-height:0;">
@@ -11728,6 +11729,16 @@ const NiasClimateFrontend = {
         return `<span style="font-size:8px;color:${color};margin-right:8px;">● ${label}: ${statusTxt}</span>`;
       }).join('');
       el.innerHTML = items;
+
+      // Pipeline & Storage info
+      const pipeEl = document.getElementById('pipeline-status-bar');
+      if (pipeEl && data.storage) {
+        const persistent = data.storage.persistent;
+        const storageIcon = persistent ? '✅' : '⚠️';
+        const storageText = persistent ? 'Dados protegidos entre deploys' : 'Storage efêmero — configure Persistent Disk';
+        const storageColor = persistent ? 'var(--accent)' : 'var(--danger)';
+        pipeEl.innerHTML = `<span style="font-size:8px;color:${storageColor};">${storageIcon} ${storageText}</span>`;
+      }
     } catch(e) {}
   },
 
