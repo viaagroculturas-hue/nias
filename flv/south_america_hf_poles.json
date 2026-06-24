@@ -1,0 +1,964 @@
+{
+  "updated_at": "2026-05-24",
+  "precision": "polo/município-região",
+  "records": [
+    {
+      "id": "AR-MDZ-LUJ",
+      "name": "Luján de Cuyo",
+      "state": "Mendoza",
+      "country": "AR",
+      "culture": "uva",
+      "lat": -33.04,
+      "lon": -68.88,
+      "flvTons": 420000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Oásis Norte — viticultura, alho e frutas de caroço",
+      "products": [
+        "uva",
+        "alho",
+        "cebola",
+        "pessego",
+        "ameixa"
+      ]
+    },
+    {
+      "id": "AR-MDZ-SRA",
+      "name": "San Rafael",
+      "state": "Mendoza",
+      "country": "AR",
+      "culture": "uva",
+      "lat": -34.61,
+      "lon": -68.33,
+      "flvTons": 360000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Oásis Sul — fruta fresca, vitivinicultura e tomate",
+      "products": [
+        "uva",
+        "pera",
+        "maçã",
+        "ameixa",
+        "tomate"
+      ]
+    },
+    {
+      "id": "AR-RNO-ALT",
+      "name": "Alto Valle",
+      "state": "Río Negro",
+      "country": "AR",
+      "culture": "maca",
+      "lat": -38.95,
+      "lon": -67.99,
+      "flvTons": 520000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Vale irrigado do Río Negro — pomáceas",
+      "products": [
+        "maçã",
+        "pera",
+        "cereja",
+        "ameixa"
+      ]
+    },
+    {
+      "id": "AR-TUC-FAM",
+      "name": "Famaillá",
+      "state": "Tucumán",
+      "country": "AR",
+      "culture": "limao",
+      "lat": -27.05,
+      "lon": -65.4,
+      "flvTons": 480000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "NOA citrícola — limão industrial e fresco",
+      "products": [
+        "limão",
+        "laranja",
+        "mandarina",
+        "hortaliças"
+      ]
+    },
+    {
+      "id": "AR-SAL-ORA",
+      "name": "Orán",
+      "state": "Salta",
+      "country": "AR",
+      "culture": "banana",
+      "lat": -23.13,
+      "lon": -64.32,
+      "flvTons": 210000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Subtropical de Salta/Jujuy",
+      "products": [
+        "banana",
+        "citrus",
+        "tomate",
+        "pimentao"
+      ]
+    },
+    {
+      "id": "AR-BUE-LPL",
+      "name": "La Plata",
+      "state": "Buenos Aires",
+      "country": "AR",
+      "culture": "horti",
+      "lat": -34.92,
+      "lon": -57.95,
+      "flvTons": 180000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Cinturão verde de Buenos Aires",
+      "products": [
+        "alface",
+        "tomate",
+        "pimentao",
+        "folhosas"
+      ]
+    },
+    {
+      "id": "AR-COR-COL",
+      "name": "Colonia Caroya",
+      "state": "Córdoba",
+      "country": "AR",
+      "culture": "horti",
+      "lat": -31.02,
+      "lon": -64.07,
+      "flvTons": 145000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Horti-fruti centro argentino",
+      "products": [
+        "batata",
+        "cebola",
+        "uva",
+        "frutas"
+      ]
+    },
+    {
+      "id": "CL-RM-MAI",
+      "name": "Maipo / Buin",
+      "state": "Región Metropolitana",
+      "country": "CL",
+      "culture": "uva",
+      "lat": -33.73,
+      "lon": -70.74,
+      "flvTons": 390000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Vale Central — uva, hortaliças e exportação",
+      "products": [
+        "uva",
+        "hortaliças",
+        "tomate",
+        "pimentao"
+      ]
+    },
+    {
+      "id": "CL-OHI-RAN",
+      "name": "Rancagua / Cachapoal",
+      "state": "O’Higgins",
+      "country": "CL",
+      "culture": "uva",
+      "lat": -34.17,
+      "lon": -70.74,
+      "flvTons": 610000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "O’Higgins — frutas temperadas exportáveis",
+      "products": [
+        "uva",
+        "cereja",
+        "maçã",
+        "nectarina",
+        "pêssego"
+      ]
+    },
+    {
+      "id": "CL-MAU-CUR",
+      "name": "Curicó / Maule",
+      "state": "Maule",
+      "country": "CL",
+      "culture": "maca",
+      "lat": -34.98,
+      "lon": -71.24,
+      "flvTons": 580000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Maule — pomáceas e caroço",
+      "products": [
+        "maçã",
+        "cereja",
+        "kiwi",
+        "uva"
+      ]
+    },
+    {
+      "id": "CL-NUB-CHI",
+      "name": "Chillán",
+      "state": "Ñuble",
+      "country": "CL",
+      "culture": "horti",
+      "lat": -36.61,
+      "lon": -72.1,
+      "flvTons": 210000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Ñuble/Bío-Bío hortícola",
+      "products": [
+        "tomate",
+        "cebola",
+        "alho",
+        "batata",
+        "berries"
+      ]
+    },
+    {
+      "id": "CL-ARA-TEM",
+      "name": "Temuco / Araucanía",
+      "state": "Araucanía",
+      "country": "CL",
+      "culture": "batata",
+      "lat": -38.74,
+      "lon": -72.59,
+      "flvTons": 260000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Sul chileno — batata, leite e berries",
+      "products": [
+        "batata",
+        "frango",
+        "leite",
+        "berries"
+      ]
+    },
+    {
+      "id": "CL-ATA-COP",
+      "name": "Copiapó / Huasco",
+      "state": "Atacama",
+      "country": "CL",
+      "culture": "uva",
+      "lat": -27.37,
+      "lon": -70.33,
+      "flvTons": 150000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Oásis desértico irrigado",
+      "products": [
+        "uva",
+        "oliva",
+        "tomate"
+      ]
+    },
+    {
+      "id": "PE-ICA-ICA",
+      "name": "Ica",
+      "state": "Ica",
+      "country": "PE",
+      "culture": "uva",
+      "lat": -14.07,
+      "lon": -75.73,
+      "flvTons": 720000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Agroexportação costeira — Ica",
+      "products": [
+        "uva",
+        "aspargos",
+        "palta",
+        "mandarina",
+        "arandano"
+      ]
+    },
+    {
+      "id": "PE-LAL-VIR",
+      "name": "Virú / Chao",
+      "state": "La Libertad",
+      "country": "PE",
+      "culture": "aspargos",
+      "lat": -8.41,
+      "lon": -78.75,
+      "flvTons": 650000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Chavimochic — hortifruti de exportação",
+      "products": [
+        "aspargos",
+        "palta",
+        "arandano",
+        "alcachofra",
+        "uva"
+      ]
+    },
+    {
+      "id": "PE-LAM-OLM",
+      "name": "Olmos / Motupe",
+      "state": "Lambayeque",
+      "country": "PE",
+      "culture": "palta",
+      "lat": -5.99,
+      "lon": -79.74,
+      "flvTons": 430000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Olmos — fruticultura irrigada",
+      "products": [
+        "palta",
+        "manga",
+        "uva",
+        "limão"
+      ]
+    },
+    {
+      "id": "PE-PIU-TAM",
+      "name": "Tambogrande / Sullana",
+      "state": "Piura",
+      "country": "PE",
+      "culture": "manga",
+      "lat": -4.93,
+      "lon": -80.34,
+      "flvTons": 520000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Piura — manga e limão",
+      "products": [
+        "manga",
+        "limão",
+        "banana",
+        "uva"
+      ]
+    },
+    {
+      "id": "PE-LIM-HUA",
+      "name": "Huaral / Cañete",
+      "state": "Lima",
+      "country": "PE",
+      "culture": "horti",
+      "lat": -11.5,
+      "lon": -77.2,
+      "flvTons": 310000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Costa central — citros e hortaliças",
+      "products": [
+        "mandarina",
+        "uva",
+        "palta",
+        "hortaliças"
+      ]
+    },
+    {
+      "id": "PE-JUN-CHA",
+      "name": "Chanchamayo",
+      "state": "Junín",
+      "country": "PE",
+      "culture": "cafe",
+      "lat": -11.06,
+      "lon": -75.33,
+      "flvTons": 190000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Selva central — café, cacau e frutas",
+      "products": [
+        "café",
+        "cacau",
+        "banana",
+        "abacaxi"
+      ]
+    },
+    {
+      "id": "EC-GUA-MAC",
+      "name": "Machala / El Oro",
+      "state": "El Oro",
+      "country": "EC",
+      "culture": "banana",
+      "lat": -3.26,
+      "lon": -79.96,
+      "flvTons": 760000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Corredor bananeiro do El Oro",
+      "products": [
+        "banana",
+        "cacau",
+        "camarão"
+      ]
+    },
+    {
+      "id": "EC-GUA-GYE",
+      "name": "Guayas / Los Ríos",
+      "state": "Guayas",
+      "country": "EC",
+      "culture": "banana",
+      "lat": -2.17,
+      "lon": -79.9,
+      "flvTons": 890000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Litoral equatoriano — banana, cacau, arroz",
+      "products": [
+        "banana",
+        "cacau",
+        "arroz",
+        "manga"
+      ]
+    },
+    {
+      "id": "EC-MAN-QUE",
+      "name": "Quevedo / Los Ríos",
+      "state": "Los Ríos",
+      "country": "EC",
+      "culture": "cacau",
+      "lat": -1.03,
+      "lon": -79.46,
+      "flvTons": 420000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Cacau fino e banana",
+      "products": [
+        "cacau",
+        "banana",
+        "mandarina",
+        "milho"
+      ]
+    },
+    {
+      "id": "EC-PIC-CAY",
+      "name": "Cayambe / Pedro Moncayo",
+      "state": "Pichincha",
+      "country": "EC",
+      "culture": "flores",
+      "lat": 0.04,
+      "lon": -78.15,
+      "flvTons": 160000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Serra equatoriana — flores e hortaliças",
+      "products": [
+        "flores",
+        "brocolis",
+        "alface",
+        "leite"
+      ]
+    },
+    {
+      "id": "EC-COT-LAT",
+      "name": "Latacunga / Cotopaxi",
+      "state": "Cotopaxi",
+      "country": "EC",
+      "culture": "brocolis",
+      "lat": -0.93,
+      "lon": -78.62,
+      "flvTons": 130000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Altiplano hortícola",
+      "products": [
+        "brocolis",
+        "batata",
+        "cenoura",
+        "leite"
+      ]
+    },
+    {
+      "id": "CO-ANT-URA",
+      "name": "Urabá / Apartadó",
+      "state": "Antioquia",
+      "country": "CO",
+      "culture": "banana",
+      "lat": 7.88,
+      "lon": -76.63,
+      "flvTons": 820000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Urabá — banana/plátano exportação",
+      "products": [
+        "banana",
+        "plátano",
+        "cacau"
+      ]
+    },
+    {
+      "id": "CO-MAG-SMR",
+      "name": "Santa Marta / Magdalena",
+      "state": "Magdalena",
+      "country": "CO",
+      "culture": "banana",
+      "lat": 11.24,
+      "lon": -74.2,
+      "flvTons": 510000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Caribe colombiano — banana",
+      "products": [
+        "banana",
+        "manga",
+        "cítricos"
+      ]
+    },
+    {
+      "id": "CO-CUN-FAC",
+      "name": "Facatativá / Sabana Bogotá",
+      "state": "Cundinamarca",
+      "country": "CO",
+      "culture": "flores",
+      "lat": 4.81,
+      "lon": -74.35,
+      "flvTons": 260000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Sabana de Bogotá — flores, batata, lácteos",
+      "products": [
+        "flores",
+        "batata",
+        "alface",
+        "morango",
+        "leite"
+      ]
+    },
+    {
+      "id": "CO-VAL-PAL",
+      "name": "Palmira / Valle del Cauca",
+      "state": "Valle del Cauca",
+      "country": "CO",
+      "culture": "cana",
+      "lat": 3.54,
+      "lon": -76.3,
+      "flvTons": 380000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Valle del Cauca — cana e hortifruti",
+      "products": [
+        "cana",
+        "uva",
+        "hortaliças",
+        "frango"
+      ]
+    },
+    {
+      "id": "CO-HUI-GAR",
+      "name": "Garzón / Huila",
+      "state": "Huila",
+      "country": "CO",
+      "culture": "cafe",
+      "lat": 2.2,
+      "lon": -75.63,
+      "flvTons": 210000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Andes colombianos — café e frutas",
+      "products": [
+        "café",
+        "cacau",
+        "maracuja",
+        "abacate"
+      ]
+    },
+    {
+      "id": "CO-SAN-BUC",
+      "name": "Bucaramanga / Santander",
+      "state": "Santander",
+      "country": "CO",
+      "culture": "cacau",
+      "lat": 7.12,
+      "lon": -73.12,
+      "flvTons": 230000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Santander — cacau, citros e avicultura",
+      "products": [
+        "cacau",
+        "cítricos",
+        "abacate",
+        "frango"
+      ]
+    },
+    {
+      "id": "BO-SCZ-YAP",
+      "name": "Yapacaní / Santa Cruz",
+      "state": "Santa Cruz",
+      "country": "BO",
+      "culture": "banana",
+      "lat": -17.4,
+      "lon": -63.88,
+      "flvTons": 300000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Oriente boliviano — tropical e grãos",
+      "products": [
+        "banana",
+        "arroz",
+        "soja",
+        "mandioca",
+        "frango"
+      ]
+    },
+    {
+      "id": "BO-SCZ-VAL",
+      "name": "Vallegrande",
+      "state": "Santa Cruz",
+      "country": "BO",
+      "culture": "horti",
+      "lat": -18.49,
+      "lon": -64.1,
+      "flvTons": 95000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Vales cruceños — hortaliças",
+      "products": [
+        "tomate",
+        "batata",
+        "pimentao",
+        "cebola"
+      ]
+    },
+    {
+      "id": "BO-CBA-CHI",
+      "name": "Chapare / Cochabamba",
+      "state": "Cochabamba",
+      "country": "BO",
+      "culture": "banana",
+      "lat": -16.99,
+      "lon": -65.13,
+      "flvTons": 280000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Chapare tropical",
+      "products": [
+        "banana",
+        "abacaxi",
+        "mandioca",
+        "cítricos"
+      ]
+    },
+    {
+      "id": "BO-LP-ALT",
+      "name": "Altiplano La Paz / Oruro",
+      "state": "La Paz/Oruro",
+      "country": "BO",
+      "culture": "batata",
+      "lat": -16.5,
+      "lon": -68.15,
+      "flvTons": 190000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Altiplano andino — batata e quinoa",
+      "products": [
+        "batata",
+        "quinua",
+        "cebola",
+        "leite"
+      ]
+    },
+    {
+      "id": "BO-TJA-TAR",
+      "name": "Tarija",
+      "state": "Tarija",
+      "country": "BO",
+      "culture": "uva",
+      "lat": -21.53,
+      "lon": -64.73,
+      "flvTons": 120000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Vales de Tarija — uva e hortaliças",
+      "products": [
+        "uva",
+        "tomate",
+        "pimentao",
+        "hortaliças"
+      ]
+    },
+    {
+      "id": "PY-ITA-CDE",
+      "name": "Alto Paraná / Itapúa",
+      "state": "Alto Paraná/Itapúa",
+      "country": "PY",
+      "culture": "soja",
+      "lat": -25.51,
+      "lon": -54.61,
+      "flvTons": 530000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Leste paraguaio — grãos, mandioca e proteína",
+      "products": [
+        "soja",
+        "milho",
+        "mandioca",
+        "frango",
+        "suinos"
+      ]
+    },
+    {
+      "id": "PY-CEN-ITA",
+      "name": "Itauguá / Central",
+      "state": "Central",
+      "country": "PY",
+      "culture": "horti",
+      "lat": -25.38,
+      "lon": -57.33,
+      "flvTons": 90000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Cinturão hortícola de Assunção",
+      "products": [
+        "tomate",
+        "pimentao",
+        "alface",
+        "mandioca",
+        "ovos"
+      ]
+    },
+    {
+      "id": "PY-CAZ-CAZ",
+      "name": "Caaguazú",
+      "state": "Caaguazú",
+      "country": "PY",
+      "culture": "mandioca",
+      "lat": -25.46,
+      "lon": -56.02,
+      "flvTons": 260000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Mandioca industrial e grãos",
+      "products": [
+        "mandioca",
+        "soja",
+        "milho",
+        "frango"
+      ]
+    },
+    {
+      "id": "PY-PAR-PIL",
+      "name": "Pilar / Ñeembucú",
+      "state": "Ñeembucú",
+      "country": "PY",
+      "culture": "arroz",
+      "lat": -26.86,
+      "lon": -58.3,
+      "flvTons": 110000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Arroz irrigado e leite",
+      "products": [
+        "arroz",
+        "hortaliças",
+        "pecuaria_leite"
+      ]
+    },
+    {
+      "id": "UY-SAL-SAL",
+      "name": "Salto / Paysandú",
+      "state": "Salto/Paysandú",
+      "country": "UY",
+      "culture": "citricos",
+      "lat": -31.39,
+      "lon": -57.96,
+      "flvTons": 300000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Litoral Norte — citros e arroz",
+      "products": [
+        "laranja",
+        "mandarina",
+        "limão",
+        "arroz",
+        "leite"
+      ]
+    },
+    {
+      "id": "UY-CAN-CAN",
+      "name": "Canelones",
+      "state": "Canelones",
+      "country": "UY",
+      "culture": "horti",
+      "lat": -34.52,
+      "lon": -56.28,
+      "flvTons": 160000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Cinturão hortifrutícola de Montevidéu",
+      "products": [
+        "tomate",
+        "alface",
+        "uva",
+        "pêssego",
+        "ovos"
+      ]
+    },
+    {
+      "id": "UY-SJO-SJO",
+      "name": "San José",
+      "state": "San José",
+      "country": "UY",
+      "culture": "leite",
+      "lat": -34.34,
+      "lon": -56.71,
+      "flvTons": 210000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Leite, aves e hortifruti",
+      "products": [
+        "leite",
+        "queijo",
+        "hortaliças",
+        "frango"
+      ]
+    },
+    {
+      "id": "UY-ROC-ROZ",
+      "name": "Rocha / Treinta y Tres",
+      "state": "Rocha/Treinta y Tres",
+      "country": "UY",
+      "culture": "arroz",
+      "lat": -33.37,
+      "lon": -54.21,
+      "flvTons": 190000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Arroz e pecuária no leste",
+      "products": [
+        "arroz",
+        "batata",
+        "pecuaria_corte"
+      ]
+    },
+    {
+      "id": "VE-ZUL-SUR",
+      "name": "Sur del Lago",
+      "state": "Zulia",
+      "country": "VE",
+      "culture": "banana",
+      "lat": 8.98,
+      "lon": -71.91,
+      "flvTons": 430000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Sul do Lago — plátano, banana e leite",
+      "products": [
+        "banana",
+        "plátano",
+        "cacau",
+        "leite"
+      ]
+    },
+    {
+      "id": "VE-ARA-MAR",
+      "name": "Maracay / Aragua",
+      "state": "Aragua",
+      "country": "VE",
+      "culture": "horti",
+      "lat": 10.25,
+      "lon": -67.6,
+      "flvTons": 170000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Centro venezuelano — hortaliças e aves",
+      "products": [
+        "tomate",
+        "pimentao",
+        "cítricos",
+        "frango"
+      ]
+    },
+    {
+      "id": "VE-LAR-BAR",
+      "name": "Barquisimeto / Lara",
+      "state": "Lara",
+      "country": "VE",
+      "culture": "cebola",
+      "lat": 10.07,
+      "lon": -69.32,
+      "flvTons": 150000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Vale seco irrigado — hortaliças",
+      "products": [
+        "cebola",
+        "tomate",
+        "pimentao",
+        "uvas"
+      ]
+    },
+    {
+      "id": "VE-MER-MER",
+      "name": "Mérida Andes",
+      "state": "Mérida",
+      "country": "VE",
+      "culture": "batata",
+      "lat": 8.59,
+      "lon": -71.14,
+      "flvTons": 130000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Andes venezuelanos — batata e lácteos",
+      "products": [
+        "batata",
+        "cenoura",
+        "alface",
+        "leite"
+      ]
+    },
+    {
+      "id": "GY-DEM-GEO",
+      "name": "Demerara / Georgetown",
+      "state": "Demerara-Mahaica",
+      "country": "GY",
+      "culture": "arroz",
+      "lat": 6.8,
+      "lon": -58.16,
+      "flvTons": 160000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Planície costeira guianense",
+      "products": [
+        "arroz",
+        "coco",
+        "abacaxi",
+        "frango"
+      ]
+    },
+    {
+      "id": "GY-ESS-ROS",
+      "name": "Essequibo Coast",
+      "state": "Pomeroon-Supenaam",
+      "country": "GY",
+      "culture": "arroz",
+      "lat": 7.26,
+      "lon": -58.49,
+      "flvTons": 120000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Costa do Essequibo",
+      "products": [
+        "arroz",
+        "coco",
+        "banana",
+        "mandioca"
+      ]
+    },
+    {
+      "id": "SR-PAR-PAR",
+      "name": "Paramaribo / Wanica",
+      "state": "Paramaribo/Wanica",
+      "country": "SR",
+      "culture": "horti",
+      "lat": 5.85,
+      "lon": -55.2,
+      "flvTons": 130000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Costa do Suriname",
+      "products": [
+        "arroz",
+        "banana",
+        "hortaliças",
+        "frango"
+      ]
+    },
+    {
+      "id": "SR-NIC-NIC",
+      "name": "Nickerie",
+      "state": "Nickerie",
+      "country": "SR",
+      "culture": "arroz",
+      "lat": 5.95,
+      "lon": -56.99,
+      "flvTons": 190000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Nickerie — arroz irrigado",
+      "products": [
+        "arroz",
+        "banana",
+        "coco"
+      ]
+    },
+    {
+      "id": "GF-CAY-MAT",
+      "name": "Cayenne / Matoury",
+      "state": "Guiana Francesa",
+      "country": "GF",
+      "culture": "horti",
+      "lat": 4.92,
+      "lon": -52.33,
+      "flvTons": 60000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Abastecimento local — costa da Guiana Francesa",
+      "products": [
+        "hortaliças",
+        "banana",
+        "mandioca",
+        "frango"
+      ]
+    },
+    {
+      "id": "GF-STL-STL",
+      "name": "Saint-Laurent-du-Maroni",
+      "state": "Guiana Francesa",
+      "country": "GF",
+      "culture": "mandioca",
+      "lat": 5.5,
+      "lon": -54.03,
+      "flvTons": 50000,
+      "source": "curated_south_america_hf_2026",
+      "phenology": "Oeste guianense — mandioca e frutas tropicais",
+      "products": [
+        "mandioca",
+        "banana",
+        "abacaxi"
+      ]
+    }
+  ]
+}

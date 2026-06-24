@@ -1,5 +1,5 @@
 """FLV SATVeg NDVI Collector — EMBRAPA satellite vegetation index."""
-import urllib.request, json, math
+import urllib.request, json, math, os
 from datetime import datetime, timedelta
 
 def fetch_all():
@@ -33,7 +33,9 @@ def _fetch_ndvi_proxy(conn, mun):
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read())
     except Exception:
-        return _generate_synthetic_ndvi(conn, mun)
+        if os.getenv('FLV_ALLOW_SYNTHETIC_FALLBACK', '').lower() in ('1','true','yes'):
+            return _generate_synthetic_ndvi(conn, mun)
+        return 0
 
     daily = data.get('daily', {})
     dates = daily.get('time', [])
@@ -54,7 +56,7 @@ def _fetch_ndvi_proxy(conn, mun):
         try:
             conn.execute(
                 "INSERT OR REPLACE INTO flv_ndvi (mun_id,obs_date,ndvi_value,source) VALUES (?,?,?,?)",
-                (mun['id'], date, round(ndvi, 4), 'OpenMeteo-proxy')
+                (mun['id'], date, round(ndvi, 4), 'proxy:OpenMeteo-soil-moisture')
             )
             count += 1
         except Exception:
@@ -77,7 +79,7 @@ def _generate_synthetic_ndvi(conn, mun):
         try:
             conn.execute(
                 "INSERT OR REPLACE INTO flv_ndvi (mun_id,obs_date,ndvi_value,source) VALUES (?,?,?,?)",
-                (mun['id'], date, round(ndvi, 4), 'synthetic')
+                (mun['id'], date, round(ndvi, 4), 'synthetic:seasonal-ndvi')
             )
             count += 1
         except Exception:

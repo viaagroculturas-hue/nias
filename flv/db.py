@@ -1,12 +1,32 @@
 """FLV Database Layer — SQLite WAL mode, thread-safe."""
 import sqlite3, os, json, time
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nia_flv.db')
-SCHEMA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'flv_schema.sql')
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Prefer the populated production database under /data. Older builds left empty
+# nia_flv.db files in the root and inside /flv, which caused HTTP 500 in IA/Audit.
+def _select_db_path():
+    candidates = [
+        os.environ.get('NIAS_DB_PATH'),
+        os.path.join(ROOT_PATH, 'data', 'nia_flv.db'),
+        os.path.join(ROOT_PATH, 'nia_flv.db'),
+        os.path.join(ROOT_PATH, 'flv', 'nia_flv.db'),
+    ]
+    for cand in candidates:
+        if cand and os.path.exists(cand) and os.path.getsize(cand) > 8192:
+            return cand
+    return os.path.join(ROOT_PATH, 'data', 'nia_flv.db')
+
+DB_PATH = _select_db_path()
+SCHEMA_PATH = os.path.join(ROOT_PATH, 'data', 'flv_schema.sql')
+if not os.path.exists(SCHEMA_PATH):
+    SCHEMA_PATH = os.path.join(ROOT_PATH, 'flv_schema.sql')
 
 _conn_cache = {}
+_schema_checked = False
+
 
 def get_conn():
+    global _schema_checked
     tid = id(os.getpid())
     if tid not in _conn_cache:
         conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=10)
@@ -14,6 +34,13 @@ def get_conn():
         conn.execute("PRAGMA busy_timeout=5000")
         conn.execute("PRAGMA foreign_keys=ON")
         conn.row_factory = sqlite3.Row
+        if not _schema_checked:
+            try:
+                from flv.db_migration import ensure_runtime_schema
+                ensure_runtime_schema(conn)
+                _schema_checked = True
+            except Exception as e:
+                print(f'[FLV] schema migration warning: {e}')
         _conn_cache[tid] = conn
     return _conn_cache[tid]
 
@@ -84,35 +111,57 @@ def _seed_municipalities(conn):
     conn.commit()
 
 def upsert_price(culture_slug, terminal, price_date, price_avg, price_min=None, price_max=None, volume_kg=None, source='CONAB'):
+    from flv.data_quality import normalize_date, valid_price, quality_for_source
+    price_date = normalize_date(price_date)
+    price_avg = valid_price(price_avg)
+    price_min = valid_price(price_min) if price_min is not None else None
+    price_max = valid_price(price_max) if price_max is not None else None
+    if not price_date or price_avg is None:
+        return
+    is_synthetic, data_quality = quality_for_source(source)
     conn = get_conn()
     cid = conn.execute("SELECT id FROM flv_cultures WHERE slug=?", (culture_slug,)).fetchone()
     if not cid:
         return
     conn.execute(
-        "INSERT OR REPLACE INTO flv_ceasa_prices (culture_id,terminal,price_date,price_avg,price_min,price_max,volume_kg,source) VALUES (?,?,?,?,?,?,?,?)",
-        (cid['id'], terminal, price_date, price_avg, price_min, price_max, volume_kg, source)
+        "INSERT OR REPLACE INTO flv_ceasa_prices (culture_id,terminal,price_date,price_avg,price_min,price_max,volume_kg,source,is_synthetic,data_quality) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (cid['id'], terminal, price_date, price_avg, price_min, price_max, volume_kg, source, is_synthetic, data_quality)
     )
     conn.commit()
 
 def upsert_climate(ibge_code, obs_date, temp_max=None, temp_min=None, precip=None, humidity=None, wind=None, source='INMET'):
+    from flv.data_quality import normalize_date, quality_for_source
+    obs_date = normalize_date(obs_date)
+    if not obs_date:
+        return
+    is_synthetic, data_quality = quality_for_source(source)
     conn = get_conn()
     mid = conn.execute("SELECT id FROM flv_municipalities WHERE ibge_code=?", (ibge_code,)).fetchone()
     if not mid:
         return
     conn.execute(
-        "INSERT OR REPLACE INTO flv_climate (mun_id,obs_date,temp_max_c,temp_min_c,precip_mm,humidity_pct,wind_ms,source) VALUES (?,?,?,?,?,?,?,?)",
-        (mid['id'], obs_date, temp_max, temp_min, precip, humidity, wind, source)
+        "INSERT OR REPLACE INTO flv_climate (mun_id,obs_date,temp_max_c,temp_min_c,precip_mm,humidity_pct,wind_ms,source,is_synthetic,data_quality) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (mid['id'], obs_date, temp_max, temp_min, precip, humidity, wind, source, is_synthetic, data_quality)
     )
     conn.commit()
 
 def upsert_ndvi(ibge_code, obs_date, ndvi_value, ndvi_anomaly=None, source='SATVeg'):
+    from flv.data_quality import normalize_date, quality_for_source
+    obs_date = normalize_date(obs_date)
+    try:
+        ndvi_value = float(ndvi_value)
+    except Exception:
+        return
+    if not obs_date or ndvi_value < 0 or ndvi_value > 1:
+        return
+    is_synthetic, data_quality = quality_for_source(source)
     conn = get_conn()
     mid = conn.execute("SELECT id FROM flv_municipalities WHERE ibge_code=?", (ibge_code,)).fetchone()
     if not mid:
         return
     conn.execute(
-        "INSERT OR REPLACE INTO flv_ndvi (mun_id,obs_date,ndvi_value,ndvi_anomaly,source) VALUES (?,?,?,?,?)",
-        (mid['id'], obs_date, ndvi_value, ndvi_anomaly, source)
+        "INSERT OR REPLACE INTO flv_ndvi (mun_id,obs_date,ndvi_value,ndvi_anomaly,source,is_synthetic,data_quality) VALUES (?,?,?,?,?,?,?)",
+        (mid['id'], obs_date, ndvi_value, ndvi_anomaly, source, is_synthetic, data_quality)
     )
     conn.commit()
 
@@ -129,12 +178,19 @@ def upsert_macro_indicators(
     ipca_yoy_pct=None,
     source='BCB/ANP'
 ):
+    from flv.data_quality import normalize_date, valid_percent, quality_for_source
+    obs_date = normalize_date(obs_date)
+    if not obs_date:
+        return
+    ipca_yoy_pct = valid_percent(ipca_yoy_pct, low=-10.0, high=30.0) if ipca_yoy_pct is not None else None
+    selic_pct = valid_percent(selic_pct, low=0.0, high=50.0) if selic_pct is not None else None
+    is_synthetic, data_quality = quality_for_source(source)
     conn = get_conn()
     conn.execute(
         "INSERT OR REPLACE INTO flv_macro_indicators ("
         "obs_date,diesel_brl_l,diesel_change_pct,brent_usd,brent_change_pct,wti_usd,wti_change_pct,"
-        "usd_brl,selic_pct,ipca_yoy_pct,source"
-        ") VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        "usd_brl,selic_pct,ipca_yoy_pct,source,is_synthetic,data_quality"
+        ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (
             obs_date,
             diesel_brl_l,
@@ -147,6 +203,8 @@ def upsert_macro_indicators(
             selic_pct,
             ipca_yoy_pct,
             source,
+            is_synthetic,
+            data_quality,
         )
     )
     conn.commit()
@@ -168,19 +226,42 @@ def upsert_news_risk_daily(obs_date, risk_index, top_tags_json=None, sources_jso
     conn.commit()
 
 def upsert_global_climate(obs_date, oni=None, atl_north_warm_idx=None, source="NOAA/ESRL"):
+    from flv.data_quality import normalize_date, quality_for_source
+    obs_date = normalize_date(obs_date)
+    if not obs_date or (oni is None and atl_north_warm_idx is None):
+        return
+    is_synthetic, data_quality = quality_for_source(source)
     conn = get_conn()
     conn.execute(
-        "INSERT OR REPLACE INTO flv_global_climate (obs_date,oni,atl_north_warm_idx,source) VALUES (?,?,?,?)",
-        (obs_date, oni, atl_north_warm_idx, source),
+        "INSERT OR REPLACE INTO flv_global_climate (obs_date,oni,atl_north_warm_idx,source,is_synthetic,data_quality) VALUES (?,?,?,?,?,?)",
+        (obs_date, oni, atl_north_warm_idx, source, is_synthetic, data_quality),
     )
     conn.commit()
 
 def query(sql, params=()):
     conn = get_conn()
-    rows = conn.execute(sql, params).fetchall()
+    try:
+        rows = conn.execute(sql, params).fetchall()
+    except sqlite3.OperationalError as e:
+        # Old deployments may have a populated DB without quality columns.
+        # Apply migration once and retry, so APIs do not fail with HTTP 500.
+        if 'no such column' in str(e).lower():
+            from flv.db_migration import ensure_runtime_schema
+            ensure_runtime_schema(conn)
+            rows = conn.execute(sql, params).fetchall()
+        else:
+            raise
     return [dict(r) for r in rows]
 
 def execute(sql, params=()):
     conn = get_conn()
-    conn.execute(sql, params)
+    try:
+        conn.execute(sql, params)
+    except sqlite3.OperationalError as e:
+        if 'no such column' in str(e).lower():
+            from flv.db_migration import ensure_runtime_schema
+            ensure_runtime_schema(conn)
+            conn.execute(sql, params)
+        else:
+            raise
     conn.commit()

@@ -1,0 +1,82 @@
+import sqlite3
+import json
+
+conn = sqlite3.connect('nia_flv.db')
+cursor = conn.cursor()
+
+# Criar endpoint de API para dados financeiros
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS api_endpoints (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        path TEXT UNIQUE,
+        description TEXT,
+        query TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+''')
+
+# Inserir dados de resumo financeiro
+financial_summary = {
+    'empresas_total': 48,
+    'instituicoes_total': 20,
+    'trocas_ceo_recentes': 16,
+    'distribuicao_pais': {
+        'AR': 8, 'BR': 20, 'CL': 4, 'CO': 4, 'MX': 2, 'PE': 2, 'PY': 2, 'US': 4, 'UY': 2
+    },
+    'top_ganhadoras': [
+        {'nome': '3tentos Agroindustrial', 'ticker': 'TTEN3', 'variacao': '+42.8%', 'pais': 'BR'},
+        {'nome': 'SLC Agrícola S.A.', 'ticker': 'SLCE3', 'variacao': '+35.6%', 'pais': 'BR'},
+        {'nome': 'Bioceres Crop Solutions', 'ticker': 'BIOX', 'variacao': '+28.5%', 'pais': 'AR'},
+        {'nome': 'Terra Santa Agro', 'ticker': 'LAND3', 'variacao': '+28.6%', 'pais': 'BR'},
+        {'nome': 'São Martinho S.A.', 'ticker': 'SMTO3', 'variacao': '+18.3%', 'pais': 'BR'}
+    ],
+    'top_perdedoras': [
+        {'nome': 'Agrogalaxy', 'ticker': 'AGXY3', 'variacao': '-48.2%', 'pais': 'BR'},
+        {'nome': 'Lavoro Ltd.', 'ticker': 'LVRO', 'variacao': '-35.2%', 'pais': 'BR'},
+        {'nome': 'Grupo Los Grobo', 'ticker': 'GROBO', 'variacao': '-22.4%', 'pais': 'AR'},
+        {'nome': 'Empresas AquaChile', 'ticker': 'AQUACHILE', 'variacao': '-22.4%', 'pais': 'CL'},
+        {'nome': 'Grupo Aval', 'ticker': 'AVAL', 'variacao': '-8.5%', 'pais': 'CO'}
+    ],
+    'trocas_ceo': [
+        {'empresa': 'Bioceres Crop Solutions', 'pais': 'AR', 'novo_ceo': 'Federico Trucco', 'data': '2023-01-10'},
+        {'empresa': 'São Martinho S.A.', 'pais': 'BR', 'novo_ceo': 'Felipe Vicchiato', 'data': '2022-04-01'},
+        {'empresa': '3tentos Agroindustrial', 'pais': 'BR', 'novo_ceo': 'Ricardo de Abreu', 'data': '2024-01-15'},
+        {'empresa': 'Agrogalaxy', 'pais': 'BR', 'novo_ceo': 'Fábio Pires', 'data': '2023-11-01'},
+        {'empresa': 'Guararapes', 'pais': 'BR', 'novo_ceo': 'Nelson Almeida', 'data': '2024-02-01'},
+        {'empresa': 'Empresas AquaChile', 'pais': 'CL', 'novo_ceo': 'Sady Delgado', 'data': '2023-07-01'},
+        {'empresa': 'Grupo Argos', 'pais': 'CO', 'novo_ceo': 'Jorge Mario Velásquez', 'data': '2024-03-01'},
+        {'empresa': 'Grupo Cartes', 'pais': 'PY', 'novo_ceo': 'Horacio Cartes Jr.', 'data': '2023-06-01'}
+    ],
+    'instituicoes_financeiras': [
+        {'nome': 'Itaú Unibanco', 'pais': 'BR', 'exposicao_agro': 'R$ 85 bi', 'crescimento': '+12.5%', 'rating': 'BBB+'},
+        {'nome': 'Banco do Brasil', 'pais': 'BR', 'exposicao_agro': 'R$ 185 bi', 'crescimento': '+8.5%', 'rating': 'BBB'},
+        {'nome': 'Rabobank Brasil', 'pais': 'BR', 'exposicao_agro': 'R$ 25 bi', 'crescimento': '+18.5%', 'rating': 'A-'},
+        {'nome': 'Banco Galicia', 'pais': 'AR', 'exposicao_agro': 'US$ 2.8 bi', 'crescimento': '+25.5%', 'rating': 'B+'},
+        {'nome': 'Grupo Aval', 'pais': 'CO', 'exposicao_agro': 'US$ 12.5 bi', 'crescimento': '+12.5%', 'rating': 'BB'}
+    ]
+}
+
+# Salvar em arquivo JSON para o frontend
+with open('financial_summary.json', 'w', encoding='utf-8') as f:
+    json.dump(financial_summary, f, ensure_ascii=False, indent=2)
+
+print("✅ Resumo financeiro exportado para financial_summary.json")
+
+# Criar tabela de cache para API
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS flv_api_cache (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        endpoint TEXT UNIQUE,
+        data TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+''')
+
+cursor.execute('''
+    INSERT OR REPLACE INTO flv_api_cache (endpoint, data)
+    VALUES (?, ?)
+''', ('/api/financial/summary', json.dumps(financial_summary)))
+
+conn.commit()
+conn.close()
+print("✅ Dados financeiros disponíveis na API!")
