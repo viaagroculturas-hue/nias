@@ -733,12 +733,18 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 cults = conn.execute("SELECT COUNT(*) FROM flv_cultures").fetchone()[0]
                 climate = conn.execute("SELECT COUNT(*) FROM flv_climate").fetchone()[0]
                 prices = conn.execute("SELECT COUNT(*) FROM flv_ceasa_prices").fetchone()[0]
+                try:
+                    from flv.collectors.inmet import get_last_errors
+                    inmet_log = get_last_errors()
+                except:
+                    inmet_log = []
                 result = {
                     'db_path': DB_PATH,
                     'municipalities': muns,
                     'cultures': cults,
                     'climate_records': climate,
                     'price_records': prices,
+                    'inmet_log': inmet_log,
                 }
             else:
                 result = {'error': 'Endpoint não encontrado', 'available': ['/api/pipeline/status', '/api/pipeline/run', '/api/pipeline/runs', '/api/pipeline/logs', '/api/pipeline/freshness']}

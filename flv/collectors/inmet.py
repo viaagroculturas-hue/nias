@@ -2,23 +2,33 @@
 import urllib.request, json, time
 from datetime import datetime, timedelta
 
+_last_errors = []
+
+def get_last_errors():
+    return _last_errors[-20:]
+
 def fetch_all():
     """Fetch climate data for all FLV producer municipalities."""
+    global _last_errors
+    _last_errors = []
     from flv.db import get_conn
     conn = get_conn()
     muns = conn.execute("SELECT id, ibge_code, name, lat, lon, inmet_station FROM flv_municipalities").fetchall()
-    print(f'[FLV-INMET] Municipios encontrados: {len(muns)}')
+    _last_errors.append(f'Municipios encontrados: {len(muns)}')
     inserted = 0
 
     for mun in muns:
         try:
             count = _fetch_openmeteo(conn, mun)
             inserted += count
+            _last_errors.append(f'OK {mun["name"]}: {count} registros')
         except Exception as e:
+            _last_errors.append(f'ERRO {mun["name"]}: {e}')
             print(f'[FLV-INMET] Erro {mun["name"]}: {e}')
-        time.sleep(0.3)  # Respeitar rate limit Open-Meteo
+        time.sleep(0.3)
 
     conn.commit()
+    _last_errors.append(f'Total inserido: {inserted}')
     print(f'[FLV-INMET] {inserted} observacoes climaticas inseridas')
     return inserted
 
@@ -49,8 +59,8 @@ def _fetch_openmeteo(conn, mun):
                 (mun['id'], date, temp_max, temp_min, precip, humidity, wind, 'Open-Meteo')
             )
             count += 1
-        except Exception:
-            pass
+        except Exception as ie:
+            print(f'[FLV-INMET] INSERT erro mun_id={mun["id"]} date={date}: {ie}')
 
     return count
 
