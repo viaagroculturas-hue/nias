@@ -243,6 +243,15 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path.startswith('/api/intelligence/'):
             self._serve_intelligence_api()
             return
+        if self.path.startswith('/api/pipeline/'):
+            self._serve_pipeline_api()
+            return
+        if self.path.startswith('/api/sources/status'):
+            self._serve_sources_status_api()
+            return
+        if self.path.startswith('/api/climate/'):
+            self._serve_climate_api()
+            return
         if self.path.startswith('/api/flv/'):
             from flv.api.routes import handle_flv
             handle_flv(self, self.path)
@@ -691,6 +700,162 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'status': 'error', 'error': str(e), 'module': 'intelligence_engine'}).encode())
+
+    def _serve_pipeline_api(self):
+        """API de status/execução do pipeline."""
+        from urllib.parse import urlparse
+        try:
+            from flv.scheduler import get_pipeline_status, run_pipeline_once
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/pipeline/', '').rstrip('/')
+
+            if path == 'status' or path == '':
+                result = get_pipeline_status()
+            elif path == 'run':
+                # Execução manual — rodar em thread para não bloquear
+                import threading
+                result = {'status': 'started', 'message': 'Pipeline iniciado em background'}
+                threading.Thread(target=run_pipeline_once, daemon=True).start()
+            else:
+                result = {'error': 'Endpoint não encontrado', 'available': ['/api/pipeline/status', '/api/pipeline/run']}
+
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e), 'module': 'scheduler'}).encode())
+
+    def _serve_sources_status_api(self):
+        """API de status de todas as fontes de dados."""
+        try:
+            from flv.intelligence_engine import get_engine
+            engine = get_engine()
+            freshness = engine.get_data_freshness()
+
+            # Complementar com CEPEA e CLIMAPI
+            sources = {
+                'conab': {
+                    'status': freshness['source_status'].get('ceasa', 'fallback'),
+                    'last_success': freshness.get('last_price_update'),
+                    'freshness': 'fresh' if freshness['source_status'].get('ceasa') == 'real' else 'stale',
+                    'description': 'CONAB/CEASA Preços'
+                },
+                'cepea': {
+                    'status': 'fallback',
+                    'reason': 'Cloudflare/WAF bloqueando scraping direto. Retorna 403 ou challenge JS.',
+                    'last_success': None,
+                    'fallback_active': True,
+                    'recommendation': 'Usar dados CONAB/Prohort como fonte primária de preços.'
+                },
+                'climapi': {
+                    'status': 'fallback',
+                    'reason': 'Credenciais Embrapa expiradas ou quota excedida. Token OAuth2 invalido.',
+                    'credentials_present': bool(os.environ.get('AGROAPI_KEY')),
+                    'last_success': None,
+                    'fallback_active': True,
+                    'replacement': 'Open-Meteo (gratuito, sem chave, cobertura global)'
+                },
+                'open_meteo': {
+                    'status': freshness['source_status'].get('open_meteo', 'fallback'),
+                    'last_success': freshness.get('last_weather_update'),
+                    'freshness': 'fresh' if freshness['source_status'].get('open_meteo') == 'real' else 'stale',
+                    'description': 'Open-Meteo Clima (gratuito)'
+                },
+                'sidra': {
+                    'status': freshness['source_status'].get('sidra', 'fallback'),
+                    'last_success': None,
+                    'description': 'IBGE SIDRA Produção Agrícola'
+                },
+                'news': {
+                    'status': freshness['source_status'].get('news', 'fallback'),
+                    'last_success': freshness.get('last_news_update'),
+                    'description': 'NewsAPI Risco Agregado'
+                },
+                'macro': {
+                    'status': freshness['source_status'].get('macro', 'fallback'),
+                    'last_success': freshness.get('last_macro_update'),
+                    'description': 'BCB/ANP Indicadores Macro'
+                },
+            }
+
+            result = {
+                'sources': sources,
+                'data_freshness': freshness['data_freshness'],
+                'checked_at': freshness.get('checked_at')
+            }
+
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e), 'module': 'sources_status'}).encode())
+
+    def _serve_climate_api(self):
+        """API de Inteligência Climática NiasClimate."""
+        from urllib.parse import urlparse
+        try:
+            from flv.climate_intelligence import get_climate_engine
+            engine = get_climate_engine()
+
+            parsed = urlparse(self.path)
+            path = parsed.path.replace('/api/climate/', '').rstrip('/')
+
+            if path == 'status' or path == '':
+                result = engine.get_status()
+            elif path == 'alerts':
+                events = engine.detect_extreme_events()
+                alerts = engine.generate_climate_alerts()
+                result = {'alerts': alerts, 'total': len(alerts)}
+            elif path == 'price-impact':
+                engine.detect_extreme_events()
+                impacts = engine.calculate_price_impact()
+                result = {'items': impacts, 'total': len(impacts)}
+            elif path == 'report':
+                engine.detect_extreme_events()
+                engine.calculate_price_impact()
+                result = engine.generate_climate_report()
+            elif path == 'regions':
+                regions = engine.get_regions()
+                result = {'regions': regions, 'total': len(regions)}
+            elif path == 'events':
+                events = engine.detect_extreme_events()
+                result = {'events': events, 'total': len(events)}
+            else:
+                result = {
+                    'error': 'Endpoint não encontrado',
+                    'available': [
+                        '/api/climate/status',
+                        '/api/climate/alerts',
+                        '/api/climate/price-impact',
+                        '/api/climate/report',
+                        '/api/climate/regions',
+                        '/api/climate/events',
+                    ]
+                }
+
+            self.send_response(200)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, ensure_ascii=False, default=str).encode())
+        except Exception as e:
+            self.send_response(500)
+            self._cors()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e), 'module': 'climate_intelligence'}).encode())
 
     def _cors(self):
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -1714,12 +1879,12 @@ try:
 
     def _flv_scheduler():
         time.sleep(10)  # Wait for server startup
-        from flv.pipeline import run_pipeline
-        run_pipeline()
+        from flv.scheduler import run_pipeline_once
+        run_pipeline_once()
         while True:
             time.sleep(6 * 3600)
             try:
-                run_pipeline()
+                run_pipeline_once()
             except Exception as e:
                 print(f'[FLV-Scheduler] Erro: {e}')
 

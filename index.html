@@ -1088,6 +1088,12 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <div style="font-size:9px;color:var(--accent);letter-spacing:1px;margin-bottom:4px;">TOP OPORTUNIDADES</div>
             <div id="intel-opps-list"></div>
           </div>
+          <div id="climate-section" style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">
+            <div style="font-size:9px;color:#33ABFF;letter-spacing:1px;margin-bottom:4px;">INTELIGÊNCIA CLIMÁTICA</div>
+            <div id="climate-summary-card"></div>
+            <div id="climate-alerts-panel" style="margin-top:4px;"></div>
+          </div>
+          <div id="sources-status-bar" style="margin-top:6px;border-top:1px solid var(--border);padding-top:4px;"></div>
         </div>
         <div class="ov-right" style="display:flex;flex-direction:column;">
           <div class="ov-chart-area" style="flex:1;min-height:0;">
@@ -11665,7 +11671,104 @@ const NiasIntelFrontend = {
 
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => NiasIntelFrontend.init(), 3000);
+  setTimeout(() => NiasClimateFrontend.init(), 4000);
 });
+
+// ═══════════════════════════════════════════════════════════════════════
+// NiasClimateFrontend — Inteligência Climática no Dashboard
+// ═══════════════════════════════════════════════════════════════════════
+const NiasClimateFrontend = {
+  _cache: {},
+
+  async _fetch(endpoint) {
+    try {
+      const r = await fetch('/api/climate/' + endpoint);
+      if (!r.ok) return null;
+      return await r.json();
+    } catch(e) { return null; }
+  },
+
+  async renderClimateAlerts() {
+    const data = await this._fetch('alerts');
+    const el = document.getElementById('climate-alerts-panel');
+    if (!el) return;
+    if (!data || !data.alerts || !data.alerts.length) {
+      el.innerHTML = '<div style="padding:6px;font-size:10px;color:var(--accent2);">Sem eventos climáticos extremos no momento.</div>';
+      return;
+    }
+    const alerts = data.alerts.slice(0, 4);
+    el.innerHTML = alerts.map(a => {
+      const pColor = a.priority === 'critica' ? 'var(--danger)' : a.priority === 'alta' ? '#ff6b35' : 'var(--warn)';
+      const pLabel = a.priority === 'critica' ? 'CRÍTICO' : a.priority === 'alta' ? 'ALTO' : 'MÉDIO';
+      return `
+        <div style="padding:5px 7px;border-left:3px solid ${pColor};margin-bottom:4px;background:${pColor}11;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:10px;font-weight:bold;color:var(--fg);">${a.titulo}</span>
+            <span style="font-size:8px;padding:1px 4px;border-radius:2px;background:${pColor}22;color:${pColor};">${pLabel}</span>
+          </div>
+          <div style="font-size:9px;color:var(--accent2);margin-top:2px;">${a.explicacao || ''}</div>
+          <div style="font-size:8px;color:var(--accent2);margin-top:2px;">
+            <b>Ação:</b> ${a.acao_recomendada || '—'} | Confiança: ${a.confidence || '—'}
+          </div>
+        </div>`;
+    }).join('');
+  },
+
+  async renderSourcesStatus() {
+    try {
+      const r = await fetch('/api/sources/status');
+      if (!r.ok) return;
+      const data = await r.json();
+      const el = document.getElementById('sources-status-bar');
+      if (!el || !data || !data.sources) return;
+      const items = Object.entries(data.sources).map(([key, s]) => {
+        const color = s.status === 'real' ? 'var(--accent)' : s.status === 'fallback' ? 'var(--warn)' : 'var(--danger)';
+        const label = key.toUpperCase();
+        const statusTxt = s.status === 'real' ? 'API REAL' : 'FALLBACK';
+        return `<span style="font-size:8px;color:${color};margin-right:8px;">● ${label}: ${statusTxt}</span>`;
+      }).join('');
+      el.innerHTML = items;
+    } catch(e) {}
+  },
+
+  async renderClimateSummary() {
+    const data = await this._fetch('report');
+    const el = document.getElementById('climate-summary-card');
+    if (!el || !data) return;
+    const evCount = data.total_events || 0;
+    const alertCount = data.total_alerts || 0;
+    const regions = (data.regions_at_risk || []).length;
+    const products = (data.products_likely_up || []).length;
+
+    if (evCount === 0) {
+      el.innerHTML = `<div style="padding:6px;font-size:10px;color:var(--accent);">🌤 Sem eventos climáticos críticos. Operação normal.</div>`;
+      return;
+    }
+    el.innerHTML = `
+      <div style="padding:6px;">
+        <div style="font-size:10px;font-weight:bold;color:var(--warn);">🌦 Inteligência Climática</div>
+        <div style="font-size:9px;color:var(--fg);margin-top:3px;">
+          ${regions} região(ões) em alerta<br>
+          ${products} produto(s) com risco de alta<br>
+          ${(data.logistic_bottlenecks||[]).length} gargalo(s) logístico(s)<br>
+          <span style="color:var(--accent2);">Confiança: ${data.confidence || 'media'}</span>
+        </div>
+      </div>`;
+  },
+
+  async init() {
+    await Promise.all([
+      this.renderClimateAlerts(),
+      this.renderSourcesStatus(),
+      this.renderClimateSummary(),
+    ]);
+    // Refresh a cada 10 min
+    setInterval(() => {
+      this.renderClimateAlerts();
+      this.renderClimateSummary();
+    }, 600000);
+  }
+};
 
 
 </script>
