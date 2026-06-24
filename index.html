@@ -1092,6 +1092,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <div style="font-size:9px;color:#33ABFF;letter-spacing:1px;margin-bottom:4px;">INTELIGÊNCIA CLIMÁTICA</div>
             <div id="climate-summary-card"></div>
             <div id="climate-alerts-panel" style="margin-top:4px;"></div>
+            <div id="climate-price-impact-panel" style="margin-top:4px;"></div>
           </div>
           <div id="sources-status-bar" style="margin-top:6px;border-top:1px solid var(--border);padding-top:4px;"></div>
           <div id="pipeline-status-bar" style="margin-top:3px;"></div>
@@ -11767,16 +11768,52 @@ const NiasClimateFrontend = {
       </div>`;
   },
 
+  async renderPriceImpact() {
+    const data = await this._fetch('price-impact');
+    const el = document.getElementById('climate-price-impact-panel');
+    if (!el) return;
+    if (!data || !data.items || !data.items.length) {
+      const msg = data && data.message ? data.message : 'Sem correlação clima×preço disponível no momento.';
+      el.innerHTML = `<div style="padding:6px;font-size:9px;color:var(--accent2);">${msg}</div>`;
+      return;
+    }
+    const items = data.items.slice(0, 5);
+    el.innerHTML = `
+      <div style="padding:4px 6px;font-size:10px;font-weight:bold;color:var(--fg);border-bottom:1px solid var(--border);margin-bottom:3px;">🌦 Clima × Preço</div>
+      ${items.map(item => {
+        const impactColor = item.correlation > 0.7 ? 'var(--danger)' : item.correlation > 0.5 ? '#ff6b35' : 'var(--warn)';
+        const confLabel = item.confidence === 'alta' ? '🔴' : item.confidence === 'média' ? '🟠' : '🟡';
+        return `
+          <div style="padding:4px 6px;border-left:3px solid ${impactColor};margin-bottom:3px;background:${impactColor}08;">
+            <div style="font-size:9px;font-weight:bold;color:var(--fg);">
+              ${item.product_name || item.product} — ${item.region}
+            </div>
+            <div style="font-size:8px;color:var(--accent2);margin-top:1px;">
+              Clima: ${item.weather_signal} | Preço: ${item.price_signal}
+            </div>
+            <div style="font-size:8px;color:${impactColor};margin-top:1px;">
+              Impacto: ${item.expected_impact} (${item.price_impact_range}) | Corr: ${item.correlation}
+            </div>
+            <div style="font-size:8px;color:var(--accent2);margin-top:1px;">
+              ${confLabel} ${item.recommended_action || '—'}
+            </div>
+          </div>`;
+      }).join('')}
+      <div style="font-size:7px;color:var(--accent2);padding:2px 6px;">Fonte: ${data.source || 'NiasClimate'} | Modo: ${data.mode || '—'}</div>`;
+  },
+
   async init() {
     await Promise.all([
       this.renderClimateAlerts(),
       this.renderSourcesStatus(),
       this.renderClimateSummary(),
+      this.renderPriceImpact(),
     ]);
     // Refresh a cada 10 min
     setInterval(() => {
       this.renderClimateAlerts();
       this.renderClimateSummary();
+      this.renderPriceImpact();
     }, 600000);
   }
 };

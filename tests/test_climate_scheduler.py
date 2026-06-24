@@ -41,7 +41,7 @@ results.append(test('/api/climate/alerts', '/api/climate/alerts',
     lambda d: 'alerts' in d and 'total' in d))
 
 results.append(test('/api/climate/price-impact', '/api/climate/price-impact',
-    lambda d: 'items' in d and 'total' in d))
+    lambda d: 'items' in d and d.get('status') in ('ok', 'partial', 'insufficient_data')))
 
 results.append(test('/api/climate/report', '/api/climate/report',
     lambda d: 'resumo' in d and 'regioes_monitoradas' in d))

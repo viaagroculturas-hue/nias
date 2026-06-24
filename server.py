@@ -826,8 +826,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 result = {'alerts': alerts, 'total': len(alerts)}
             elif path == 'price-impact':
                 engine.detect_extreme_events()
-                impacts = engine.calculate_price_impact()
-                result = {'items': impacts, 'total': len(impacts)}
+                result = engine.analyze_weather_price_correlation()
             elif path == 'report':
                 engine.detect_extreme_events()
                 engine.calculate_price_impact()
