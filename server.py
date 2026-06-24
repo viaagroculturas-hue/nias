@@ -726,6 +726,20 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 result = {'lines': lines, 'total': len(lines)}
             elif path == 'freshness':
                 result = get_pipeline_freshness()
+            elif path == 'diag':
+                from flv.db import get_conn, DB_PATH
+                conn = get_conn()
+                muns = conn.execute("SELECT COUNT(*) FROM flv_municipalities").fetchone()[0]
+                cults = conn.execute("SELECT COUNT(*) FROM flv_cultures").fetchone()[0]
+                climate = conn.execute("SELECT COUNT(*) FROM flv_climate").fetchone()[0]
+                prices = conn.execute("SELECT COUNT(*) FROM flv_ceasa_prices").fetchone()[0]
+                result = {
+                    'db_path': DB_PATH,
+                    'municipalities': muns,
+                    'cultures': cults,
+                    'climate_records': climate,
+                    'price_records': prices,
+                }
             else:
                 result = {'error': 'Endpoint não encontrado', 'available': ['/api/pipeline/status', '/api/pipeline/run', '/api/pipeline/runs', '/api/pipeline/logs', '/api/pipeline/freshness']}
 

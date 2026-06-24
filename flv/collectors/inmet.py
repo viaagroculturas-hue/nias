@@ -7,6 +7,7 @@ def fetch_all():
     from flv.db import get_conn
     conn = get_conn()
     muns = conn.execute("SELECT id, ibge_code, name, lat, lon, inmet_station FROM flv_municipalities").fetchall()
+    print(f'[FLV-INMET] Municipios encontrados: {len(muns)}')
     inserted = 0
 
     for mun in muns:
@@ -15,6 +16,7 @@ def fetch_all():
             inserted += count
         except Exception as e:
             print(f'[FLV-INMET] Erro {mun["name"]}: {e}')
+        time.sleep(0.3)  # Respeitar rate limit Open-Meteo
 
     conn.commit()
     print(f'[FLV-INMET] {inserted} observacoes climaticas inseridas')
