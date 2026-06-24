@@ -647,9 +647,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 result = {
                     'status': 'active',
                     'version': '3.0',
-                    'capabilities': ['opportunities', 'predictions', 'alerts', 'report', 'memory'],
+                    'capabilities': ['opportunities', 'predictions', 'alerts', 'report', 'memory', 'freshness'],
                     'accuracy': engine.get_accuracy_stats()
                 }
+            elif path == 'freshness':
+                result = engine.get_data_freshness()
             elif path == 'opportunities':
                 result = {'opportunities': engine.generate_opportunities()}
             elif path == 'predictions':
@@ -1605,8 +1607,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             },
         }
 
+    _warroom_cache = {"data": None, "ts": 0}
+
     def _serve_warroom_api(self):
-        """API do War Room (snapshot + deltas)"""
+        """API do War Room (snapshot + deltas) — com cache de 60s"""
         import json
         from urllib.parse import urlparse, parse_qs
         try:
@@ -1617,13 +1621,20 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             from flv.warroom.engine import WarRoomEngine, run_cycle
             eng = WarRoomEngine()
 
-            if path == '' or path == 'snapshot':
-                # garante um ciclo antes do snapshot
-                try:
-                    run_cycle(delta_threshold=0.15)
-                except Exception:
-                    pass
-                result = eng.snapshot()
+            now = time.time()
+            if path == '' or path == 'snapshot' or path == 'status':
+                # Cache de 60 segundos para evitar timeout
+                if ProxyHandler._warroom_cache["data"] and now - ProxyHandler._warroom_cache["ts"] < 60:
+                    result = ProxyHandler._warroom_cache["data"]
+                    result['cached'] = True
+                else:
+                    try:
+                        run_cycle(delta_threshold=0.15)
+                    except Exception:
+                        pass
+                    result = eng.snapshot()
+                    result['cached'] = False
+                    ProxyHandler._warroom_cache = {"data": result, "ts": now}
             elif path == 'deltas':
                 since = params.get('since', ['1970-01-01T00:00:00Z'])[0]
                 limit = int(params.get('limit', [250])[0])
@@ -1631,6 +1642,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             elif path == 'cycle':
                 thr = float(params.get('thr', [0.15])[0])
                 result = run_cycle(delta_threshold=thr)
+                ProxyHandler._warroom_cache = {"data": None, "ts": 0}  # invalidate
             else:
                 result = {'error': 'Endpoint não encontrado', 'path': path}
 

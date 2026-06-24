@@ -777,6 +777,85 @@ class NiasIntelligenceEngine:
         except Exception:
             return {'total_verificados': 0, 'acertos': 0, 'taxa_acerto': 'N/A', 'status': 'iniciando'}
 
+    # ─── FRESHNESS / STATUS DAS FONTES ─────────────────────────────────
+
+    def get_data_freshness(self) -> dict:
+        """Retorna status de atualização das fontes de dados."""
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        result = {
+            'last_price_update': None,
+            'last_weather_update': None,
+            'last_news_update': None,
+            'last_macro_update': None,
+            'data_freshness': 'critical',
+            'source_status': {}
+        }
+
+        # Preços
+        try:
+            row = self.conn.execute("SELECT MAX(price_date) as d FROM flv_ceasa_prices").fetchone()
+            if row and row['d']:
+                result['last_price_update'] = row['d']
+                days_old = (now - datetime.strptime(row['d'], '%Y-%m-%d')).days
+                result['source_status']['ceasa'] = 'real' if days_old <= 3 else 'stale' if days_old <= 7 else 'critical'
+        except Exception:
+            result['source_status']['ceasa'] = 'error'
+
+        # Clima
+        try:
+            row = self.conn.execute("SELECT MAX(obs_date) as d FROM flv_climate").fetchone()
+            if row and row['d']:
+                result['last_weather_update'] = row['d']
+                days_old = (now - datetime.strptime(row['d'], '%Y-%m-%d')).days
+                result['source_status']['open_meteo'] = 'real' if days_old <= 1 else 'stale' if days_old <= 3 else 'critical'
+        except Exception:
+            result['source_status']['open_meteo'] = 'error'
+
+        # News
+        try:
+            row = self.conn.execute("SELECT MAX(obs_date) as d FROM flv_news_risk_daily").fetchone()
+            if row and row['d']:
+                result['last_news_update'] = row['d']
+                days_old = (now - datetime.strptime(row['d'], '%Y-%m-%d')).days
+                result['source_status']['news'] = 'real' if days_old <= 1 else 'stale' if days_old <= 3 else 'critical'
+        except Exception:
+            result['source_status']['news'] = 'error'
+
+        # Macro
+        try:
+            row = self.conn.execute("SELECT MAX(obs_date) as d FROM flv_macro_indicators").fetchone()
+            if row and row['d']:
+                result['last_macro_update'] = row['d']
+                days_old = (now - datetime.strptime(row['d'], '%Y-%m-%d')).days
+                result['source_status']['macro'] = 'real' if days_old <= 7 else 'stale' if days_old <= 30 else 'critical'
+        except Exception:
+            result['source_status']['macro'] = 'error'
+
+        # SIDRA
+        try:
+            row = self.conn.execute("SELECT MAX(inserted_at) as d FROM flv_sidra_production").fetchone()
+            if row and row['d']:
+                result['source_status']['sidra'] = 'real'
+            else:
+                result['source_status']['sidra'] = 'fallback'
+        except Exception:
+            result['source_status']['sidra'] = 'fallback'
+
+        # Freshness geral
+        statuses = list(result['source_status'].values())
+        if all(s == 'real' for s in statuses):
+            result['data_freshness'] = 'fresh'
+        elif any(s == 'critical' for s in statuses):
+            result['data_freshness'] = 'critical'
+        elif any(s in ('stale', 'fallback') for s in statuses):
+            result['data_freshness'] = 'stale'
+        else:
+            result['data_freshness'] = 'fresh'
+
+        result['checked_at'] = now.isoformat()
+        return result
+
     # ─── CICLO COMPLETO ───────────────────────────────────────────────
 
     def run_full_cycle(self) -> dict:
