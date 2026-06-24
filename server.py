@@ -733,43 +733,6 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 cults = conn.execute("SELECT COUNT(*) FROM flv_cultures").fetchone()[0]
                 climate = conn.execute("SELECT COUNT(*) FROM flv_climate").fetchone()[0]
                 prices = conn.execute("SELECT COUNT(*) FROM flv_ceasa_prices").fetchone()[0]
-                # Teste direto de INSERT clima
-                clima_test = 'not_tested'
-                try:
-                    mun_row = conn.execute("SELECT id, lat, lon, name FROM flv_municipalities LIMIT 1").fetchone()
-                    if mun_row:
-                        import urllib.request as _ur
-                        test_url = (f"https://api.open-meteo.com/v1/forecast?"
-                                    f"latitude={mun_row['lat']}&longitude={mun_row['lon']}"
-                                    f"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum"
-                                    f"&timezone=America/Sao_Paulo&past_days=1&forecast_days=1")
-                        req = _ur.Request(test_url, headers={'User-Agent': 'NIA$-FLV/1.0'})
-                        with _ur.urlopen(req, timeout=15) as resp:
-                            api_data = json.loads(resp.read())
-                        daily = api_data.get('daily', {})
-                        dates = daily.get('time', [])
-                        if dates:
-                            d = dates[0]
-                            tmax = (daily.get('temperature_2m_max') or [None])[0]
-                            tmin = (daily.get('temperature_2m_min') or [None])[0]
-                            prec = (daily.get('precipitation_sum') or [None])[0]
-                            try:
-                                conn.execute(
-                                    "INSERT OR REPLACE INTO flv_climate (mun_id,obs_date,temp_max_c,temp_min_c,precip_mm,humidity_pct,wind_ms,source) VALUES (?,?,?,?,?,?,?,?)",
-                                    (mun_row['id'], d, tmax, tmin, prec, None, None, 'Open-Meteo-Test')
-                                )
-                                conn.commit()
-                                clima_test = f'INSERT OK mun={mun_row["name"]} date={d} tmax={tmax}'
-                            except Exception as ie:
-                                clima_test = f'INSERT FAIL: {ie}'
-                        else:
-                            clima_test = f'API OK but no dates: {api_data}'
-                    else:
-                        clima_test = 'no municipalities in db'
-                except Exception as e:
-                    clima_test = f'FETCH FAIL: {e}'
-                # Re-count after test insert
-                climate_after = conn.execute("SELECT COUNT(*) FROM flv_climate").fetchone()[0]
                 try:
                     from flv.collectors.inmet import get_last_errors
                     inmet_log = get_last_errors()
@@ -780,9 +743,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                     'municipalities': muns,
                     'cultures': cults,
                     'climate_records': climate,
-                    'climate_after_test': climate_after,
                     'price_records': prices,
-                    'clima_test': clima_test,
                     'inmet_log': inmet_log,
                 }
             else:
