@@ -84,6 +84,14 @@ def _dispatch(path: str, params: dict) -> dict:
     if path == 'pipeline/runs':
         return _pipeline_runs()
 
+    # Preços Sul-Americanos
+    if path == 'prices/south-america':
+        return _prices_south_america(params)
+    if path == 'prices/sources':
+        return _prices_sources()
+    if path == 'prices/status':
+        return _prices_status()
+
     # Advisor (Conselheiro NIAS)
     if path == 'advisor' or path == 'advisor/recommendations':
         return _advisor_recommendations(params)
@@ -162,14 +170,126 @@ def _health():
 
 # ─── PREÇOS ───────────────────────────────────────────────────────
 
+def _prices_south_america(params: dict):
+    import sqlite3
+    from flv.paths import get_db_path
+    from flv.sa_price_persistence import get_latest_sa_prices, get_sa_prices_summary, ensure_sa_prices_table
+
+    conn = sqlite3.connect(str(get_db_path()), check_same_thread=False, timeout=10)
+    conn.row_factory = sqlite3.Row
+    ensure_sa_prices_table(conn)
+
+    country = (params.get('country', ['']) or [''])[0].upper()
+    product = (params.get('product', ['']) or [''])[0].lower()
+
+    items   = get_latest_sa_prices(conn,
+                                   country_code=country or None,
+                                   product_normalized=product or None)
+    summary = get_sa_prices_summary(conn)
+    conn.close()
+
+    if not items:
+        return R.partial(
+            {
+                'scope':       'south_america',
+                'country':     country or None,
+                'items':       [],
+                'db_summary':  summary,
+            },
+            'Preços sul-americanos ainda não populados. Execute o pipeline para coletar.',
+            missing=['SA price collectors — execute /api/pipeline/run'],
+            sources=['NIAS'],
+        )
+
+    return R.ok(
+        {
+            'scope':       'south_america',
+            'country':     country or None,
+            'product':     product or None,
+            'items':       items,
+            'total':       len(items),
+            'db_summary':  summary,
+            'note':        'Preços em moeda local. price_usd disponível quando conversão confiável.',
+        },
+        sources=['Open Market Sources', 'ODEPA', 'SIPSA', 'MIDAGRI', 'Mercado Central BA', 'Mercado Modelo UY'],
+        confidence='media',
+    )
+
+
+def _prices_status():
+    from flv.south_america_price_sources import get_status_summary
+    import sqlite3
+    from flv.paths import get_db_path
+    from flv.sa_price_persistence import get_sa_prices_summary, ensure_sa_prices_table
+
+    source_summary = get_status_summary()
+
+    conn = sqlite3.connect(str(get_db_path()), check_same_thread=False, timeout=10)
+    conn.row_factory = sqlite3.Row
+    ensure_sa_prices_table(conn)
+    db_summary = get_sa_prices_summary(conn)
+    conn.close()
+
+    return R.ok(
+        {
+            'scope':       'south_america',
+            'sources':     source_summary,
+            'db_summary':  db_summary,
+            'br_note':     'Brasil gerenciado por CONAB/PROHORT via pipeline CEASA.',
+        },
+        sources=['NIAS'],
+        confidence='alta',
+    )
+
+
+def _prices_sources():
+    from flv.south_america_price_sources import SOUTH_AMERICA_PRICE_SOURCES
+    out = {}
+    for cc, cfg in SOUTH_AMERICA_PRICE_SOURCES.items():
+        out[cc] = {
+            'country':    cfg.get('name'),
+            'currency':   cfg.get('currency'),
+            'status':     cfg.get('status'),
+            'products':   cfg.get('products', []),
+            'sources': [
+                {
+                    'name':         s.get('name'),
+                    'url':          s.get('url'),
+                    'access_type':  s.get('access_type'),
+                    'legal_status': s.get('legal_status'),
+                    'frequency':    s.get('frequency'),
+                    'status':       s.get('status'),
+                    'implemented':  s.get('implemented', False),
+                }
+                for s in cfg.get('sources', [])
+            ],
+            'notes': cfg.get('notes', ''),
+        }
+    return R.ok(
+        {'scope': 'south_america', 'countries': out, 'total': len(out)},
+        sources=['NIAS'],
+        confidence='alta',
+    )
+
+
 def _prices_latest(params: dict):
+    # Rota SA: ?scope=south_america ou ?country= não-BR
+    scope   = (params.get('scope',   ['']) or [''])[0]
+    country = (params.get('country', ['']) or [''])[0].upper()
+    if scope == 'south_america' or (country and country != 'BR'):
+        return _prices_south_america(params)
+
     import sqlite3
     from flv.paths import get_db_path
     db = str(get_db_path())
     conn = sqlite3.connect(db, check_same_thread=False, timeout=10)
     conn.row_factory = sqlite3.Row
 
-    max_row = conn.execute("SELECT MAX(price_date) as d FROM flv_ceasa_prices").fetchone()
+    try:
+        max_row = conn.execute("SELECT MAX(price_date) as d FROM flv_ceasa_prices").fetchone()
+    except Exception:
+        conn.close()
+        return R.partial({'items': []}, 'Tabela de preços BR não disponível.', missing=['flv_ceasa_prices'])
     if not max_row or not max_row['d']:
         conn.close()
         return R.partial({'items': []}, 'Sem dados de preço no banco.', missing=['preços CEASA'])

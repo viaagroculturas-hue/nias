@@ -48,6 +48,20 @@ def run_pipeline():
     except Exception as e:
         print(f'[FLV-Pipeline] CEASA erro: {e}')
 
+    # 4.1 Preços sul-americanos (AR, CL, PE, UY, CO — exceto BR que já está no passo 4)
+    try:
+        import sqlite3
+        from flv.paths import get_db_path
+        from flv.sa_price_persistence import run_sa_prices_cycle
+        _sa_price_conn = sqlite3.connect(str(get_db_path()), check_same_thread=False, timeout=10)
+        _sa_price_conn.row_factory = sqlite3.Row
+        _sa_price_conn.execute("PRAGMA journal_mode=WAL")
+        sa_price_result = run_sa_prices_cycle(_sa_price_conn)
+        _sa_price_conn.close()
+        print(f'[FLV-Pipeline] SA Prices: status={sa_price_result.get("status")} total={sa_price_result.get("total", 0)}')
+    except Exception as e:
+        print(f'[FLV-Pipeline] SA Prices erro: {e}')
+
     # 4.5 Macro indicators (economia/energia) — importante para custo/logística
     try:
         from flv.collectors.macro import coletar_indicadores_macro

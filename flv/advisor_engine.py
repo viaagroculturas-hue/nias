@@ -94,9 +94,10 @@ class NiasAdvisorEngine:
 
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
-        self._weather: list[dict] = []
-        self._prices:  list[dict] = []
-        self._freshness: dict = {}
+        self._weather:    list[dict] = []
+        self._prices:     list[dict] = []     # preços BR (CONAB)
+        self._sa_prices:  list[dict] = []     # preços SA por país
+        self._freshness:  dict = {}
         self._loaded = False
 
     # ── Carregamento de dados ──────────────────────────────────────────────
@@ -106,6 +107,7 @@ class NiasAdvisorEngine:
             return
         self._load_weather()
         self._load_prices()
+        self._load_sa_prices()
         self._load_freshness()
         self._loaded = True
 
@@ -136,6 +138,32 @@ class NiasAdvisorEngine:
             self._prices = [dict(r) for r in rows]
         except Exception:
             self._prices = []
+
+    def _load_sa_prices(self):
+        """Carrega preços SA do banco (nias_sa_prices)."""
+        try:
+            from flv.sa_price_persistence import get_latest_sa_prices, ensure_sa_prices_table
+            ensure_sa_prices_table(self.conn)
+            self._sa_prices = get_latest_sa_prices(self.conn)
+        except Exception:
+            self._sa_prices = []
+
+    def _sa_price_for(self, country_code: str, product_normalized: str) -> Optional[dict]:
+        """Busca preço SA para país + produto. Retorna None se não disponível."""
+        cc = country_code.upper()
+        pn = product_normalized.lower()
+        for p in self._sa_prices:
+            if p.get('country_code') == cc and p.get('product_normalized') == pn:
+                return p
+        return None
+
+    def _has_sa_price(self, country_code: str) -> bool:
+        """Verifica se há ao menos 1 preço real para o país."""
+        cc = country_code.upper()
+        return any(
+            p.get('country_code') == cc and not p.get('is_fallback', 0)
+            for p in self._sa_prices
+        )
 
     def _load_freshness(self):
         try:
@@ -356,6 +384,22 @@ class NiasAdvisorEngine:
             'region':  region,
         })
 
+        # ── Price gating: sem preço real → máximo 'monitorar', não 'comprar'/'vender' ──
+        has_price = self._has_sa_price(cc) if cc != 'BR' else bool(self._prices)
+        if tipo not in ('monitorar', 'alerta') and not has_price:
+            tipo = 'monitorar'
+
+        # Reduzir score e confiança quando não há preço confirmado
+        if not has_price:
+            score_obj['score']      = min(score_obj['score'], 64)
+            score_obj['confianca']  = 'baixa' if score_obj['confianca'] == 'alta' else score_obj['confianca']
+            score_obj['classificacao'] = 'sinal a monitorar'
+
+        price_note = (
+            'Preço local disponível no banco.' if has_price
+            else 'Sem preço local persistido — recomendação limitada a monitoramento.'
+        )
+
         return {
             'titulo':            titulo,
             'tipo':              tipo,
@@ -365,7 +409,7 @@ class NiasAdvisorEngine:
             'regiao':            region,
             'horizonte':         '1 a 7 dias',
             'tese':              tese,
-            'dados_usados':      ['clima Open-Meteo'],
+            'dados_usados':      ['clima Open-Meteo', 'preços SA' if has_price else 'clima apenas'],
             'justificativa':     tese,
             'cenario_contrario': contrario,
             'risco':             score_obj['risco'],
@@ -377,8 +421,10 @@ class NiasAdvisorEngine:
             'temp_max_c':        w.get('temp_max_c'),
             'temp_min_c':        w.get('temp_min_c'),
             'precip_mm':         w.get('precip_mm'),
-            'fontes':            ['Open-Meteo'],
-            'price_signal':      'sem preço local persistido',
+            'fontes':            ['Open-Meteo'] + (['nias_sa_prices'] if has_price else []),
+            'price_signal':      'disponível' if has_price else 'sem preço local persistido',
+            'has_price':         has_price,
+            'price_gate_note':   price_note,
             'atualizado_em':     today,
             'scope':             'south_america',
         }
