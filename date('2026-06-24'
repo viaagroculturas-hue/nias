@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-    import sqlite3; from flv.paths import get_db_path; conn=sqlite3.connect(str(get_db_path()), check_same_thread=False, timeout=10); conn.row_factory=sqlite3.Row; rows=conn.execute("SELECT mun_id, obs_date FROM flv_climate WHERE obs_date , '-7 days') LIMIT 5").fetchall(); print(len(rows))
-                                                                                                                                                                         ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-sqlite3.OperationalError: near ",": syntax error
