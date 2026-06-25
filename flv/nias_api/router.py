@@ -84,6 +84,24 @@ def _dispatch(path: str, params: dict) -> dict:
     if path == 'pipeline/runs':
         return _pipeline_runs()
 
+    # Advisor (Conselheiro NIAS)
+    if path == 'advisor' or path == 'advisor/recommendations':
+        return _advisor_recommendations(params)
+    if path == 'advisor/summary':
+        return _advisor_summary()
+    if path == 'advisor/opportunities':
+        return _advisor_opportunities()
+    if path == 'advisor/risks':
+        return _advisor_risks()
+    if path == 'advisor/thesis':
+        return _advisor_thesis(params)
+    if path == 'advisor/product':
+        return _advisor_product(params)
+    if path == 'advisor/country':
+        return _advisor_country(params)
+    if path == 'advisor/region':
+        return _advisor_region(params)
+
     # 404
     return R.error(
         f'Endpoint /api/nias/{path} não encontrado',
@@ -674,6 +692,234 @@ def _pipeline_runs():
 
 
 # ─── DOCUMENTAÇÃO ─────────────────────────────────────────────────
+
+
+# ─── ADVISOR (Conselheiro NIAS) ───────────────────────────────────
+
+def _advisor_conn():
+    import sqlite3
+    from flv.paths import get_db_path
+    conn = sqlite3.connect(str(get_db_path()), check_same_thread=False, timeout=10)
+    conn.row_factory = sqlite3.Row
+    try:
+        from flv.db_migration import ensure_runtime_schema
+        ensure_runtime_schema(conn)
+    except Exception:
+        pass
+    return conn
+
+
+def _advisor_recommendations(params: dict):
+    conn = _advisor_conn()
+    try:
+        from flv.advisor_engine import get_advisor
+        engine = get_advisor(conn)
+        advices = engine.generate_advice()
+        for a in advices:
+            a['explicacao_completa'] = engine.explain_recommendation(a)
+    finally:
+        conn.close()
+
+    return R.ok(
+        {
+            'scope':           'south_america',
+            'recommendations': advices,
+            'total':           len(advices),
+            'note': (
+                'Recomendações geradas a partir de dados reais de clima e preços. '
+                'Cada conselho inclui justificativa, cenário contrário e nível de confiança.'
+            ),
+        },
+        sources=['Open-Meteo', 'CONAB/PROHORT'],
+        confidence='media',
+    )
+
+
+def _advisor_summary():
+    conn = _advisor_conn()
+    try:
+        from flv.advisor_engine import get_advisor
+        engine  = get_advisor(conn)
+        summary = engine.generate_executive_summary()
+    finally:
+        conn.close()
+
+    return R.ok(
+        summary,
+        sources=['Open-Meteo', 'CONAB/PROHORT'],
+        confidence=summary.get('confianca', 'media'),
+    )
+
+
+def _advisor_opportunities():
+    conn = _advisor_conn()
+    try:
+        from flv.advisor_engine import get_advisor
+        engine = get_advisor(conn)
+        opps   = engine.rank_opportunities()
+        for o in opps:
+            o['explicacao_completa'] = engine.explain_recommendation(o)
+    finally:
+        conn.close()
+
+    return R.ok(
+        {
+            'scope':         'south_america',
+            'opportunities': opps,
+            'total':         len(opps),
+        },
+        sources=['Open-Meteo', 'CONAB/PROHORT'],
+        confidence='media',
+    )
+
+
+def _advisor_risks():
+    conn = _advisor_conn()
+    try:
+        from flv.advisor_engine import get_advisor
+        engine  = get_advisor(conn)
+        advices = engine.generate_advice()
+        risks   = [
+            a for a in advices
+            if a.get('tipo') == 'alerta'
+            or any(s in a.get('sinais_climaticos', [])
+                   for s in ['risco de geada', 'calor extremo', 'chuva muito intensa'])
+        ]
+    finally:
+        conn.close()
+
+    return R.ok(
+        {
+            'scope': 'south_america',
+            'risks': risks,
+            'total': len(risks),
+        },
+        sources=['Open-Meteo'],
+        confidence='alta' if risks else 'media',
+    )
+
+
+def _advisor_thesis(params: dict):
+    product = (params.get('product', ['']) or [''])[0]
+    region  = (params.get('region',  ['']) or [''])[0]
+    if not product and not region:
+        return R.error(
+            'Informe ao menos ?product= ou ?region=',
+            details='Exemplo: /api/nias/advisor/thesis?product=tomate&region=Sul+de+Minas'
+        )
+
+    conn = _advisor_conn()
+    try:
+        from flv.advisor_engine import get_advisor
+        engine = get_advisor(conn)
+        thesis = engine.build_investment_thesis(
+            product=product or 'produto',
+            region=region  or 'brasil',
+        )
+    finally:
+        conn.close()
+
+    return R.ok(
+        thesis,
+        sources=['CONAB/PROHORT', 'Open-Meteo'],
+        confidence=thesis.get('score', {}).get('confianca', 'media'),
+    )
+
+
+def _advisor_product(params: dict):
+    product = (params.get('product', ['']) or [''])[0]
+    if not product:
+        return R.error('Informe ?product=nome', details='Exemplo: /api/nias/advisor/product?product=tomate')
+
+    conn = _advisor_conn()
+    try:
+        from flv.advisor_engine import get_advisor
+        engine  = get_advisor(conn)
+        advices = engine.generate_advice()
+        product_l = product.lower()
+        filtered = [
+            a for a in advices
+            if product_l in (a.get('produto') or '').lower()
+            or product_l in (a.get('slug') or '').lower()
+        ]
+        for a in filtered:
+            a['explicacao_completa'] = engine.explain_recommendation(a)
+    finally:
+        conn.close()
+
+    return R.ok(
+        {
+            'produto':         product,
+            'scope':           'south_america',
+            'recommendations': filtered,
+            'total':           len(filtered),
+        },
+        sources=['CONAB/PROHORT', 'Open-Meteo'],
+        confidence='media',
+    )
+
+
+def _advisor_country(params: dict):
+    country = (params.get('country', ['']) or [''])[0].upper()
+    if not country:
+        return R.error('Informe ?country=XX', details='Exemplo: /api/nias/advisor/country?country=AR')
+
+    conn = _advisor_conn()
+    try:
+        from flv.advisor_engine import get_advisor
+        engine  = get_advisor(conn)
+        advices = engine.generate_advice()
+        filtered = [a for a in advices if a.get('pais') == country]
+        for a in filtered:
+            a['explicacao_completa'] = engine.explain_recommendation(a)
+        summary = engine.generate_executive_summary()
+    finally:
+        conn.close()
+
+    return R.ok(
+        {
+            'pais':            country,
+            'scope':           'south_america',
+            'recommendations': filtered,
+            'total':           len(filtered),
+            'resumo':          summary.get('resumo', ''),
+        },
+        sources=['Open-Meteo', 'CONAB/PROHORT'],
+        confidence='media',
+    )
+
+
+def _advisor_region(params: dict):
+    region = (params.get('region', ['']) or [''])[0]
+    if not region:
+        return R.error('Informe ?region=nome', details='Exemplo: /api/nias/advisor/region?region=Mendoza')
+
+    conn = _advisor_conn()
+    try:
+        from flv.advisor_engine import get_advisor
+        engine  = get_advisor(conn)
+        advices = engine.generate_advice()
+        region_l = region.lower()
+        filtered = [
+            a for a in advices
+            if region_l in (a.get('regiao') or '').lower()
+        ]
+        for a in filtered:
+            a['explicacao_completa'] = engine.explain_recommendation(a)
+    finally:
+        conn.close()
+
+    return R.ok(
+        {
+            'regiao':          region,
+            'scope':           'south_america',
+            'recommendations': filtered,
+            'total':           len(filtered),
+        },
+        sources=['Open-Meteo', 'CONAB/PROHORT'],
+        confidence='media',
+    )
+
 
 def _docs():
     endpoints = [
