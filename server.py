@@ -1534,16 +1534,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         import json
         from urllib.parse import urlparse, parse_qs
         try:
-            import sys
-            import os
-            flv_dir = os.path.join(DIR, 'flv')
-            if flv_dir not in sys.path:
-                sys.path.insert(0, flv_dir)
-            import predictx_live_api
+            from flv.predictx_live_api import build_live_payload
             parsed = urlparse(self.path)
             params = parse_qs(parsed.query)
             force = params.get('force', ['0'])[0] in ('1', 'true', 'yes')
-            data = predictx_live_api.build_live_payload(force=force, live_weather=(params.get("live", ["0"])[0] in ("1", "true", "yes")))
+            data = build_live_payload(force=force, live_weather=(params.get("live", ["0"])[0] in ("1", "true", "yes")))
             self.send_response(200)
             self._cors()
             self.send_header('Content-Type', 'application/json')
@@ -1564,8 +1559,8 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         
         try:
             # Importar módulo de inteligência
-            import predictix_intelligence
-            intel = predictix_intelligence.PredictixIntelligence()
+            from predictix_intelligence import PredictixIntelligence
+            intel = PredictixIntelligence()
             
             parsed = urlparse(self.path)
             path = parsed.path.replace('/api/predictix/intel', '').lstrip('/')

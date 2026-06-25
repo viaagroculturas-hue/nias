@@ -16,10 +16,12 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Tuple
 import logging
 
+import os
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DB_PATH = 'nia_flv.db'
+DB_PATH = os.environ.get('NIAS_DB_PATH') or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'nia_flv.db')
 
 class PredictixIntelligence:
     """Motor de inteligência do PREDICTIX"""
