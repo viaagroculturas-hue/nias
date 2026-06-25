@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>NIA$ — Núcleo de Inteligência Agro-Sul</title>
+<title>NIAS — Núcleo de Inteligência Agrocomercial da América do Sul</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -700,7 +700,8 @@ tr:hover td{background:rgba(0,212,255,.04);}
 
 <!-- TOP BAR -->
 <div id="topbar">
-  <span class="logo">N<span>IA</span>$</span>
+  <span class="logo" title="Núcleo de Inteligência Agrocomercial da América do Sul">N<span>IA</span>S</span>
+  <span style="font-size:9px;color:var(--text2);letter-spacing:1px;white-space:nowrap;flex-shrink:0;">AMÉRICA DO SUL</span>
   <span class="pulse"></span>
   <span class="top-meta" id="clock"></span>
   <div style="width:1px;height:24px;background:var(--border);flex-shrink:0;"></div>
@@ -812,7 +813,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
       <!-- HORTIFRUTIS ROW -->
       <div id="horti-section">
         <div class="horti-header">
-          <span class="horti-title">HORTIFRUTIS — MONITORAMENTO POR PRODUTO</span>
+          <span class="horti-title">HORTIFRUTIS — MONITORAMENTO SUL-AMERICANO</span>
           <span class="horti-badge warn">ANOMALIA TÉRMICA ATIVA +2.1°C</span>
           <span class="horti-badge danger">OFERTA REDUZIDA</span>
           <span class="badge-live" style="font-size:9px;padding:2px 6px;">● LIVE</span>
@@ -1085,7 +1086,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <!-- Populated by NiasIntelFrontend -->
           </div>
           <div id="intel-opportunities" style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">
-            <div style="font-size:9px;color:var(--accent);letter-spacing:1px;margin-bottom:4px;">TOP OPORTUNIDADES</div>
+            <div style="font-size:9px;color:var(--accent);letter-spacing:1px;margin-bottom:4px;">TOP OPORTUNIDADES — AMÉRICA DO SUL</div>
             <div id="intel-opps-list"></div>
           </div>
           <div id="climate-section" style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">
@@ -2562,6 +2563,13 @@ tr:hover td{background:rgba(0,212,255,.04);}
 </div><!-- /app -->
 
 <script>
+// ─── Global helpers (usados em todo o dashboard) ─────────────────
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>'"]/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]
+  ));
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // CLOCK
 // ═══════════════════════════════════════════════════════════════════
@@ -2586,7 +2594,7 @@ const SituationRoom = {
   data: {
     totals: { in_rj: 0, bankrupt: 0, total_companies: 0, total_debt_billions: 0, employees_at_risk: 0 },
     recent_entries: []
-  },,
+  },
   newsData: [],
   refreshInterval: null,
   clockInterval: null,

@@ -13,12 +13,26 @@ def run_pipeline():
     except Exception as e:
         print(f'[FLV-Pipeline] SIDRA erro: {e}')
 
-    # 2. INMET/Open-Meteo climate (7 days)
+    # 2. INMET/Open-Meteo climate — Brasil (municípios existentes)
     try:
         from flv.collectors.inmet import fetch_all as inmet_fetch
         inmet_fetch()
     except Exception as e:
         print(f'[FLV-Pipeline] INMET erro: {e}')
+
+    # 2.5 Open-Meteo batch — América do Sul (44 polos, 1 request)
+    try:
+        import sqlite3
+        from flv.paths import get_db_path
+        from flv.sa_weather_persistence import run_south_america_weather_cycle
+        _sa_conn = sqlite3.connect(str(get_db_path()), check_same_thread=False, timeout=10)
+        _sa_conn.row_factory = sqlite3.Row
+        _sa_conn.execute("PRAGMA journal_mode=WAL")
+        sa_result = run_south_america_weather_cycle(_sa_conn)
+        _sa_conn.close()
+        print(f'[FLV-Pipeline] SA Weather: status={sa_result.get("status")} inserted={sa_result.get("inserted", 0)}')
+    except Exception as e:
+        print(f'[FLV-Pipeline] SA Weather erro: {e}')
 
     # 3. NDVI satellite data
     try:

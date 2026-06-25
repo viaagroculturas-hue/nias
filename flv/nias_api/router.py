@@ -42,6 +42,10 @@ def _dispatch(path: str, params: dict) -> dict:
     if path == 'docs':
         return _docs()
 
+    # Regiões sul-americanas
+    if path in ('regions', 'regions/south-america'):
+        return _regions(params)
+
     # Preços
     if path == 'prices/latest':
         return _prices_latest(params)
@@ -53,10 +57,12 @@ def _dispatch(path: str, params: dict) -> dict:
         return _weather_latest(params)
     if path == 'weather/risk':
         return _weather_risk()
+    if path == 'weather/south-america':
+        return _weather_south_america()
 
     # Inteligência
     if path == 'intelligence/weather-price':
-        return _intelligence_weather_price()
+        return _intelligence_weather_price(params)
     if path == 'intelligence/opportunities':
         return _intelligence_opportunities()
     if path == 'intelligence/predictions':
@@ -101,7 +107,9 @@ def _status():
             'persistent': storage['persistent'],
             'type': storage['type'],
         },
-        'endpoints_count': 16,
+        'scope': 'south_america',
+        'scope_label': 'Inteligência Agrocomercial da América do Sul',
+        'endpoints_count': 20,
     }, sources=['NIAS'], confidence='alta')
 
 
@@ -227,7 +235,39 @@ def _weather_latest(params: dict):
     conn = sqlite3.connect(db, check_same_thread=False, timeout=10)
     conn.row_factory = sqlite3.Row
 
-    max_row = conn.execute("SELECT MAX(obs_date) as d FROM flv_climate").fetchone()
+    country = (params.get('country', ['']) or [''])[0].upper()
+    scope   = (params.get('scope',   ['']) or [''])[0]
+
+    # Rota SA: filtro por país ou scope=south_america
+    if country or scope == 'south_america':
+        from flv.sa_weather_persistence import get_latest_sa_weather, get_sa_weather_summary
+        items = get_latest_sa_weather(conn, country_code=country or None)
+        summary = get_sa_weather_summary(conn)
+        conn.close()
+        if not items:
+            return R.partial(
+                {'items': [], 'scope': 'south_america', 'country': country or None},
+                'Dados climáticos sul-americanos ainda não foram populados pelo scheduler.',
+                missing=['Open-Meteo SA batch'],
+                sources=['NIAS'],
+            )
+        return R.ok(
+            {
+                'scope': 'south_america',
+                'country': country or None,
+                'items': items,
+                'total': len(items),
+                'date': summary.get('latest_date'),
+                'countries_with_data': summary.get('countries'),
+            },
+            sources=['Open-Meteo'],
+            confidence='alta',
+        )
+
+    # Rota padrão Brasil (mun_id based)
+    max_row = conn.execute(
+        "SELECT MAX(obs_date) as d FROM flv_climate WHERE mun_id IS NOT NULL"
+    ).fetchone()
     if not max_row or not max_row['d']:
         conn.close()
         return R.partial({'items': []}, 'Sem dados climáticos no banco.', missing=['clima Open-Meteo'])
@@ -237,7 +277,7 @@ def _weather_latest(params: dict):
         SELECT mun_id, obs_date, temp_max_c, temp_min_c, precip_mm,
                wind_ms, humidity_pct, source
         FROM flv_climate
-        WHERE obs_date = ?
+        WHERE obs_date = ? AND mun_id IS NOT NULL
         ORDER BY mun_id
     """, (max_date,)).fetchall()
     conn.close()
@@ -245,14 +285,14 @@ def _weather_latest(params: dict):
     items = []
     for r in rows:
         items.append({
-            'region_id': str(r['mun_id']),
-            'date': r['obs_date'],
-            'temp_max_c': r['temp_max_c'],
-            'temp_min_c': r['temp_min_c'],
-            'precip_mm': r['precip_mm'],
-            'wind_kmh': round((r['wind_ms'] or 0) * 3.6, 1),
+            'region_id':   str(r['mun_id']),
+            'date':        r['obs_date'],
+            'temp_max_c':  r['temp_max_c'],
+            'temp_min_c':  r['temp_min_c'],
+            'precip_mm':   r['precip_mm'],
+            'wind_kmh':    round((r['wind_ms'] or 0) * 3.6, 1),
             'humidity_pct': r['humidity_pct'],
-            'source': r['source'] or 'Open-Meteo',
+            'source':      r['source'] or 'Open-Meteo',
         })
 
     return R.ok(
@@ -282,7 +322,113 @@ def _weather_risk():
 
 # ─── INTELIGÊNCIA ─────────────────────────────────────────────────
 
-def _intelligence_weather_price():
+def _regions(params: dict):
+    from flv.south_america_regions import get_all_regions, get_regions_by_country, summary, MONITORED_COUNTRIES
+    country = (params.get('country', ['']) or [''])[0].upper()
+    scope = (params.get('scope', ['']) or [''])[0]
+
+    if country:
+        regions = get_regions_by_country(country)
+        return R.ok(
+            {
+                'scope': 'south_america',
+                'country': country,
+                'country_name': MONITORED_COUNTRIES.get(country, {}).get('name', country),
+                'regions': regions,
+                'total': len(regions),
+            },
+            sources=['NIAS'],
+            confidence='alta',
+        )
+
+    regions = get_all_regions()
+    meta = summary()
+    return R.ok(
+        {
+            'scope': scope or 'south_america',
+            'regions': regions,
+            'total': meta['total_regions'],
+            'countries': meta['countries'],
+            'by_country': meta['by_country'],
+            'monitored_countries': meta['monitored_countries'],
+        },
+        sources=['NIAS'],
+        confidence='alta',
+    )
+
+
+def _weather_south_america():
+    import sqlite3
+    from flv.paths import get_db_path
+    from flv.sa_weather_persistence import get_latest_sa_weather, get_sa_weather_summary
+
+    conn = sqlite3.connect(str(get_db_path()), check_same_thread=False, timeout=10)
+    conn.row_factory = sqlite3.Row
+
+    # 1. Tentar dados persistidos no banco (fonte primária)
+    items = get_latest_sa_weather(conn)
+    summary = get_sa_weather_summary(conn)
+    conn.close()
+
+    if items:
+        return R.ok(
+            {
+                'scope':             'south_america',
+                'items':             items,
+                'total':             len(items),
+                'date':              summary.get('latest_date'),
+                'countries_covered': summary.get('countries'),
+                'source_mode':       'persisted_db',
+            },
+            sources=['Open-Meteo'],
+            confidence='alta',
+        )
+
+    # 2. Fallback: buscar do in-memory cache Open-Meteo (sem persistir agora)
+    from flv.openmeteo_batch_sa import fetch_south_america_weather, get_cache_status
+    cache_st = get_cache_status()
+    result = fetch_south_america_weather()
+    status  = result.get('status', 'error')
+
+    if status == 'rate_limited':
+        return R.partial(
+            {'items': result.get('results', []), 'scope': 'south_america'},
+            'Open-Meteo com rate limit ativo. Banco ainda não populado.',
+            missing=['Open-Meteo live', 'scheduler run'],
+            sources=['Open-Meteo (cache)'],
+        )
+    if status == 'error':
+        return R.partial(
+            {'items': [], 'scope': 'south_america'},
+            result.get('message', 'Erro ao buscar dados climáticos. Execute o pipeline.'),
+            missing=['Open-Meteo', 'scheduler run'],
+        )
+
+    return R.ok(
+        {
+            'scope':       'south_america',
+            'items':       result.get('results', []),
+            'total':       result.get('total_points', 0),
+            'fetched_at':  result.get('fetched_at'),
+            'source_mode': 'in_memory_cache',
+            'note':        'Dados em memória — rode o pipeline para persistir no banco.',
+        },
+        sources=['Open-Meteo'],
+        confidence='media',
+    )
+
+
+def _intelligence_weather_price(params: dict = None):
+    if params is None:
+        params = {}
+    scope   = (params.get('scope',   ['']) or [''])[0]
+    country = (params.get('country', ['']) or [''])[0].upper()
+
+    # Rota sul-americana: usa dados climáticos do banco + lógica de impacto regional
+    if scope == 'south_america' or (country and country != 'BR'):
+        return _intelligence_weather_price_sa(country=country or None)
+
+    # Rota padrão Brasil
     from flv.climate_intelligence import get_climate_engine
     engine = get_climate_engine()
     engine.detect_extreme_events()
@@ -299,12 +445,110 @@ def _intelligence_weather_price():
 
     return R.ok(
         {
-            'items': result.get('items', []),
-            'total': len(result.get('items', [])),
+            'scope':        scope or 'brazil',
+            'country':      country or 'BR',
+            'items':        result.get('items', []),
+            'total':        len(result.get('items', [])),
             'data_quality': result.get('data_quality', {}),
         },
         mode=mode,
         sources=['Open-Meteo', 'CONAB/PROHORT'],
+        confidence='media',
+    )
+
+
+def _intelligence_weather_price_sa(country: str | None = None):
+    """
+    Inteligência clima × preço para América do Sul.
+    Usa dados climáticos persistidos no banco.
+    Se não houver preço local, gera análise climática honesta sem inventar preço.
+    """
+    import sqlite3
+    from flv.paths import get_db_path
+    from flv.sa_weather_persistence import get_latest_sa_weather
+
+    conn = sqlite3.connect(str(get_db_path()), check_same_thread=False, timeout=10)
+    conn.row_factory = sqlite3.Row
+
+    weather_items = get_latest_sa_weather(conn, country_code=country)
+    conn.close()
+
+    if not weather_items:
+        return R.partial(
+            {'items': [], 'scope': 'south_america', 'country': country},
+            'Dados climáticos sul-americanos ainda não foram populados pelo scheduler.',
+            missing=['Open-Meteo SA batch — execute /api/pipeline/run'],
+            sources=['NIAS'],
+        )
+
+    # Gerar sinais climáticos por polo
+    items = []
+    for w in weather_items:
+        signals = []
+        confidence = 'media'
+
+        temp_max  = w.get('temp_max_c')
+        temp_min  = w.get('temp_min_c')
+        precip    = w.get('precip_mm', 0) or 0
+        region    = w.get('region_name', '')
+        cc        = w.get('country_code', '')
+
+        if temp_max and temp_max > 36:
+            signals.append('calor extremo')
+            confidence = 'media'
+        if temp_min and temp_min < 2:
+            signals.append('risco de geada')
+            confidence = 'alta'
+        if precip > 30:
+            signals.append('chuva intensa')
+        if precip == 0 and temp_max and temp_max > 30:
+            signals.append('déficit hídrico')
+
+        weather_signal = ' + '.join(signals) if signals else 'condições normais'
+        has_risk       = bool(signals and signals != ['condições normais'])
+
+        items.append({
+            'country':             cc,
+            'region':              region,
+            'region_id':           w.get('region_id'),
+            'lat':                 w.get('lat'),
+            'lon':                 w.get('lon'),
+            'obs_date':            w.get('obs_date'),
+            'weather_signal':      weather_signal,
+            'price_signal':        'sem preço local persistido',
+            'expected_impact':     'risco de pressão regional' if has_risk else 'sem impacto climático imediato',
+            'confidence':          confidence if has_risk else 'baixa',
+            'explanation': (
+                f'Sinal climático em {region} ({cc}): {weather_signal}. '
+                'Preço local sul-americano ainda não está disponível no banco — '
+                'impacto comercial deve ser monitorado via fontes oficiais locais.'
+            ) if has_risk else (
+                f'{region} ({cc}) sem eventos climáticos extremos no momento.'
+            ),
+            'recommended_action': (
+                f'Monitorar oferta de {cc} e verificar fonte oficial de preço local.' if has_risk
+                else 'Sem ação imediata necessária.'
+            ),
+            'temp_max_c':  temp_max,
+            'temp_min_c':  temp_min,
+            'precip_mm':   precip,
+            'source':      w.get('source', 'Open-Meteo'),
+            'scope':       'south_america',
+        })
+
+    # Ordenar: regiões com risco primeiro
+    items.sort(key=lambda x: (0 if x['weather_signal'] != 'condições normais' else 1, x['country']))
+
+    return R.ok(
+        {
+            'scope':   'south_america',
+            'country': country,
+            'items':   items,
+            'total':   len(items),
+            'note':    'Análise baseada em clima real. Preço local por país pendente de fonte oficial.',
+        },
+        mode='real_weather_no_price',
+        sources=['Open-Meteo'],
         confidence='media',
     )
 
@@ -435,11 +679,14 @@ def _docs():
     endpoints = [
         {'path': '/api/nias/status', 'method': 'GET', 'description': 'Status geral da API', 'legacy': None},
         {'path': '/api/nias/health', 'method': 'GET', 'description': 'Health check com módulos', 'legacy': '/api/health'},
-        {'path': '/api/nias/prices/latest', 'method': 'GET', 'description': 'Preços mais recentes por produto/mercado', 'legacy': None, 'params': 'Nenhum'},
-        {'path': '/api/nias/prices/history', 'method': 'GET', 'description': 'Histórico de preços', 'legacy': None, 'params': '?product=tomate&limit=50'},
-        {'path': '/api/nias/weather/latest', 'method': 'GET', 'description': 'Dados climáticos mais recentes', 'legacy': None},
+        {'path': '/api/nias/regions', 'method': 'GET', 'description': 'Regiões monitoradas da América do Sul', 'params': '?country=BR|AR|CL|PE|BO|PY|UY|CO|EC'},
+        {'path': '/api/nias/regions/south-america', 'method': 'GET', 'description': 'Alias: todos os polos sul-americanos'},
+        {'path': '/api/nias/prices/latest', 'method': 'GET', 'description': 'Preços mais recentes por produto/mercado', 'params': '?country=BR'},
+        {'path': '/api/nias/prices/history', 'method': 'GET', 'description': 'Histórico de preços', 'params': '?product=tomate&limit=50'},
+        {'path': '/api/nias/weather/latest', 'method': 'GET', 'description': 'Dados climáticos mais recentes', 'params': '?country=BR'},
+        {'path': '/api/nias/weather/south-america', 'method': 'GET', 'description': 'Clima em batch para todos os polos sul-americanos (Open-Meteo)'},
         {'path': '/api/nias/weather/risk', 'method': 'GET', 'description': 'Riscos climáticos e alertas', 'legacy': '/api/climate/alerts'},
-        {'path': '/api/nias/intelligence/weather-price', 'method': 'GET', 'description': 'Correlação clima × preço', 'legacy': '/api/climate/price-impact'},
+        {'path': '/api/nias/intelligence/weather-price', 'method': 'GET', 'description': 'Correlação clima × preço', 'params': '?country=BR&scope=south_america'},
         {'path': '/api/nias/intelligence/opportunities', 'method': 'GET', 'description': 'Oportunidades de mercado', 'legacy': '/api/intelligence/opportunities'},
         {'path': '/api/nias/intelligence/predictions', 'method': 'GET', 'description': 'Previsões de preço', 'legacy': '/api/intelligence/predictions'},
         {'path': '/api/nias/intelligence/alerts', 'method': 'GET', 'description': 'Alertas acionáveis', 'legacy': '/api/intelligence/alerts'},
@@ -454,7 +701,9 @@ def _docs():
     return R.ok(
         {
             'title': 'NIAS API Core v1',
-            'description': 'API oficial do NIA$ — Inteligência agrocomercial para o mercado de hortifrúti.',
+            'description': 'API oficial do NIAS — Inteligência Agrocomercial da América do Sul.',
+            'scope': 'south_america',
+            'scope_label': 'América do Sul',
             'base_url': '/api/nias',
             'response_format': {
                 'success': '{ status: "ok", api, version, mode, data, meta: { sources, updated_at, confidence } }',
