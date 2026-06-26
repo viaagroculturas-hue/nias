@@ -13296,40 +13296,44 @@ const NiasOS = (function() {
 
     document.body.classList.add('nias-os-mode');
 
-    // Hoist all panels to body level so position:fixed works free of #main
+    // Hoist all panels to body level so position:fixed escapes #main stacking context
     const panelMap = $('panel-map');
     const allPanels = document.querySelectorAll('#main .panel');
     allPanels.forEach(p => document.body.appendChild(p));
-    // Make sure panel-map is the first in body (background layer)
+    // panel-map goes first in body (lowest layer, z-index 20)
     if (panelMap) document.body.insertBefore(panelMap, document.body.firstChild);
 
     // Show dock
     const dock = $('os-dock');
     if (dock) dock.style.display = 'flex';
 
-    // Activate the map as the permanent canvas
-    _activateMapCanvas();
+    // Wait one frame for CSS to paint (inset:0 must apply BEFORE Leaflet measures the container)
+    requestAnimationFrame(() => {
+      setTimeout(_activateMapCanvas, 60);
+    });
 
     // Start live data cycle
-    setTimeout(_firstLoad, 800);
-    // Refresh signals every 3 min
+    setTimeout(_firstLoad, 1400);
     setInterval(loadSignals, 180000);
   }
 
   function _activateMapCanvas() {
-    // Force panel-map to be the eternal canvas
-    const map = $('panel-map');
-    if (!map) return;
-    document.querySelectorAll('.panel').forEach(p => {
-      p.classList.remove('active', 'os-sheet-open');
-      p.style.display = '';
-    });
-    map.classList.add('active');
-    // Init the map if not done
-    if (!window._mapInit) {
-      try { window.initMap && initMap(); } catch(e) { console.error('map init', e); }
-    }
-    setTimeout(() => { try { window.leafletMap && leafletMap.invalidateSize(); } catch(e){} }, 200);
+    // Use the existing showPanel('map') so all its hooks fire (initMap, invalidateSize, etc.)
+    try { showPanel('map'); } catch(e) { console.error('showPanel map', e); }
+
+    // Aggressive invalidateSize cascade: tile render requires correct container size
+    const _inv = () => { try { window.leafletMap && leafletMap.invalidateSize(true); } catch(e){} };
+    [120, 400, 800, 1600, 3000].forEach(d => setTimeout(_inv, d));
+
+    // Force tile refresh after container is stable
+    setTimeout(() => {
+      try {
+        if (window.leafletMap) {
+          leafletMap.invalidateSize(true);
+          leafletMap.setView(leafletMap.getCenter(), leafletMap.getZoom(), { animate: false });
+        }
+      } catch(e) {}
+    }, 900);
   }
 
   function _firstLoad() {
