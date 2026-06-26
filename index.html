@@ -6,6 +6,7 @@
 <title>NIAS — Núcleo de Inteligência Agrocomercial da América do Sul</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
@@ -234,6 +235,27 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .bc-arb-row{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:10px;}
 .bc-arb-best{color:var(--accent2);}
 .bc-arb-label{font-size:9px;color:var(--text2);margin-top:2px;}
+/* BioCommand Live Effects */
+@keyframes bcPulse1{0%{r:6;opacity:.8}100%{r:28;opacity:0}}
+@keyframes bcPulse2{0%{r:6;opacity:.6}100%{r:40;opacity:0}}
+@keyframes bcElNino{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.0),inset 0 0 80px rgba(255,107,53,.0)}50%{box-shadow:0 0 40px 10px rgba(255,107,53,.18),inset 0 0 80px rgba(255,107,53,.07)}}
+@keyframes bcLaNina{0%,100%{box-shadow:0 0 0 0 rgba(0,180,255,.0),inset 0 0 80px rgba(0,180,255,.0)}50%{box-shadow:0 0 40px 10px rgba(0,180,255,.2),inset 0 0 80px rgba(0,180,255,.08)}}
+@keyframes bcNeutral{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,.0)}50%{box-shadow:0 0 20px 4px rgba(0,212,255,.1)}}
+@keyframes bcTicker{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+@keyframes bcNarrFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+#bc-map.enso-elnino{animation:bcElNino 3s ease-in-out infinite;}
+#bc-map.enso-lanina{animation:bcLaNina 3s ease-in-out infinite;}
+#bc-map.enso-neutro{animation:bcNeutral 4s ease-in-out infinite;}
+#bc-narrative-bar{position:absolute;bottom:0;left:0;right:0;height:24px;z-index:900;background:rgba(5,14,26,.82);backdrop-filter:blur(8px);border-top:1px solid rgba(0,212,255,.2);display:flex;align-items:center;overflow:hidden;font-size:9px;color:var(--accent);letter-spacing:.5px;pointer-events:none;}
+#bc-narrative-text{white-space:nowrap;animation:bcTicker 38s linear infinite;}
+#bc-live-overlay{position:absolute;top:42px;right:8px;z-index:910;display:flex;flex-direction:column;gap:5px;pointer-events:none;}
+.bc-live-chip{background:rgba(5,14,26,.82);backdrop-filter:blur(10px);border:1px solid rgba(0,212,255,.22);border-radius:6px;padding:4px 8px;font-size:9px;color:var(--text2);letter-spacing:.5px;display:flex;align-items:center;gap:5px;}
+.bc-live-chip .dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.bc-live-chip .dot.green{background:#00ff88;box-shadow:0 0 4px #00ff88;}
+.bc-live-chip .dot.orange{background:#ff6b35;box-shadow:0 0 4px #ff6b35;}
+.bc-live-chip .dot.blue{background:#00d4ff;box-shadow:0 0 4px #00d4ff;}
+.bc-live-chip .dot.pulse{animation:blink-badge 1.2s ease-in-out infinite;}
+#bc-wind-canvas{position:absolute;inset:36px 0 24px 0;z-index:2;pointer-events:none;opacity:.55;}
 
 /* ALERTS STRIP */
 #alerts-strip{height:28px;background:rgba(255,61,61,.07);border-bottom:1px solid rgba(255,61,61,.25);display:flex;align-items:center;overflow:hidden;flex-shrink:0;}
@@ -1557,7 +1579,15 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <button class="lyr-btn" style="width:100%;" onclick="bcSetRiskMode('off')">✕ Desligar Risco</button>
         </div>
       </div>
+      <canvas id="bc-wind-canvas"></canvas>
       <div id="bc-map"></div>
+      <div id="bc-narrative-bar"><span style="color:var(--accent);margin:0 12px;flex-shrink:0;font-size:8px;letter-spacing:2px;">◎ IA</span><span id="bc-narrative-text">Carregando análise climática ao vivo…</span></div>
+      <div id="bc-live-overlay">
+        <div class="bc-live-chip"><span class="dot green pulse"></span><span id="bc-chip-enso">ENSO: carregando</span></div>
+        <div class="bc-live-chip"><span class="dot blue pulse"></span><span id="bc-chip-temp">Temp SA: —</span></div>
+        <div class="bc-live-chip"><span class="dot orange"></span><span id="bc-chip-alerts">Alertas: —</span></div>
+        <div class="bc-live-chip"><span class="dot green"></span><span id="bc-chip-updated">Atualizado: —</span></div>
+      </div>
       <div class="bc-sidebar" id="bc-right">
         <div class="bc-sh" style="justify-content:space-between;">
           <span id="bc-right-title">⬢ BIÓPSIA GEOESPACIAL</span>
@@ -8745,11 +8775,203 @@ function _showDemoBanner() {
 let bcMap, bcMapLayers = {}, _bcInit = false;
 let _bcRiskCycle = -1;
 
+/* ── BioCommand Live Intelligence ── */
+var _bcHeatLayer = null;
+var _bcWindAnim  = null;
+var _bcWindParts = [];
+var _bcLiveData  = {};
+
+function _bcStartWindCanvas() {
+  const canvas = document.getElementById('bc-wind-canvas');
+  if (!canvas) return;
+  const mapEl = document.getElementById('bc-map');
+  if (mapEl) { canvas.width = mapEl.offsetWidth; canvas.height = mapEl.offsetHeight; }
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  if (!W || !H) return;
+  // Seed particles
+  _bcWindParts = Array.from({length:120}, () => ({
+    x: Math.random() * W,
+    y: Math.random() * H,
+    vx: (Math.random() * 1.2 + 0.3) * (Math.random() > 0.5 ? 1 : -1),
+    vy: (Math.random() * 0.8 - 0.4),
+    life: Math.random(),
+    maxLife: 0.6 + Math.random() * 0.4,
+    size: 0.8 + Math.random() * 1.4,
+    hue: 180 + Math.random() * 60
+  }));
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    _bcWindParts.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.life -= 0.003;
+      if (p.life <= 0 || p.x < 0 || p.x > W || p.y < 0 || p.y > H) {
+        p.x = Math.random() * W; p.y = Math.random() * H;
+        p.vx = (Math.random() * 1.2 + 0.3) * (Math.random() > 0.5 ? 1 : -1);
+        p.vy = Math.random() * 0.8 - 0.4;
+        p.life = p.maxLife; p.hue = 180 + Math.random() * 60;
+      }
+      const alpha = (p.life / p.maxLife) * 0.55;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue},90%,65%,${alpha})`;
+      ctx.fill();
+      // Trail
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - p.vx * 6, p.y - p.vy * 6);
+      ctx.strokeStyle = `hsla(${p.hue},90%,65%,${alpha * 0.35})`;
+      ctx.lineWidth = p.size * 0.7;
+      ctx.stroke();
+    });
+    _bcWindAnim = requestAnimationFrame(frame);
+  }
+  if (_bcWindAnim) cancelAnimationFrame(_bcWindAnim);
+  frame();
+}
+
+function _bcBuildHeatmap(data) {
+  if (!bcMap || typeof L.heatLayer === 'undefined') return;
+  if (_bcHeatLayer) { try { bcMap.removeLayer(_bcHeatLayer); } catch(e){} }
+  const pts = data.map(d => [d.lat, d.lon, Math.max(0.1, d.intensity)]);
+  if (!pts.length) return;
+  _bcHeatLayer = L.heatLayer(pts, {
+    radius: 38, blur: 26, maxZoom: 9, max: 1.0,
+    gradient: { 0.0:'#0d47a1', 0.2:'#1565c0', 0.4:'#00acc1', 0.55:'#00e676', 0.7:'#ffee58', 0.85:'#ff7043', 1.0:'#b71c1c' }
+  }).addTo(bcMap);
+}
+
+async function _bcFetchLiveClimate() {
+  // 8 key SA agro poles: MT, GO, PR, RS, BA, PE, MG, SP
+  const poles = [
+    { name:'Mato Grosso', lat:-12.6, lon:-55.9, state:'MT' },
+    { name:'Goiás', lat:-15.9, lon:-50.0, state:'GO' },
+    { name:'Paraná', lat:-24.7, lon:-51.5, state:'PR' },
+    { name:'Rio Grande do Sul', lat:-28.5, lon:-52.5, state:'RS' },
+    { name:'Bahia', lat:-12.0, lon:-41.7, state:'BA' },
+    { name:'Pernambuco', lat:-8.4, lon:-36.9, state:'PE' },
+    { name:'Minas Gerais', lat:-18.5, lon:-44.4, state:'MG' },
+    { name:'São Paulo', lat:-22.3, lon:-48.2, state:'SP' },
+  ];
+  const lats = poles.map(p => p.lat).join(',');
+  const lons = poles.map(p => p.lon).join(',');
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,precipitation,windspeed_10m,relative_humidity_2m&daily=temperature_2m_max,precipitation_sum&forecast_days=3&timezone=America%2FSao_Paulo`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const arr = Array.isArray(json) ? json : [json];
+    return poles.map((p, i) => {
+      const d = arr[i] || {};
+      const cur = d.current || {};
+      const daily = d.daily || {};
+      return {
+        ...p,
+        temp: cur.temperature_2m ?? null,
+        precip: cur.precipitation ?? null,
+        wind: cur.windspeed_10m ?? null,
+        humidity: cur.relative_humidity_2m ?? null,
+        tmax3d: (daily.temperature_2m_max || []).slice(0,3),
+        precip3d: (daily.precipitation_sum || []).slice(0,3),
+      };
+    });
+  } catch(e) { return null; }
+}
+
+async function _bcApplyENSO() {
+  try {
+    const res = await fetch('/api/clima/bioclima');
+    if (!res.ok) return;
+    const d = await res.json();
+    const phase = (d.enso_phase || '').toLowerCase();
+    const mapEl = document.getElementById('bc-map');
+    const chip = document.getElementById('bc-chip-enso');
+    if (mapEl) {
+      mapEl.classList.remove('enso-elnino','enso-lanina','enso-neutro');
+      if (phase.includes('niño') || phase.includes('nino') || phase === 'el nino') {
+        mapEl.classList.add('enso-elnino');
+        if (chip) { chip.textContent = `ENSO: El Niño ${d.oni_value ? '(ONI '+d.oni_value.toFixed(1)+')' : ''}`; }
+        // Warm color shift for wind canvas hue
+        _bcWindParts.forEach(p => { p.hue = 20 + Math.random() * 40; });
+      } else if (phase.includes('niña') || phase.includes('nina') || phase === 'la nina') {
+        mapEl.classList.add('enso-lanina');
+        if (chip) { chip.textContent = `ENSO: La Niña ${d.oni_value ? '(ONI '+d.oni_value.toFixed(1)+')' : ''}`; }
+        _bcWindParts.forEach(p => { p.hue = 195 + Math.random() * 40; });
+      } else {
+        mapEl.classList.add('enso-neutro');
+        if (chip) { chip.textContent = 'ENSO: Neutro'; }
+      }
+    }
+  } catch(e) {}
+}
+
+async function _bcUpdateNarrative() {
+  try {
+    const res = await fetch('/api/nias/narrative');
+    if (!res.ok) return;
+    const d = await res.json();
+    const text = d.narrative || d.text || d.summary || '';
+    if (!text) return;
+    const el = document.getElementById('bc-narrative-text');
+    if (el) {
+      el.style.animation = 'none';
+      el.textContent = '◆ ' + text + '   ◆   ' + text;
+      void el.offsetWidth; // reflow
+      el.style.animation = 'bcTicker 38s linear infinite';
+    }
+  } catch(e) {}
+}
+
+async function _bcLiveRefresh() {
+  // 1. Live climate from Open-Meteo
+  const poles = await _bcFetchLiveClimate();
+  if (poles) {
+    _bcLiveData.poles = poles;
+    // Build heatmap with temp as intensity (normalized ~10–45°C range)
+    const heatPts = poles.filter(p => p.temp !== null).map(p => ({
+      lat: p.lat, lon: p.lon,
+      intensity: Math.max(0, Math.min(1, (p.temp - 10) / 32))
+    }));
+    // Add MUNICIPAL_DB NDVI points as green anchor
+    if (typeof MUNICIPAL_DB !== 'undefined') {
+      MUNICIPAL_DB.forEach(m => {
+        if (m.lat && m.lon && m.ndvi != null) {
+          heatPts.push({ lat: m.lat, lon: m.lon, intensity: 1 - Math.min(1, Math.max(0, m.ndvi)) * 0.5 });
+        }
+      });
+    }
+    _bcBuildHeatmap(heatPts);
+    // Update chips
+    const avgTemp = poles.filter(p=>p.temp!==null).reduce((s,p)=>s+p.temp,0) / poles.filter(p=>p.temp!==null).length;
+    const chipT = document.getElementById('bc-chip-temp');
+    if (chipT) chipT.textContent = `Temp SA: ${avgTemp.toFixed(1)}°C`;
+  }
+  // 2. Alert count
+  try {
+    const res = await fetch('/api/flv/alerts?severity=all');
+    if (res.ok) {
+      const d = await res.json();
+      const alerts = d.alerts || d.data || [];
+      const critical = alerts.filter(a => (a.severity||'').toLowerCase() === 'critical' || (a.severidade||'').toLowerCase() === 'crítico').length;
+      const chipA = document.getElementById('bc-chip-alerts');
+      if (chipA) chipA.textContent = `Alertas: ${alerts.length} (${critical} crít.)`;
+    }
+  } catch(e) {}
+  // 3. Timestamp
+  const chipU = document.getElementById('bc-chip-updated');
+  if (chipU) chipU.textContent = `Atualizado: ${new Date().toLocaleTimeString('pt-BR')}`;
+  // 4. ENSO + narrative in parallel
+  _bcApplyENSO();
+  _bcUpdateNarrative();
+}
+
 function initBioCommand() {
   if (_bcInit) { setTimeout(() => bcMap && bcMap.invalidateSize(), 80); return; }
   _bcInit = true;
   bcMap = L.map('bc-map', { center:[-10,-60], zoom:3, zoomControl:true, attributionControl:false });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, subdomains:'abc', attribution:'© OpenStreetMap' }).addTo(bcMap);
+  // Dark satellite-style tile layer
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom:19, subdomains:'abcd', attribution:'© CARTO'
+  }).addTo(bcMap);
 
   // Fetch SIDRA data for ALL cultures
   window._bcSidraData = {};
@@ -8815,7 +9037,12 @@ function initBioCommand() {
     saEl.textContent = `SA HF ${window.BC_SOUTH_AMERICA_HF_META.records} polos · ${window.BC_SOUTH_AMERICA_HF_META.countries.length} países`;
     saEl.title = `${window.BC_SOUTH_AMERICA_HF_META.scope} · Produtos: ${window.BC_SOUTH_AMERICA_HF_META.products.join(', ')}`;
   }
-  setTimeout(() => bcMap.invalidateSize(), 80);
+  setTimeout(() => {
+    bcMap.invalidateSize();
+    _bcStartWindCanvas();
+    _bcLiveRefresh();
+    setInterval(_bcLiveRefresh, 5 * 60 * 1000);
+  }, 150);
 }
 
 function bcToggleLeft() { document.getElementById('bc-left').classList.toggle('collapsed'); setTimeout(()=>bcMap&&bcMap.invalidateSize(),300); }
