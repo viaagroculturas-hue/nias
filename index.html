@@ -688,28 +688,63 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .nias-os-mode #topbar .logo { font-size: 11px !important; letter-spacing: 3px; }
 .nias-os-mode #price-ticker { height: 18px !important; font-size: 8px !important; }
 .nias-os-mode #failsafe-bar { height: 14px !important; font-size: 7px !important; padding: 0 8px; }
-.nias-os-mode #app { background: transparent !important; overflow: visible !important; }
-.nias-os-mode #main { overflow: visible !important; }
+/* ── OS Mode: #app e #sidebar ────────────────────────────────────── */
+.nias-os-mode #app  { position: static !important; overflow: visible !important; }
 
-/* ── OS Mode: map panel é o canvas eterno ─────────────────────────── */
-.nias-os-mode #panel-map {
-  display: flex !important; opacity: 1 !important; visibility: visible !important;
-  position: fixed !important; inset: 0 !important;
-  z-index: 20 !important; border-radius: 0 !important;
+/* ── OS Mode: #main VIRA o canvas full-screen ─────────────────────
+   Não movemos painéis no DOM. #main preenche a viewport menos o dock.
+   position:fixed no #main NÃO cria containing-block para filhos com
+   position:fixed (só transform/filter fazem isso) — sheets filhas com
+   position:fixed se posicionam em relação ao viewport normalmente.
+──────────────────────────────────────────────────────────────────── */
+.nias-os-mode #main {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important; right: 0 !important;
+  bottom: 60px !important;          /* acima do dock */
+  z-index: 20 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
 }
 
-/* ── OS Mode: outros painéis são sheets ─────────────────────────────── */
-.nias-os-mode .panel:not(#panel-map) { display: none !important; opacity: 0 !important; visibility: hidden !important; }
+/* ── OS Mode: panel-map preenche #main normalmente ──────────────── */
+.nias-os-mode #panel-map {
+  display:    flex     !important;
+  opacity:    1        !important;
+  visibility: visible  !important;
+  position:   relative !important;   /* estático dentro de #main */
+  inset:      auto     !important;
+  width:      100%     !important;
+  height:     100%     !important;
+  flex:       1 1 auto !important;
+  z-index:    1        !important;
+  border-radius: 0     !important;
+}
+
+/* ── OS Mode: outros painéis ocultos — sheets aparecem como overlay */
+.nias-os-mode .panel:not(#panel-map) {
+  display: none !important; opacity: 0 !important; visibility: hidden !important;
+}
 .nias-os-mode .panel.os-sheet-open {
-  display: flex !important; opacity: 1 !important; visibility: visible !important;
-  position: fixed !important; left: 0 !important; right: 0 !important;
-  bottom: 60px !important; top: auto !important; height: 80vh !important;
-  z-index: 500 !important;
+  /* position:fixed aqui é em relação ao VIEWPORT (não ao #main),
+     porque #main não tem transform/filter/will-change */
+  display:     flex        !important;
+  opacity:     1           !important;
+  visibility:  visible     !important;
+  position:    fixed       !important;
+  left:        0           !important;
+  right:       0           !important;
+  bottom:      60px        !important;
+  top:         auto        !important;
+  height:      80vh        !important;
+  z-index:     500         !important;
   border-radius: 20px 20px 0 0 !important;
-  border-top: 2px solid var(--accent) !important;
-  background: rgba(5,14,26,0.97) !important; backdrop-filter: blur(24px) !important;
-  overflow-y: auto !important; flex-direction: column !important;
-  animation: osSheetUp 0.38s cubic-bezier(0.22,1,0.36,1) both !important;
+  border-top:  2px solid var(--accent) !important;
+  background:  rgba(5,14,26,0.97) !important;
+  backdrop-filter: blur(24px) !important;
+  overflow-y:  auto        !important;
+  flex-direction: column   !important;
+  animation:   osSheetUp 0.38s cubic-bezier(0.22,1,0.36,1) both !important;
 }
 .nias-os-mode .panel.os-sheet-open::before {
   content: ''; display: block; width: 40px; height: 4px;
@@ -13290,50 +13325,51 @@ const NiasOS = (function() {
   const $ = id => document.getElementById(id);
 
   // ── BOOT ─────────────────────────────────────────────────────────
+  // Estratégia: NÃO mover painéis no DOM.
+  // #main vira o canvas full-screen via CSS (position:fixed; top:0; bottom:60px).
+  // panel-map fica dentro de #main como position:relative; flex:1 — Leaflet
+  // mede o container DEPOIS do CSS ser pintado e recebe tamanho correto.
   function boot() {
     if (_booted) return;
     _booted = true;
 
+    // 1. Ativa modo OS (CSS transforma #main em canvas full-screen)
     document.body.classList.add('nias-os-mode');
 
-    // Hoist all panels to body level so position:fixed escapes #main stacking context
-    const panelMap = $('panel-map');
-    const allPanels = document.querySelectorAll('#main .panel');
-    allPanels.forEach(p => document.body.appendChild(p));
-    // panel-map goes first in body (lowest layer, z-index 20)
-    if (panelMap) document.body.insertBefore(panelMap, document.body.firstChild);
-
-    // Show dock
+    // 2. Mostra o dock
     const dock = $('os-dock');
     if (dock) dock.style.display = 'flex';
 
-    // Wait one frame for CSS to paint (inset:0 must apply BEFORE Leaflet measures the container)
-    requestAnimationFrame(() => {
-      setTimeout(_activateMapCanvas, 60);
-    });
+    // 3. Aguarda dois frames para o browser pintar o CSS antes do Leaflet medir o container
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      _activateMapCanvas();
+    }));
 
-    // Start live data cycle
-    setTimeout(_firstLoad, 1400);
+    // 4. Dados vivos (delay maior para não competir com init do mapa)
+    setTimeout(_firstLoad, 2000);
     setInterval(loadSignals, 180000);
   }
 
   function _activateMapCanvas() {
-    // Use the existing showPanel('map') so all its hooks fire (initMap, invalidateSize, etc.)
+    // showPanel('map') dispara initMap() + todos os hooks de resize
     try { showPanel('map'); } catch(e) { console.error('showPanel map', e); }
 
-    // Aggressive invalidateSize cascade: tile render requires correct container size
-    const _inv = () => { try { window.leafletMap && leafletMap.invalidateSize(true); } catch(e){} };
-    [120, 400, 800, 1600, 3000].forEach(d => setTimeout(_inv, d));
+    // Cascata de invalidateSize para garantir que Leaflet recalcula após o layout estabilizar
+    const _inv = () => {
+      try { window.leafletMap && leafletMap.invalidateSize(true); } catch(e) {}
+    };
+    [50, 200, 500, 1000, 2000].forEach(d => setTimeout(_inv, d));
 
-    // Force tile refresh after container is stable
+    // Após estabilização: force redraw completo dos tiles
     setTimeout(() => {
       try {
         if (window.leafletMap) {
           leafletMap.invalidateSize(true);
-          leafletMap.setView(leafletMap.getCenter(), leafletMap.getZoom(), { animate: false });
+          // panBy(0,0) força o Leaflet a recarregar tiles na viewport atual
+          leafletMap.panBy([0, 0], { animate: false });
         }
       } catch(e) {}
-    }, 900);
+    }, 600);
   }
 
   function _firstLoad() {
