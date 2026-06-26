@@ -13421,62 +13421,106 @@ const NiasOS = (function() {
   // #main vira o canvas full-screen via CSS (position:fixed; top:0; bottom:60px).
   // panel-map fica dentro de #main como position:relative; flex:1 — Leaflet
   // mede o container DEPOIS do CSS ser pintado e recebe tamanho correto.
+  // ── DEBUG overlay: mostra status do mapa na tela ─────────────────
+  function _dbg(msg) {
+    let el = document.getElementById('nias-mapdbg');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'nias-mapdbg';
+      el.style.cssText = 'position:fixed;bottom:76px;left:8px;z-index:9999;' +
+        'background:rgba(0,0,0,0.93);color:#30D158;font-size:10px;' +
+        'font-family:monospace;padding:8px 12px;border-radius:10px;' +
+        'border:1px solid #30D158;max-width:320px;white-space:pre-wrap;' +
+        'pointer-events:none;line-height:1.5;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '[' + new Date().toLocaleTimeString() + ']\n' + msg;
+  }
+
   function boot() {
     if (_booted) return;
     _booted = true;
 
-    // 1. Ativa modo OS (CSS transforma #main em canvas full-screen)
     document.body.classList.add('nias-os-mode');
-
-    // 2. Mostra o dock
     const dock = $('os-dock');
     if (dock) dock.style.display = 'flex';
 
-    // 3. Aguarda dois frames para o browser pintar o CSS antes do Leaflet medir o container
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      _activateMapCanvas();
-    }));
+    // Usa setTimeout(400ms) em vez de rAF — mais confiável para layout ter
+    // sido calculado antes do Leaflet medir o container
+    setTimeout(_activateMapCanvas, 400);
 
-    // 4. Dados vivos (delay maior para não competir com init do mapa)
-    setTimeout(_firstLoad, 2000);
+    setTimeout(_firstLoad, 2500);
     setInterval(loadSignals, 180000);
   }
 
   function _activateMapCanvas() {
-    // ── Força dimensões explícitas no panel-map (não depende de flex cascade) ──
-    const mp = document.getElementById('panel-map');
+    const mp     = document.getElementById('panel-map');
+    const mapDiv = document.getElementById('map');
+
+    // ── 1. Força visibilidade e dimensão do panel-map ─────────────────
     if (mp) {
-      // Calcula a altura disponível: viewport menos headers OS + dock
-      const headerH = 28 + 20 + 18; // topbar(28) + ticker(20) + failsafe(18) em OS mode
-      const dockH   = 68;
-      const panelH  = Math.max(300, window.innerHeight - headerH - dockH);
-      mp.style.cssText = [
-        'display:flex',
-        'flex:1 1 auto',
-        'width:100%',
-        'min-height:' + panelH + 'px',
-        'height:' + panelH + 'px',
-        'position:relative',
-        'overflow:hidden',
-        'visibility:visible',
-        'opacity:1',
-      ].join('!important;') + '!important;';
+      const headerH = (function() {
+        // Calcula a altura real dos headers somando os elementos do DOM
+        const tb = document.getElementById('topbar');
+        const pt = document.getElementById('price-ticker');
+        const fb = document.getElementById('failsafe-bar');
+        return (tb ? tb.offsetHeight : 28) +
+               (pt ? pt.offsetHeight : 20) +
+               (fb ? fb.offsetHeight : 18);
+      })();
+      const dockH  = 68;
+      const panelH = Math.max(300, window.innerHeight - headerH - dockH);
+
+      mp.style.display    = 'flex';
+      mp.style.visibility = 'visible';
+      mp.style.opacity    = '1';
+      mp.style.position   = 'relative';
+      mp.style.width      = '100%';
+      mp.style.height     = panelH + 'px';
+      mp.style.minHeight  = panelH + 'px';
+      mp.style.overflow   = 'hidden';
+      mp.style.flex       = '1 1 auto';
       mp.classList.add('active');
+
+      _dbg('panel-map: ' + mp.offsetWidth + 'x' + mp.offsetHeight +
+           '\n#map antes init: ' + (mapDiv ? mapDiv.offsetWidth + 'x' + mapDiv.offsetHeight : 'N/A') +
+           '\nheaderH=' + headerH + ' dockH=' + dockH + ' panelH=' + panelH +
+           '\nL definido: ' + (typeof L !== 'undefined') +
+           '\n_mapInit: ' + !!window._mapInit);
+    } else {
+      _dbg('ERRO: panel-map nao encontrado!');
+      return;
     }
 
-    // ── Inicializa o mapa diretamente (sem depender do showPanel chain) ──
+    // ── 2. Inicializa o mapa ──────────────────────────────────────────
     if (!window._mapInit) {
       window._mapInit = true;
-      try { initMap(); } catch(e) { console.error('NiasOS initMap:', e); }
+      try {
+        initMap();
+        _dbg('initMap() OK\nleafletMap: ' + (window.leafletMap ? 'criado' : 'FALHOU') +
+             '\n#map apos init: ' + (mapDiv ? mapDiv.offsetWidth + 'x' + mapDiv.offsetHeight : 'N/A'));
+      } catch(e) {
+        window._mapInit = false;
+        _dbg('initMap() ERRO:\n' + e.message + '\n' + (e.stack || '').split('\n')[0]);
+      }
+    } else {
+      _dbg('_mapInit ja true — leafletMap: ' + (window.leafletMap ? 'existe' : 'null'));
     }
 
-    // ── Cascata de invalidateSize ──────────────────────────────────────
+    // ── 3. Cascata invalidateSize ─────────────────────────────────────
     const inv = () => {
-      try { window.leafletMap && leafletMap.invalidateSize(true); } catch(e) {}
+      try {
+        if (window.leafletMap) {
+          leafletMap.invalidateSize(true);
+          // Atualiza debug com dimensões pos-invalidate
+          const c = leafletMap.getContainer();
+          _dbg('invalidateSize OK\ncontainer: ' + c.offsetWidth + 'x' + c.offsetHeight +
+               '\nleafletMap: ' + (window.leafletMap ? 'ativo' : 'null'));
+        }
+      } catch(e) { _dbg('invalidateSize erro: ' + e.message); }
     };
-    [80, 250, 550, 1100, 2200].forEach(d => setTimeout(inv, d));
+    [150, 400, 800, 1600].forEach(d => setTimeout(inv, d));
 
-    // panBy força reload de tiles na viewport
     setTimeout(() => {
       try {
         if (window.leafletMap) {
@@ -13484,7 +13528,7 @@ const NiasOS = (function() {
           leafletMap.panBy([0, 0], { animate: false });
         }
       } catch(e) {}
-    }, 700);
+    }, 900);
   }
 
   function _firstLoad() {
