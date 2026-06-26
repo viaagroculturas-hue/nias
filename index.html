@@ -700,11 +700,11 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .nias-os-mode #main {
   position: fixed !important;
   top: 0 !important; left: 0 !important; right: 0 !important;
-  bottom: 60px !important;          /* acima do dock */
+  bottom: 60px !important;
   z-index: 20 !important;
   display: flex !important;
   flex-direction: column !important;
-  overflow: hidden !important;
+  overflow: visible !important; /* visible: não clippa sheets position:fixed filhas */
 }
 
 /* ── OS Mode: panel-map preenche #main normalmente ──────────────── */
@@ -712,12 +712,13 @@ tr:hover td{background:rgba(0,212,255,.04);}
   display:    flex     !important;
   opacity:    1        !important;
   visibility: visible  !important;
-  position:   relative !important;   /* estático dentro de #main */
+  position:   relative !important;
   inset:      auto     !important;
   width:      100%     !important;
   height:     100%     !important;
   flex:       1 1 auto !important;
   z-index:    1        !important;
+  overflow:   hidden   !important;  /* clippa o Leaflet sem afetar sheets */
   border-radius: 0     !important;
 }
 
@@ -3382,6 +3383,11 @@ const SituationRoom = {
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════════════
 function showPanel(id) {
+  // Em OS mode: mapa é o canvas eterno. Qualquer outro painel vira sheet.
+  if (document.body.classList.contains('nias-os-mode') && id !== 'map') {
+    try { NiasOS.showSheet(id); } catch(e) {}
+    return;
+  }
   try {
     document.querySelectorAll('.panel').forEach(p => {
       p.classList.remove('active');
@@ -8379,9 +8385,9 @@ function _niasGrantAccess(role) {
   const overlay = document.getElementById('nias-login-overlay');
   if (overlay) overlay.style.display = 'none';
   _applyRBAC(role);
+  // Boot OS primeiro — antes de qualquer demo mode que chame showPanel
+  try { NiasOS.boot(); } catch(e) { console.error('NiasOS boot error:', e); }
   if (role === 'guest') _activateDemoMode();
-  // Boot the geographic intelligence OS
-  setTimeout(() => { try { NiasOS.boot(); } catch(e) { console.error('NiasOS boot error:', e); } }, 200);
 }
 
 // ── RBAC restrictions
