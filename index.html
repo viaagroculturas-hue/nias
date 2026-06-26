@@ -1061,12 +1061,8 @@ tr:hover td{background:rgba(0,212,255,.04);}
         <span class="badge-live">● LIVE</span>
       </div>
       <div id="alerts-strip">
-        <div class="alert-scroll">
-          <span class="alert-item">⚠ ESTRESSE HÍDRICO — Oeste da Bahia / Norte MT<span class="sep">|</span></span>
-          <span class="alert-item">⚠ SUSPEITA DE PRAGA — Norte PR / Sul MS<span class="sep">|</span></span>
-          <span class="alert-item">⚠ GARGALO LOGÍSTICO — BR-163 / Porto Santos 82%<span class="sep">|</span></span>
-          <span class="alert-item">⚠ ANOMALIA TÉRMICA — Cinturão Verde SP/MG/PR +2.1°C<span class="sep">|</span></span>
-          <span class="alert-item">⚠ ESTRESSE HÍDRICO — Oeste da Bahia / Norte MT</span>
+        <div class="alert-scroll" id="alerts-strip-scroll">
+          <span class="alert-item" style="color:var(--text2);">⬡ Carregando alertas ao vivo…</span>
         </div>
       </div>
 
@@ -1084,7 +1080,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
       <div class="kpi-row">
         <div class="kpi-card"><div class="kpi-label">SOJA BR 2025/26</div><div class="kpi-value" id="kpi-soja">—</div><div class="kpi-delta down" id="kd-soja">aguardando API</div><canvas class="kpi-spark" id="sp-soja"></canvas></div>
         <div class="kpi-card"><div class="kpi-label">MILHO SAFRINHA</div><div class="kpi-value" id="kpi-milho">—</div><div class="kpi-delta down" id="kd-milho">aguardando API</div><canvas class="kpi-spark" id="sp-milho"></canvas></div>
-        <div class="kpi-card"><div class="kpi-label">NDVI MÉDIO CERRADO</div><div class="kpi-value" id="kpi-ndvi">—</div><div class="kpi-delta down" id="kd-ndvi">aguardando API</div><div id="ndvi-phenol-tag" class="ndvi-tag harvest" style="margin-top:3px;">✓ COLHEITA EM ANDAMENTO</div><canvas class="kpi-spark" id="sp-ndvi"></canvas></div>
+        <div class="kpi-card"><div class="kpi-label">NDVI MÉDIO CERRADO</div><div class="kpi-value" id="kpi-ndvi">—</div><div class="kpi-delta down" id="kd-ndvi">aguardando API</div><div id="ndvi-phenol-tag" class="ndvi-tag" style="margin-top:3px;display:none;"></div><canvas class="kpi-spark" id="sp-ndvi"></canvas></div>
         <div class="kpi-card"><div class="kpi-label">UMIDADE SOLO MÉD.</div><div class="kpi-value" id="kpi-hum">—</div><div class="kpi-delta down" id="kd-hum">aguardando API</div><canvas class="kpi-spark" id="sp-hum"></canvas></div>
         <div class="kpi-card"><div class="kpi-label">BOI GORDO (equiv.)</div><div class="kpi-value" id="kpi-boi">—</div><div class="kpi-delta up" id="kd-boi">aguardando API</div><canvas class="kpi-spark" id="sp-boi"></canvas></div>
         <div class="kpi-card"><div class="kpi-label">HORTIFRUTIS</div><div class="kpi-value" id="kpi-horti">—</div><div class="kpi-delta down" id="kd-horti">aguardando API</div><canvas class="kpi-spark" id="sp-horti"></canvas></div>
@@ -1132,8 +1128,8 @@ tr:hover td{background:rgba(0,212,255,.04);}
       <div id="horti-section">
         <div class="horti-header">
           <span class="horti-title">HORTIFRUTIS — MONITORAMENTO SUL-AMERICANO</span>
-          <span class="horti-badge warn">ANOMALIA TÉRMICA ATIVA +2.1°C</span>
-          <span class="horti-badge danger">OFERTA REDUZIDA</span>
+          <span class="horti-badge warn" id="horti-badge-clima" style="display:none;"></span>
+          <span class="horti-badge danger" id="horti-badge-oferta" style="display:none;"></span>
           <span class="badge-live" style="font-size:9px;padding:2px 6px;">● LIVE</span>
         </div>
         <div class="horti-grid">
@@ -1149,12 +1145,12 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <div class="horti-subregion">ES · Domingos Martins, Santa Teresa</div>
             <div class="horti-subregion">GO · Itaberaí, Ceres, Goianápolis</div>
             <div class="horti-subregion">BA · Mucugê (Chapada Diamantina)</div>
-            <div class="horti-vol" id="hv-tomate-mesa">5.1 Mt</div>
-            <div class="horti-price" id="hp-tomate-mesa">R$ 68,20/cx</div>
-            <div id="hsrc-tomate-mesa" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: carregando...</div>
-            <div class="horti-delta danger" id="hd-tomate-mesa">▼ -11.2% — Queima foliar SP/MG</div>
-            <div class="horti-ndvi" id="hn-tomate-mesa">NDVI: 0.49 <span style="color:var(--danger)">▼</span></div>
-            <div class="horti-status danger" id="hst-tomate-mesa">ALERTA TÉRMICO</div>
+            <div class="horti-vol" id="hv-tomate-mesa">—</div>
+            <div class="horti-price" id="hp-tomate-mesa">carregando…</div>
+            <div id="hsrc-tomate-mesa" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: aguardando</div>
+            <div class="horti-delta" id="hd-tomate-mesa">—</div>
+            <div class="horti-ndvi" id="hn-tomate-mesa">NDVI: —</div>
+            <div class="horti-status" id="hst-tomate-mesa">—</div>
           </div>
           <!-- TOMATE INDÚSTRIA -->
           <div class="horti-card horti-card-ind" id="hc-tomate-ind">
@@ -1168,24 +1164,24 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <div class="horti-subregion">MG · Uberlândia, Frutal, Pirapora</div>
             <div class="horti-subregion">SP · Itápolis, Fernando Prestes, Borborema</div>
             <div class="horti-subregion">BA/PE · Juazeiro/Petrolina (irrigado)</div>
-            <div class="horti-vol" id="hv-tomate-ind">4.7 Mt</div>
-            <div class="horti-price" id="hp-tomate-ind">R$ 148,00/t</div>
-            <div id="hsrc-tomate-ind" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: carregando...</div>
-            <div class="horti-delta warn" id="hd-tomate-ind">▼ -7.4% — Calor reduz brix</div>
-            <div class="horti-ndvi" id="hn-tomate-ind">NDVI: 0.53 <span style="color:var(--warn)">▼</span></div>
-            <div class="horti-status warn" id="hst-tomate-ind">ATENÇÃO — BRIX ↓</div>
+            <div class="horti-vol" id="hv-tomate-ind">—</div>
+            <div class="horti-price" id="hp-tomate-ind">carregando…</div>
+            <div id="hsrc-tomate-ind" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: aguardando</div>
+            <div class="horti-delta" id="hd-tomate-ind">—</div>
+            <div class="horti-ndvi" id="hn-tomate-ind">NDVI: —</div>
+            <div class="horti-status" id="hst-tomate-ind">—</div>
             <div class="brix-panel">
-              <div class="brix-row"><span class="brix-label">°BRIX ESTIMADO</span><span class="brix-val" id="brix-val" style="color:var(--warn)">3.8°</span></div>
-              <div class="brix-bar"><div class="brix-fill" id="brix-fill" style="width:54%;background:var(--warn)"></div></div>
+              <div class="brix-row"><span class="brix-label">°BRIX ESTIMADO</span><span class="brix-val" id="brix-val" style="color:var(--text2)">—</span></div>
+              <div class="brix-bar"><div class="brix-fill" id="brix-fill" style="width:0%;background:var(--warn)"></div></div>
               <div class="delta-t-row">
                 <span class="brix-label">ΔT noturno (5d)</span>
-                <span id="delta-t-val" class="delta-t-warn">Tnoite: 23.4°C ⚠</span>
+                <span id="delta-t-val" style="color:var(--text2);">aguardando Open-Meteo</span>
               </div>
               <div class="delta-t-row">
                 <span class="brix-label">Amplitude</span>
-                <span id="delta-t-amp" class="delta-t-warn">ΔT: 8.2°C &lt; 12°C ⚠</span>
+                <span id="delta-t-amp" style="color:var(--text2);">—</span>
               </div>
-              <div style="font-size:9px;color:var(--text2);margin-top:3px;" id="brix-source">Fonte: MODIS LST · ASTER · ERA5</div>
+              <div style="font-size:9px;color:var(--text2);margin-top:3px;" id="brix-source">Fonte: Open-Meteo (ao vivo)</div>
             </div>
           </div>
           <div class="horti-card" id="hc-pimentao">
@@ -1193,205 +1189,205 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <div class="horti-icon">🫑</div>
             <div class="horti-name">PIMENTÃO</div>
             <div class="horti-region">SP/GO — Campo aberto</div>
-            <div class="horti-vol" id="hv-pimentao">3.2 Mt</div>
-            <div class="horti-price" id="hp-pimentao">R$ 94,50/cx</div>
-            <div id="hsrc-pimentao" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: carregando...</div>
-            <div class="horti-delta danger" id="hd-pimentao">▼ -9.8% — Ciclo antecipado</div>
-            <div class="horti-ndvi" id="hn-pimentao">NDVI: 0.51 <span style="color:var(--warn)">▼</span></div>
-            <div class="horti-status warn" id="hst-pimentao">ATENÇÃO</div>
+            <div class="horti-vol" id="hv-pimentao">—</div>
+            <div class="horti-price" id="hp-pimentao">carregando…</div>
+            <div id="hsrc-pimentao" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: aguardando</div>
+            <div class="horti-delta" id="hd-pimentao">—</div>
+            <div class="horti-ndvi" id="hn-pimentao">NDVI: —</div>
+            <div class="horti-status" id="hst-pimentao">—</div>
           </div>
           <div class="horti-card" id="hc-alface">
             <canvas class="horti-spark" id="hs-alface"></canvas>
             <div class="horti-icon">🥬</div>
             <div class="horti-name">FOLHOSAS</div>
             <div class="horti-region">SP/PR/MG — Estufa+Campo</div>
-            <div class="horti-vol" id="hv-alface">4.1 Mt</div>
-            <div class="horti-price" id="hp-alface">R$ 12,80/dz</div>
-            <div id="hsrc-alface" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: carregando...</div>
-            <div class="horti-delta danger" id="hd-alface">▼ -8.7% — Pendoamento precoce</div>
-            <div class="horti-ndvi" id="hn-alface">NDVI: 0.55 <span style="color:var(--warn)">▼</span></div>
-            <div class="horti-status warn" id="hst-alface">ATENÇÃO</div>
+            <div class="horti-vol" id="hv-alface">—</div>
+            <div class="horti-price" id="hp-alface">carregando…</div>
+            <div id="hsrc-alface" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: aguardando</div>
+            <div class="horti-delta" id="hd-alface">—</div>
+            <div class="horti-ndvi" id="hn-alface">NDVI: —</div>
+            <div class="horti-status" id="hst-alface">—</div>
           </div>
           <div class="horti-card" id="hc-laranja">
             <canvas class="horti-spark" id="hs-laranja"></canvas>
             <div class="horti-icon">🍊</div>
             <div class="horti-name">LARANJA/CÍTRICOS</div>
             <div class="horti-region">SP/MG — Triângulo Mineiro</div>
-            <div class="horti-vol" id="hv-laranja">24.5 Mt</div>
-            <div class="horti-price" id="hp-laranja">R$ 28,40/cx</div>
-            <div id="hsrc-laranja" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: carregando...</div>
-            <div class="horti-delta danger" id="hd-laranja">▼ -6.4% — Queda prematura</div>
-            <div class="horti-ndvi" id="hn-laranja">NDVI: 0.62 <span style="color:var(--text2)">—</span></div>
-            <div class="horti-status ok" id="hst-laranja">MONIT. CONTÍNUO</div>
+            <div class="horti-vol" id="hv-laranja">—</div>
+            <div class="horti-price" id="hp-laranja">carregando…</div>
+            <div id="hsrc-laranja" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: aguardando</div>
+            <div class="horti-delta" id="hd-laranja">—</div>
+            <div class="horti-ndvi" id="hn-laranja">NDVI: —</div>
+            <div class="horti-status" id="hst-laranja">—</div>
           </div>
           <div class="horti-card" id="hc-batata">
             <canvas class="horti-spark" id="hs-batata"></canvas>
             <div class="horti-icon">🥔</div>
             <div class="horti-name">BATATA</div>
             <div class="horti-region">MG/PR/SP — Alto nível</div>
-            <div class="horti-vol" id="hv-batata">4.8 Mt</div>
-            <div class="horti-price" id="hp-batata">R$ 52,10/sc</div>
-            <div id="hsrc-batata" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: carregando...</div>
-            <div class="horti-delta ok" id="hd-batata">▲ +1.2% — Estável</div>
-            <div class="horti-ndvi" id="hn-batata">NDVI: 0.67 <span style="color:var(--accent2)">▲</span></div>
-            <div class="horti-status ok" id="hst-batata">NORMAL</div>
+            <div class="horti-vol" id="hv-batata">—</div>
+            <div class="horti-price" id="hp-batata">carregando…</div>
+            <div id="hsrc-batata" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: aguardando</div>
+            <div class="horti-delta" id="hd-batata">—</div>
+            <div class="horti-ndvi" id="hn-batata">NDVI: —</div>
+            <div class="horti-status" id="hst-batata">—</div>
           </div>
           <div class="horti-card" id="hc-cebola">
             <canvas class="horti-spark" id="hs-cebola"></canvas>
             <div class="horti-icon">🧅</div>
             <div class="horti-name">CEBOLA</div>
             <div class="horti-region">SC/SP/BA — Colheita</div>
-            <div class="horti-vol" id="hv-cebola">1.6 Mt</div>
-            <div class="horti-price" id="hp-cebola">R$ 38,70/sc</div>
-            <div id="hsrc-cebola" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: carregando...</div>
-            <div class="horti-delta ok" id="hd-cebola">▲ +3.1% — Safra boa SC</div>
-            <div class="horti-ndvi" id="hn-cebola">NDVI: 0.58 <span style="color:var(--text2)">—</span></div>
-            <div class="horti-status ok" id="hst-cebola">NORMAL</div>
+            <div class="horti-vol" id="hv-cebola">—</div>
+            <div class="horti-price" id="hp-cebola">carregando…</div>
+            <div id="hsrc-cebola" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: aguardando</div>
+            <div class="horti-delta" id="hd-cebola">—</div>
+            <div class="horti-ndvi" id="hn-cebola">NDVI: —</div>
+            <div class="horti-status" id="hst-cebola">—</div>
           </div>
           <div class="horti-card" id="hc-manga">
             <canvas class="horti-spark" id="hs-manga"></canvas>
             <div class="horti-icon">🥭</div>
             <div class="horti-name">MANGA</div>
             <div class="horti-region">BA/PE — Vale São Francisco</div>
-            <div class="horti-vol" id="hv-manga">1.4 Mt</div>
-            <div class="horti-price" id="hp-manga">R$ 42,00/cx</div>
-            <div id="hsrc-manga" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: carregando...</div>
-            <div class="horti-delta danger" id="hd-manga">▼ -14.3% — Seca MATOPIBA</div>
-            <div class="horti-ndvi" id="hn-manga">NDVI: 0.41 <span style="color:var(--danger)">▼▼</span></div>
-            <div class="horti-status danger" id="hst-manga">CRÍTICO</div>
+            <div class="horti-vol" id="hv-manga">—</div>
+            <div class="horti-price" id="hp-manga">carregando…</div>
+            <div id="hsrc-manga" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: aguardando</div>
+            <div class="horti-delta" id="hd-manga">—</div>
+            <div class="horti-ndvi" id="hn-manga">NDVI: —</div>
+            <div class="horti-status" id="hst-manga">—</div>
           </div>
           <div class="horti-card" id="hc-uva">
             <canvas class="horti-spark" id="hs-uva"></canvas>
             <div class="horti-icon">🍇</div>
             <div class="horti-name">UVA</div>
             <div class="horti-region">RS/PE — Serra Gaúcha + VSF</div>
-            <div class="horti-vol" id="hv-uva">1.7 Mt</div>
-            <div class="horti-price" id="hp-uva">R$ 6,40/kg</div>
-            <div id="hsrc-uva" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: carregando...</div>
-            <div class="horti-delta ok" id="hd-uva">▲ +2.8% — Safra RS ótima</div>
-            <div class="horti-ndvi" id="hn-uva">NDVI: 0.69 <span style="color:var(--accent2)">▲</span></div>
-            <div class="horti-status ok" id="hst-uva">NORMAL</div>
+            <div class="horti-vol" id="hv-uva">—</div>
+            <div class="horti-price" id="hp-uva">carregando…</div>
+            <div id="hsrc-uva" style="font-size:7px;color:var(--text2);margin-top:1px;position:relative;z-index:1;">Fonte: aguardando</div>
+            <div class="horti-delta" id="hd-uva">—</div>
+            <div class="horti-ndvi" id="hn-uva">NDVI: —</div>
+            <div class="horti-status" id="hst-uva">—</div>
           </div>
           <div class="horti-card" id="hc-morango">
             <canvas class="horti-spark" id="hs-morango"></canvas>
             <div class="horti-icon">🍓</div>
             <div class="horti-name">MORANGO</div>
             <div class="horti-region">SP/MG — Atibaia, Pouso Alegre</div>
-            <div class="horti-vol" id="hv-morango">0.4 Mt</div>
-            <div class="horti-price" id="hp-morango">R$ 18,90/kg</div>
-            <div class="horti-delta warn" id="hd-morango">▼ -5.1% — Calor excessivo</div>
-            <div class="horti-ndvi" id="hn-morango">NDVI: 0.58 <span style="color:var(--warn)">▼</span></div>
-            <div class="horti-status warn" id="hst-morango">ATENÇÃO</div>
+            <div class="horti-vol" id="hv-morango">—</div>
+            <div class="horti-price" id="hp-morango">carregando…</div>
+            <div class="horti-delta" id="hd-morango">—</div>
+            <div class="horti-ndvi" id="hn-morango">NDVI: —</div>
+            <div class="horti-status" id="hst-morango">—</div>
           </div>
           <div class="horti-card" id="hc-maca">
             <canvas class="horti-spark" id="hs-maca"></canvas>
             <div class="horti-icon">🍎</div>
             <div class="horti-name">MAÇÃ</div>
             <div class="horti-region">SC/RS — São Joaquim, Vacaria</div>
-            <div class="horti-vol" id="hv-maca">1.1 Mt</div>
-            <div class="horti-price" id="hp-maca">R$ 3,20/kg</div>
-            <div class="horti-delta ok" id="hd-maca">▲ +4.6% — Excelente ciclo frio</div>
-            <div class="horti-ndvi" id="hn-maca">NDVI: 0.72 <span style="color:var(--accent2)">▲</span></div>
-            <div class="horti-status ok" id="hst-maca">NORMAL</div>
+            <div class="horti-vol" id="hv-maca">—</div>
+            <div class="horti-price" id="hp-maca">carregando…</div>
+            <div class="horti-delta" id="hd-maca">—</div>
+            <div class="horti-ndvi" id="hn-maca">NDVI: —</div>
+            <div class="horti-status" id="hst-maca">—</div>
           </div>
           <div class="horti-card" id="hc-melao">
             <canvas class="horti-spark" id="hs-melao"></canvas>
             <div class="horti-icon">🍈</div>
             <div class="horti-name">MELÃO</div>
             <div class="horti-region">RN/CE — Mossoró, Açu</div>
-            <div class="horti-vol" id="hv-melao">0.6 Mt</div>
-            <div class="horti-price" id="hp-melao">R$ 48,60/cx</div>
-            <div class="horti-delta danger" id="hd-melao">▼ -12.8% — Seca Nordeste</div>
-            <div class="horti-ndvi" id="hn-melao">NDVI: 0.44 <span style="color:var(--danger)">▼▼</span></div>
-            <div class="horti-status danger" id="hst-melao">CRÍTICO</div>
+            <div class="horti-vol" id="hv-melao">—</div>
+            <div class="horti-price" id="hp-melao">carregando…</div>
+            <div class="horti-delta" id="hd-melao">—</div>
+            <div class="horti-ndvi" id="hn-melao">NDVI: —</div>
+            <div class="horti-status" id="hst-melao">—</div>
           </div>
           <div class="horti-card" id="hc-banana">
             <canvas class="horti-spark" id="hs-banana"></canvas>
             <div class="horti-icon">🍌</div>
             <div class="horti-name">BANANA</div>
             <div class="horti-region">SP/ES/BA — Litoral + Bahia</div>
-            <div class="horti-vol" id="hv-banana">7.3 Mt</div>
-            <div class="horti-price" id="hp-banana">R$ 1,80/kg</div>
-            <div class="horti-delta ok" id="hd-banana">▲ +1.8% — Estável</div>
-            <div class="horti-ndvi" id="hn-banana">NDVI: 0.71 <span style="color:var(--accent2)">▲</span></div>
-            <div class="horti-status ok" id="hst-banana">NORMAL</div>
+            <div class="horti-vol" id="hv-banana">—</div>
+            <div class="horti-price" id="hp-banana">carregando…</div>
+            <div class="horti-delta" id="hd-banana">—</div>
+            <div class="horti-ndvi" id="hn-banana">NDVI: —</div>
+            <div class="horti-status" id="hst-banana">—</div>
           </div>
           <div class="horti-card" id="hc-mamao">
             <canvas class="horti-spark" id="hs-mamao"></canvas>
             <div class="horti-icon">🫐</div>
             <div class="horti-name">MAMÃO</div>
             <div class="horti-region">ES/BA — Linhares, Cruz das Almas</div>
-            <div class="horti-vol" id="hv-mamao">1.8 Mt</div>
-            <div class="horti-price" id="hp-mamao">R$ 2,40/kg</div>
-            <div class="horti-delta ok" id="hd-mamao">▲ +0.9% — Normal</div>
-            <div class="horti-ndvi" id="hn-mamao">NDVI: 0.66 <span style="color:var(--text2)">—</span></div>
-            <div class="horti-status ok" id="hst-mamao">NORMAL</div>
+            <div class="horti-vol" id="hv-mamao">—</div>
+            <div class="horti-price" id="hp-mamao">carregando…</div>
+            <div class="horti-delta" id="hd-mamao">—</div>
+            <div class="horti-ndvi" id="hn-mamao">NDVI: —</div>
+            <div class="horti-status" id="hst-mamao">—</div>
           </div>
           <div class="horti-card" id="hc-alho">
             <canvas class="horti-spark" id="hs-alho"></canvas>
             <div class="horti-icon">🧄</div>
             <div class="horti-name">ALHO</div>
             <div class="horti-region">MG/SC — Araguari, Curitibanos</div>
-            <div class="horti-vol" id="hv-alho">0.2 Mt</div>
-            <div class="horti-price" id="hp-alho">R$ 24,80/kg</div>
-            <div class="horti-delta warn" id="hd-alho">▼ -3.4% — Importação AR</div>
-            <div class="horti-ndvi" id="hn-alho">NDVI: 0.52 <span style="color:var(--text2)">—</span></div>
-            <div class="horti-status warn" id="hst-alho">ATENÇÃO</div>
+            <div class="horti-vol" id="hv-alho">—</div>
+            <div class="horti-price" id="hp-alho">carregando…</div>
+            <div class="horti-delta" id="hd-alho">—</div>
+            <div class="horti-ndvi" id="hn-alho">NDVI: —</div>
+            <div class="horti-status" id="hst-alho">—</div>
           </div>
           <div class="horti-card" id="hc-cenoura">
             <canvas class="horti-spark" id="hs-cenoura"></canvas>
             <div class="horti-icon">🥕</div>
             <div class="horti-name">CENOURA</div>
             <div class="horti-region">MG/BA — Alto Paranaíba, Irecê</div>
-            <div class="horti-vol" id="hv-cenoura">0.8 Mt</div>
-            <div class="horti-price" id="hp-cenoura">R$ 2,90/kg</div>
-            <div class="horti-delta ok" id="hd-cenoura">▲ +2.3% — Boa produção MG</div>
-            <div class="horti-ndvi" id="hn-cenoura">NDVI: 0.60 <span style="color:var(--accent2)">▲</span></div>
-            <div class="horti-status ok" id="hst-cenoura">NORMAL</div>
+            <div class="horti-vol" id="hv-cenoura">—</div>
+            <div class="horti-price" id="hp-cenoura">carregando…</div>
+            <div class="horti-delta" id="hd-cenoura">—</div>
+            <div class="horti-ndvi" id="hn-cenoura">NDVI: —</div>
+            <div class="horti-status" id="hst-cenoura">—</div>
           </div>
           <div class="horti-card" id="hc-pepino">
             <canvas class="horti-spark" id="hs-pepino"></canvas>
             <div class="horti-icon">🥒</div>
             <div class="horti-name">PEPINO</div>
             <div class="horti-region">SP — Mogi das Cruzes (estufa)</div>
-            <div class="horti-vol" id="hv-pepino">0.5 Mt</div>
-            <div class="horti-price" id="hp-pepino">R$ 3,10/kg</div>
-            <div class="horti-delta warn" id="hd-pepino">▼ -6.2% — Anomalia térmica</div>
-            <div class="horti-ndvi" id="hn-pepino">NDVI: 0.53 <span style="color:var(--warn)">▼</span></div>
-            <div class="horti-status warn" id="hst-pepino">ATENÇÃO</div>
+            <div class="horti-vol" id="hv-pepino">—</div>
+            <div class="horti-price" id="hp-pepino">carregando…</div>
+            <div class="horti-delta" id="hd-pepino">—</div>
+            <div class="horti-ndvi" id="hn-pepino">NDVI: —</div>
+            <div class="horti-status" id="hst-pepino">—</div>
           </div>
           <div class="horti-card" id="hc-abacaxi">
             <canvas class="horti-spark" id="hs-abacaxi"></canvas>
             <div class="horti-icon">🍍</div>
             <div class="horti-name">ABACAXI</div>
             <div class="horti-region">PA/TO/PB — Floresta do Araguaia</div>
-            <div class="horti-vol" id="hv-abacaxi">2.6 Mt</div>
-            <div class="horti-price" id="hp-abacaxi">R$ 2,20/un</div>
-            <div class="horti-delta ok" id="hd-abacaxi">▲ +3.5% — Safra plena Norte</div>
-            <div class="horti-ndvi" id="hn-abacaxi">NDVI: 0.64 <span style="color:var(--accent2)">▲</span></div>
-            <div class="horti-status ok" id="hst-abacaxi">NORMAL</div>
+            <div class="horti-vol" id="hv-abacaxi">—</div>
+            <div class="horti-price" id="hp-abacaxi">carregando…</div>
+            <div class="horti-delta" id="hd-abacaxi">—</div>
+            <div class="horti-ndvi" id="hn-abacaxi">NDVI: —</div>
+            <div class="horti-status" id="hst-abacaxi">—</div>
           </div>
           <div class="horti-card" id="hc-uva-ar">
             <canvas class="horti-spark" id="hs-uva-ar"></canvas>
             <div class="horti-icon">🍇</div>
             <div class="horti-name">UVA (Mendoza)</div>
             <div class="horti-region">AR — Mendoza, San Juan</div>
-            <div class="horti-vol" id="hv-uva-ar">3.1 Mt</div>
-            <div class="horti-price" id="hp-uva-ar">US$ 0,48/kg</div>
-            <div class="horti-delta ok" id="hd-uva-ar">▲ +1.4% — Vindima normal</div>
-            <div class="horti-ndvi" id="hn-uva-ar">NDVI: 0.67 <span style="color:var(--accent2)">▲</span></div>
-            <div class="horti-status ok" id="hst-uva-ar">NORMAL</div>
+            <div class="horti-vol" id="hv-uva-ar">—</div>
+            <div class="horti-price" id="hp-uva-ar">carregando…</div>
+            <div class="horti-delta" id="hd-uva-ar">—</div>
+            <div class="horti-ndvi" id="hn-uva-ar">NDVI: —</div>
+            <div class="horti-status" id="hst-uva-ar">—</div>
           </div>
           <div class="horti-card" id="hc-maca-ar">
             <canvas class="horti-spark" id="hs-maca-ar"></canvas>
             <div class="horti-icon">🍎</div>
             <div class="horti-name">MAÇÃ (Patagônia)</div>
             <div class="horti-region">AR — Rio Negro, Neuquén</div>
-            <div class="horti-vol" id="hv-maca-ar">0.9 Mt</div>
-            <div class="horti-price" id="hp-maca-ar">US$ 0,31/kg</div>
-            <div class="horti-delta ok" id="hd-maca-ar">▲ +2.1% — Colheita em curso</div>
-            <div class="horti-ndvi" id="hn-maca-ar">NDVI: 0.70 <span style="color:var(--accent2)">▲</span></div>
-            <div class="horti-status ok" id="hst-maca-ar">NORMAL</div>
+            <div class="horti-vol" id="hv-maca-ar">—</div>
+            <div class="horti-price" id="hp-maca-ar">carregando…</div>
+            <div class="horti-delta" id="hd-maca-ar">—</div>
+            <div class="horti-ndvi" id="hn-maca-ar">NDVI: —</div>
+            <div class="horti-status" id="hst-maca-ar">—</div>
           </div>
         </div>
       </div>
@@ -6410,45 +6406,49 @@ function initHortiSparks() {
 }
 setTimeout(initHortiSparks, 200);
 
+// updateHorti: apenas mantém os sparklines sincronizados com preços reais.
+// Sem simulação — preços vêm exclusivamente de APIs reais (_updateHortiPrices).
 function updateHorti() {
   Object.entries(hortiState).forEach(([k, h]) => {
-    // price fluctuation
-    const pChange = (Math.random()-.48) * h.price * 0.008;
-    h.price = Math.max(h.price * 0.9, Math.min(h.price * 1.1, h.price + pChange));
-    h.dir = pChange > 0 ? 1 : -1;
-
-    // ndvi slight drift
-    const ndviNoise = (Math.random()-.5) * 0.004;
-    h.ndvi = Math.max(0.2, Math.min(0.85, h.ndvi + ndviNoise));
-
-    // update DOM price
-    const priceEl = document.getElementById('hp-' + k);
-    if (priceEl) {
-      const fmt = h.price >= 10 ? h.price.toFixed(2).replace('.',',') : h.price.toFixed(2).replace('.',',');
-      priceEl.textContent = 'R$ ' + fmt + '/' + h.unit;
-      priceEl.style.color = h.dir > 0 ? 'var(--accent2)' : 'var(--danger)';
-    }
-
-    // update ndvi
-    const ndviEl = document.getElementById('hn-' + k);
-    if (ndviEl) {
-      const arr = h.ndvi < 0.45 ? '<span style="color:var(--danger)">▼▼</span>'
-                : h.ndvi < 0.55 ? '<span style="color:var(--warn)">▼</span>'
-                : h.ndvi > 0.65 ? '<span style="color:var(--accent2)">▲</span>'
-                : '<span style="color:var(--text2)">—</span>';
-      ndviEl.innerHTML = 'NDVI: ' + h.ndvi.toFixed(2) + ' ' + arr;
-    }
-
-    // push sparkline
+    if (!h._realPrice) return; // só atualiza sparkline se há dado real
     if (hortiSparks[k]) {
       hortiSparkData[k].shift();
-      hortiSparkData[k].push(h.price);
+      hortiSparkData[k].push(h._realPrice);
       hortiSparks[k].data.datasets[0].data = [...hortiSparkData[k]];
       hortiSparks[k].update('none');
     }
   });
 }
-setInterval(updateHorti, 4000);
+setInterval(updateHorti, 30000); // 30s — só roda se há dado real
+
+// Popula a faixa de alertas com dados reais da API
+async function _loadAlertsStrip() {
+  const strip = document.getElementById('alerts-strip-scroll');
+  if (!strip) return;
+  try {
+    const [evRes, alertRes] = await Promise.all([
+      fetch('/api/nias/brain/events?limit=8', { cache:'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/flv/alerts?severity=all', { cache:'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    const events = evRes?.data?.events || [];
+    const alerts = alertRes?.alerts || alertRes?.data || [];
+    const all = [
+      ...events.map(e => ({ text: e.titulo || e.title || '', sev: e.gravidade || 'info' })),
+      ...alerts.map(a => ({ text: a.titulo || a.title || a.message || '', sev: a.severity || a.severidade || 'info' })),
+    ].filter(x => x.text);
+    if (!all.length) {
+      strip.innerHTML = '<span class="alert-item" style="color:var(--accent2);">✓ Sem alertas críticos no momento — sistema operacional</span>';
+      return;
+    }
+    const sevColor = { critica:'var(--danger)', alta:'var(--warn)', critical:'var(--danger)', high:'var(--warn)' };
+    strip.innerHTML = all.map(a => {
+      const c = sevColor[a.sev] || 'var(--text2)';
+      return `<span class="alert-item" style="color:${c};">⚠ ${a.text}<span class="sep">|</span></span>`;
+    }).join('');
+  } catch(e) {
+    strip.innerHTML = '<span class="alert-item" style="color:var(--text2);">⬡ Conectando ao sistema de alertas…</span>';
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // 1. PHENOLOGICAL ENGINE — Anti-False-Alarm NDVI Logic
@@ -11842,6 +11842,8 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData) {
       priceEl.textContent = `R$ ${price.toFixed(2)}/${cfg.unit}`;
       priceEl.classList.add('val-flash');
       setTimeout(() => priceEl.classList.remove('val-flash'), 500);
+      // Registra preço real para sparkline (sem simulação)
+      if (typeof hortiState !== 'undefined' && hortiState[key]) hortiState[key]._realPrice = price;
     }
     if (srcEl) {
       srcEl.textContent = `Fonte: ${source}`;
@@ -13493,6 +13495,7 @@ const NiasClimateFrontend = {
     _pulsoLastLoad = now;
 
     // Carregar pulse + events + decisions em paralelo
+    _loadAlertsStrip();
     Promise.all([
       fetch('/api/nias/brain/pulse', { cache: 'no-store' }).then(r => r.json()).catch(() => null),
       fetch('/api/nias/brain/events?limit=5', { cache: 'no-store' }).then(r => r.json()).catch(() => null),
