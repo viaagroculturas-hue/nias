@@ -231,6 +231,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             from flv.api.routes import handle_flv
             handle_flv(self, self.path)
             return
+        if self.path.startswith('/api/nias/'):
+            from flv.nias_api.router import handle_nias_api_post
+            handle_nias_api_post(self, self.path)
+            return
         if self.path.startswith('/proxy/'):
             self._proxy('POST')
         else:

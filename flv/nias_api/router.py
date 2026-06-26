@@ -10,6 +10,36 @@ from flv.nias_api import API_VERSION, API_NAME
 from flv.nias_api import responses as R
 
 
+def handle_nias_api_post(handler, raw_path: str):
+    """Entry point para POST /api/nias/* (apenas brain/command por enquanto)."""
+    import json as _json
+    from urllib.parse import urlparse as _up
+    parsed = _up(raw_path)
+    path = parsed.path.replace('/api/nias/', '').rstrip('/')
+
+    try:
+        length = int(handler.headers.get('Content-Length', 0))
+        body = _json.loads(handler.rfile.read(length)) if length else {}
+    except Exception:
+        body = {}
+
+    try:
+        if path == 'brain/command':
+            result = _brain_command(body)
+        else:
+            result = R.error(f'POST /api/nias/{path} não suportado.')
+        status_code = 200
+    except Exception as e:
+        result = R.error(str(e), details='Erro interno no NIAS API Brain')
+        status_code = 500
+
+    handler.send_response(status_code)
+    handler.send_header('Access-Control-Allow-Origin', '*')
+    handler.send_header('Content-Type', 'application/json')
+    handler.end_headers()
+    handler.wfile.write(_json.dumps(result, ensure_ascii=False, default=str).encode())
+
+
 def handle_nias_api(handler, raw_path: str):
     """Entry point chamado pelo server.py para /api/nias/*."""
     parsed = urlparse(raw_path)
@@ -109,6 +139,22 @@ def _dispatch(path: str, params: dict) -> dict:
         return _advisor_country(params)
     if path == 'advisor/region':
         return _advisor_region(params)
+
+    # Brain (Cérebro NIAS — Inteligência Viva)
+    if path in ('brain', 'brain/summary'):
+        return _brain_summary()
+    if path == 'brain/pulse':
+        return _brain_pulse()
+    if path == 'brain/events':
+        return _brain_events(params)
+    if path == 'brain/decisions':
+        return _brain_decisions(params)
+    if path == 'brain/radar':
+        return _brain_radar()
+    if path == 'brain/thesis':
+        return _brain_thesis(params)
+    if path == 'brain/quality':
+        return _brain_quality()
 
     # 404
     return R.error(
@@ -1039,6 +1085,199 @@ def _advisor_region(params: dict):
         sources=['Open-Meteo', 'CONAB/PROHORT'],
         confidence='media',
     )
+
+
+# ─── BRAIN (Cérebro NIAS) ─────────────────────────────────────────
+
+def _brain_conn():
+    import sqlite3
+    from flv.paths import get_db_path
+    conn = sqlite3.connect(str(get_db_path()), check_same_thread=False, timeout=10)
+    conn.row_factory = sqlite3.Row
+    try:
+        from flv.db_migration import ensure_runtime_schema
+        ensure_runtime_schema(conn)
+    except Exception:
+        pass
+    return conn
+
+
+def _brain_pulse():
+    conn = _brain_conn()
+    try:
+        from flv.brain_engine import get_brain
+        engine = get_brain(conn)
+        pulse  = engine.generate_system_pulse()
+    finally:
+        conn.close()
+    return R.ok(pulse, sources=['NIAS Brain'], confidence='alta')
+
+
+def _brain_events(params: dict):
+    conn = _brain_conn()
+    try:
+        from flv.brain_engine import get_brain
+        engine = get_brain(conn)
+        events = engine.generate_live_events()
+        country = (params.get('country', ['']) or [''])[0].upper()
+        if country:
+            events = [e for e in events if e.get('pais') == country]
+        gravity = (params.get('gravity', ['']) or [''])[0]
+        if gravity:
+            events = [e for e in events if e.get('gravidade') == gravity]
+    finally:
+        conn.close()
+
+    return R.ok(
+        {
+            'events': events,
+            'total':  len(events),
+            'country': country if country else None,
+            'timestamp': datetime.now().isoformat(),
+        },
+        sources=['Open-Meteo', 'NIAS SA Prices'],
+        confidence='alta' if events else 'media',
+    )
+
+
+def _brain_decisions(params: dict):
+    conn = _brain_conn()
+    try:
+        from flv.brain_engine import get_brain
+        engine  = get_brain(conn)
+        cards   = engine.generate_decision_cards()
+        country = (params.get('country', ['']) or [''])[0].upper()
+        tipo    = (params.get('tipo',    ['']) or [''])[0]
+        if country:
+            cards = [c for c in cards if c.get('pais') == country]
+        if tipo:
+            cards = [c for c in cards if c.get('tipo') == tipo]
+    finally:
+        conn.close()
+
+    return R.ok(
+        {
+            'decisions': cards,
+            'total':     len(cards),
+            'country':   country if country else None,
+            'tipo':      tipo if tipo else None,
+            'timestamp': datetime.now().isoformat(),
+            'note': (
+                'Cada decisão inclui validade e gatilhos de invalidação. '
+                'Tipo "monitorar" indica ausência de preço local — não é recomendação de ação.'
+            ),
+        },
+        sources=['Open-Meteo', 'CONAB/PROHORT', 'NIAS SA Prices'],
+        confidence='media',
+    )
+
+
+def _brain_radar():
+    conn = _brain_conn()
+    try:
+        from flv.brain_engine import get_brain
+        engine = get_brain(conn)
+        radar  = engine.generate_temporal_radar()
+    finally:
+        conn.close()
+    return R.ok(radar, sources=['Open-Meteo', 'NIAS Brain'], confidence='media')
+
+
+def _brain_thesis(params: dict):
+    product = (params.get('product', ['']) or [''])[0]
+    country = (params.get('country', ['']) or [''])[0].upper()
+    region  = (params.get('region',  ['']) or [''])[0]
+
+    conn = _brain_conn()
+    try:
+        from flv.brain_engine import get_brain
+        engine = get_brain(conn)
+        thesis = engine.generate_thesis(product=product, country=country, region=region)
+    finally:
+        conn.close()
+
+    conf = 'alta' if thesis.get('has_price') and thesis.get('has_climate') else 'media'
+    return R.ok(thesis, sources=thesis.get('fontes', ['NIAS Brain']), confidence=conf)
+
+
+def _brain_quality():
+    conn = _brain_conn()
+    try:
+        from flv.brain_engine import get_brain
+        engine  = get_brain(conn)
+        quality = engine.evaluate_data_quality()
+        changes = engine.detect_changes()
+    finally:
+        conn.close()
+    return R.ok(
+        {'quality': quality, 'changes': changes, 'timestamp': datetime.now().isoformat()},
+        sources=['NIAS Brain'],
+        confidence='alta',
+    )
+
+
+def _brain_summary():
+    conn = _brain_conn()
+    try:
+        from flv.brain_engine import get_brain
+        engine  = get_brain(conn)
+        pulse   = engine.generate_system_pulse()
+        events  = engine.generate_live_events()
+        cards   = engine.generate_decision_cards()
+        changes = engine.detect_changes()
+        quality = engine.evaluate_data_quality()
+    finally:
+        conn.close()
+
+    n_crit = sum(1 for e in events if e.get('gravidade') == 'critica')
+    n_high = sum(1 for e in events if e.get('gravidade') == 'alta')
+
+    return R.ok(
+        {
+            'scope':          'south_america',
+            'health':         pulse['health'],
+            'timestamp':      datetime.now().isoformat(),
+            'pulse':          pulse,
+            'events_summary': {
+                'total':     len(events),
+                'criticos':  n_crit,
+                'altos':     n_high,
+                'top3':      events[:3],
+            },
+            'decisions_summary': {
+                'total':   len(cards),
+                'alertas': sum(1 for c in cards if c.get('tipo') == 'alerta'),
+                'comprar': sum(1 for c in cards if c.get('tipo') in ('comprar', 'antecipar_compra')),
+                'monitorar': sum(1 for c in cards if c.get('tipo') == 'monitorar'),
+                'top3':    cards[:3],
+            },
+            'changes':  changes,
+            'quality':  quality,
+            'note': (
+                'Resumo do Cérebro NIAS. Todos os dados são reais — sem projeções inventadas. '
+                'Para análise detalhada: /api/nias/brain/events, /decisions, /radar, /thesis.'
+            ),
+        },
+        sources=['Open-Meteo', 'CONAB/PROHORT', 'NIAS SA Prices'],
+        confidence=pulse.get('sources', {}).get('clima_sa', {}).get('status', 'media'),
+    )
+
+
+def _brain_command(body: dict):
+    command = (body.get('command') or body.get('cmd') or '').strip()
+    if not command:
+        return R.error(
+            'Informe o campo "command" no body JSON.',
+            details='Exemplo: {"command": "alerta AR"} ou {"command": "tese tomate CL"}'
+        )
+    conn = _brain_conn()
+    try:
+        from flv.brain_engine import get_brain
+        engine = get_brain(conn)
+        result = engine.process_command(command)
+    finally:
+        conn.close()
+    return R.ok(result, sources=['NIAS Brain'], confidence='media')
 
 
 def _docs():

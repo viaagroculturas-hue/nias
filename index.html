@@ -764,7 +764,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
     <button class="nav-btn" onclick="showPanel('situation')" title="Situation Real" style="border-left:3px solid #ff6b35 !important;"><span>🎯</span><span class="nav-label">SITUATION</span></button>
     <button class="nav-btn" onclick="showPanel('advisor')" title="Conselheiro NIAS" style="border-left:3px solid #22c55e !important;"><span>🧠</span><span class="nav-label">CONSELHEIRO</span></button>
     <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="showPanel('chat')" title="IA e Auditoria"><span>◉</span><span class="nav-label">IA/AUDITORIA</span></button>
+    <button class="nav-btn" onclick="showPanel('brain')" title="Cérebro NIAS — Inteligência Viva" style="border-left:3px solid #8b5cf6 !important;"><span>◉</span><span class="nav-label">CÉREBRO NIAS</span></button>
     <div style="flex:1"></div>
     <button class="nav-btn" onclick="toggleSidebar()" title="Expandir"><span id="sb-icon">»</span></button>
   </div>
@@ -2551,6 +2551,96 @@ tr:hover td{background:rgba(0,212,255,.04);}
 
     </div>
 
+    <!-- CÉREBRO NIAS — Inteligência Viva da América do Sul              -->
+    <!-- ================================================================ -->
+    <div class="panel" id="panel-brain" style="background:#07070f;flex-direction:column;overflow-y:auto;">
+      <div class="panel-header" style="background:#0d0d1a;border-bottom:1px solid #2d1f6e;flex-shrink:0;">
+        <span class="panel-title" style="color:#a78bfa;">◉ CÉREBRO NIAS — INTELIGÊNCIA VIVA DA AMÉRICA DO SUL</span>
+        <span class="panel-badge" id="brain-health-badge" style="background:#1a0a3a;color:#a78bfa;border:1px solid #4c1d95;">CARREGANDO</span>
+        <span class="panel-badge" id="brain-ts" style="color:var(--text2);background:transparent;border:none;font-size:9px;"></span>
+        <button class="ia-run-btn" onclick="loadBrain(true)" style="margin-left:auto;background:#3b0764;color:#e9d5ff;border:1px solid #7c3aed;">ATUALIZAR</button>
+      </div>
+
+      <!-- ── Linha superior: Pulso + Cobertura ── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px 4px;flex-shrink:0;" id="brain-pulse-row">
+        <div style="background:#0d0d1a;border:1px solid #2d1f6e;border-radius:6px;padding:10px;">
+          <div style="font-size:9px;letter-spacing:2px;color:#7c3aed;margin-bottom:6px;">PULSO DO SISTEMA</div>
+          <div id="brain-pulse-sources" style="display:flex;flex-direction:column;gap:4px;">
+            <div style="color:var(--text2);font-size:10px;">Carregando...</div>
+          </div>
+        </div>
+        <div style="background:#0d0d1a;border:1px solid #2d1f6e;border-radius:6px;padding:10px;">
+          <div style="font-size:9px;letter-spacing:2px;color:#7c3aed;margin-bottom:6px;">COBERTURA NIAS</div>
+          <div id="brain-coverage" style="display:flex;flex-direction:column;gap:4px;">
+            <div style="color:var(--text2);font-size:10px;">Carregando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── O que o NIAS está vendo agora ── -->
+      <div style="padding:4px 12px 0;flex-shrink:0;">
+        <div style="font-size:9px;letter-spacing:2px;color:#7c3aed;margin-bottom:6px;margin-top:4px;">O QUE O NIAS ESTÁ VENDO AGORA</div>
+        <div id="brain-events-list" style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;">
+          <div style="color:var(--text2);font-size:10px;">Carregando eventos...</div>
+        </div>
+      </div>
+
+      <!-- ── Cartões de Decisão ── -->
+      <div style="padding:8px 12px 0;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <div style="font-size:9px;letter-spacing:2px;color:#7c3aed;">CARTÕES DE DECISÃO</div>
+          <div style="display:flex;gap:4px;">
+            <button class="quick-btn" onclick="brainFilterCards('all')" id="bcard-all" style="font-size:9px;padding:2px 7px;background:#1a0a3a;border-color:#7c3aed;color:#a78bfa;">TODOS</button>
+            <button class="quick-btn" onclick="brainFilterCards('alerta')" id="bcard-alerta" style="font-size:9px;padding:2px 7px;">ALERTA</button>
+            <button class="quick-btn" onclick="brainFilterCards('comprar')" id="bcard-comprar" style="font-size:9px;padding:2px 7px;">COMPRAR</button>
+            <button class="quick-btn" onclick="brainFilterCards('monitorar')" id="bcard-monitorar" style="font-size:9px;padding:2px 7px;">MONITORAR</button>
+          </div>
+          <span id="brain-cards-count" style="font-size:9px;color:var(--text2);margin-left:auto;"></span>
+        </div>
+        <div id="brain-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;max-height:300px;overflow-y:auto;">
+          <div style="color:var(--text2);font-size:10px;">Carregando cartões...</div>
+        </div>
+      </div>
+
+      <!-- ── Radar Temporal ── -->
+      <div style="padding:8px 12px 0;flex-shrink:0;">
+        <div style="font-size:9px;letter-spacing:2px;color:#7c3aed;margin-bottom:6px;">RADAR TEMPORAL</div>
+        <div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap;">
+          <button class="quick-btn" id="radar-agora" onclick="showRadarHorizon('agora')" style="font-size:9px;padding:2px 8px;background:#1a0a3a;border-color:#7c3aed;color:#a78bfa;">AGORA</button>
+          <button class="quick-btn" id="radar-24h"   onclick="showRadarHorizon('24h')"  style="font-size:9px;padding:2px 8px;">24H</button>
+          <button class="quick-btn" id="radar-48h"   onclick="showRadarHorizon('48h')"  style="font-size:9px;padding:2px 8px;">48H</button>
+          <button class="quick-btn" id="radar-3d"    onclick="showRadarHorizon('3d')"   style="font-size:9px;padding:2px 8px;">3D</button>
+          <button class="quick-btn" id="radar-7d"    onclick="showRadarHorizon('7d')"   style="font-size:9px;padding:2px 8px;">7D</button>
+          <button class="quick-btn" id="radar-15d"   onclick="showRadarHorizon('15d')"  style="font-size:9px;padding:2px 8px;">15D</button>
+          <button class="quick-btn" id="radar-30d"   onclick="showRadarHorizon('30d')"  style="font-size:9px;padding:2px 8px;">30D</button>
+        </div>
+        <div id="brain-radar-view" style="background:#0d0d1a;border:1px solid #2d1f6e;border-radius:6px;padding:10px;min-height:80px;">
+          <div style="color:var(--text2);font-size:10px;">Selecione um horizonte.</div>
+        </div>
+      </div>
+
+      <!-- ── Comando Estratégico ── -->
+      <div style="padding:8px 12px 12px;flex-shrink:0;margin-top:4px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#7c3aed;margin-bottom:5px;">COMANDO ESTRATÉGICO</div>
+        <div style="font-size:9px;color:var(--text2);margin-bottom:6px;line-height:1.4;">
+          Não é chat. Retorna análise estruturada com dados reais.<br>
+          Exemplos: <code style="color:#a78bfa;">alerta AR</code> · <code style="color:#a78bfa;">tese tomate CL</code> · <code style="color:#a78bfa;">clima PE</code> · <code style="color:#a78bfa;">pulse</code> · <code style="color:#a78bfa;">comprar</code>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-start;">
+          <textarea id="brain-cmd-input" rows="2" placeholder="Digite o comando..." style="flex:1;background:#0d0d1a;border:1px solid #4c1d95;border-radius:5px;padding:7px 10px;color:var(--text);font-family:var(--font);font-size:11px;outline:none;resize:none;" onkeydown="if(event.ctrlKey&&event.key==='Enter'){sendBrainCommand();}"></textarea>
+          <button onclick="sendBrainCommand()" style="background:#3b0764;color:#e9d5ff;border:1px solid #7c3aed;border-radius:5px;padding:7px 12px;font-size:10px;cursor:pointer;white-space:nowrap;">EXECUTAR<br><span style="font-size:8px;opacity:0.7;">Ctrl+Enter</span></button>
+        </div>
+        <div id="brain-cmd-result" style="margin-top:8px;"></div>
+      </div>
+
+      <!-- ── Auditoria detalhada (colapsada) ── -->
+      <div style="padding:0 12px 12px;flex-shrink:0;">
+        <button onclick="showPanel('chat')" style="background:transparent;border:1px solid #2d1f6e;color:var(--text2);font-size:9px;padding:4px 10px;border-radius:4px;cursor:pointer;letter-spacing:1px;">
+          ▶ VER AUDITORIA DETALHADA / IA CHAT
+        </button>
+      </div>
+    </div>
+
     <div class="panel" id="panel-chat">
       <div class="panel-header">
         <span class="panel-title">ASSISTENTE DE DECISÃO — NIA$ IA</span>
@@ -3103,6 +3193,8 @@ function showPanel(id) {
     if (id === 'esg' && !window._esgInit) { try { initESG(); } catch(e) { console.error('esg init error:', e); } }
     if (id === 'warroom' && !window._warInit) { try { initWarRoom(); } catch(e) { console.error('warroom init error:', e); } }
     if (id === 'warroom') setTimeout(() => { try { WarRoomProtocol.refresh(); } catch(e) { console.error('warroom refresh error:', e); } }, 200);
+    if (id === 'brain' && !window._brainInit) { try { initBrainPanel(); } catch(e) { console.error('brain init error:', e); } }
+    if (id === 'brain') { try { loadBrain(false); } catch(e) { console.error('brain load error:', e); } }
     if (id === 'chat' && !window._chatInit) { try { initChatIA(); runSystemAudit(false); } catch(e) { console.error('chat init error:', e); } }
     if (id === 'situation') {
       setTimeout(() => {
@@ -12267,6 +12359,367 @@ const NiasClimateFrontend = {
       loadAdvisor(false);
     }
   };
+
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CÉREBRO NIAS — JavaScript do panel-brain
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  var _brainData = { pulse: null, events: [], cards: [], radar: null };
+  var _brainActiveFilter = 'all';
+  var _brainActiveHorizon = 'agora';
+  var _brainLoading = false;
+
+  var GRAVITY_COLOR = {
+    critica: '#ef4444',
+    alta:    '#f97316',
+    warn:    '#eab308',
+    info:    '#22c55e',
+  };
+  var TIPO_COLOR = {
+    alerta:           '#ef4444',
+    comprar:          '#22c55e',
+    antecipar_compra: '#22c55e',
+    vender:           '#3b82f6',
+    monitorar:        '#6b7280',
+  };
+
+  window.initBrainPanel = function() {
+    window._brainInit = true;
+  };
+
+  window.loadBrain = function(force) {
+    if (_brainLoading && !force) return;
+    _brainLoading = true;
+
+    Promise.all([
+      fetch('/api/nias/brain/pulse').then(r => r.json()).catch(() => null),
+      fetch('/api/nias/brain/events').then(r => r.json()).catch(() => null),
+      fetch('/api/nias/brain/decisions').then(r => r.json()).catch(() => null),
+      fetch('/api/nias/brain/radar').then(r => r.json()).catch(() => null),
+    ]).then(function(results) {
+      _brainLoading = false;
+      var pulse   = results[0] && results[0].data;
+      var evData  = results[1] && results[1].data;
+      var decData = results[2] && results[2].data;
+      var radData = results[3] && results[3].data;
+
+      _brainData.pulse  = pulse;
+      _brainData.events = (evData  && evData.events)    || [];
+      _brainData.cards  = (decData && decData.decisions) || [];
+      _brainData.radar  = radData || null;
+
+      _renderPulse(pulse);
+      _renderEvents(_brainData.events);
+      _renderCards(_brainData.cards, _brainActiveFilter);
+      if (_brainData.radar) showRadarHorizon(_brainActiveHorizon);
+
+      var ts = document.getElementById('brain-ts');
+      if (ts) ts.textContent = new Date().toLocaleTimeString('pt-BR');
+    }).catch(function(e) {
+      _brainLoading = false;
+      console.error('[Brain] load error:', e);
+    });
+  };
+
+  function _renderPulse(pulse) {
+    if (!pulse) return;
+
+    // Health badge
+    var badge = document.getElementById('brain-health-badge');
+    if (badge) {
+      var h = pulse.health || 'desconhecido';
+      var hColors = { saudavel:'#22c55e', ok:'#22c55e', atencao:'#eab308', degradado:'#ef4444', desconhecido:'#6b7280' };
+      badge.textContent = h.toUpperCase();
+      badge.style.color = hColors[h] || '#a78bfa';
+      badge.style.borderColor = hColors[h] || '#a78bfa';
+    }
+
+    // Sources
+    var srcsEl = document.getElementById('brain-pulse-sources');
+    if (!srcsEl || !pulse.sources) return;
+    var srcs = pulse.sources;
+    var statusIcon = { ok:'●', warn:'◐', stale:'○', missing:'✕' };
+    var statusColor = { ok:'#22c55e', warn:'#eab308', stale:'#f97316', missing:'#ef4444' };
+
+    srcsEl.innerHTML = Object.values(srcs).map(function(s) {
+      var ic = statusIcon[s.status] || '○';
+      var cl = statusColor[s.status] || '#6b7280';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;">' +
+        '<span style="color:var(--text2);">' + escapeHtml(s.label || '') + '</span>' +
+        '<span style="color:' + cl + ';white-space:nowrap;margin-left:6px;">' + ic + ' ' + escapeHtml(s.freshness || s.status || '') + '</span>' +
+      '</div>';
+    }).join('');
+
+    // Coverage
+    var covEl = document.getElementById('brain-coverage');
+    if (!covEl || !pulse.coverage) return;
+    var cov  = pulse.coverage;
+    var recs = pulse.recommendations || {};
+    covEl.innerHTML =
+      '<div style="display:flex;justify-content:space-between;font-size:10px;"><span style="color:var(--text2);">Polos climáticos</span><span style="color:#a78bfa;">' + (cov.weather_poles || 0) + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:10px;"><span style="color:var(--text2);">Países com clima</span><span style="color:#a78bfa;">' + (cov.weather_countries || 0) + '/9</span></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:10px;"><span style="color:var(--text2);">Países com preço</span><span style="color:#a78bfa;">' + (cov.price_countries || 0) + '/9</span></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px;border-top:1px solid #2d1f6e;padding-top:4px;">' +
+        '<span style="color:#ef4444;">Alertas</span><span style="color:#ef4444;">' + (recs.alertas || 0) + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:10px;">' +
+        '<span style="color:#22c55e;">Comprar</span><span style="color:#22c55e;">' + (recs.comprar || 0) + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:10px;">' +
+        '<span style="color:var(--text2);">Monitorar</span><span style="color:var(--text2);">' + (recs.monitorar || 0) + '</span></div>';
+  }
+
+  function _renderEvents(events) {
+    var el = document.getElementById('brain-events-list');
+    if (!el) return;
+    if (!events || !events.length) {
+      el.innerHTML = '<div style="color:var(--text2);font-size:10px;">Sem eventos detectados no momento.</div>';
+      return;
+    }
+    el.innerHTML = events.map(function(ev) {
+      var gc  = GRAVITY_COLOR[ev.gravidade] || '#6b7280';
+      var ts  = (ev.timestamp || '').substring(0,16).replace('T',' ');
+      var reg = ev.regiao ? ' · ' + escapeHtml(ev.regiao) : '';
+      return '<div style="background:#0d0d1a;border:1px solid #1e1a3a;border-left:3px solid ' + gc + ';border-radius:5px;padding:7px 10px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<span style="font-size:10px;font-weight:600;color:' + gc + ';">' + escapeHtml(ev.titulo || '') + '</span>' +
+          '<span style="font-size:9px;color:var(--text2);">' + escapeHtml(ev.pais_nome || ev.pais || '') + escapeHtml(reg) + '</span>' +
+        '</div>' +
+        '<div style="font-size:9px;color:var(--text2);margin-top:3px;line-height:1.4;">' + escapeHtml(ev.descricao || '') + '</div>' +
+        (ev.acao ? '<div style="font-size:9px;color:#a78bfa;margin-top:3px;">→ ' + escapeHtml(ev.acao) + '</div>' : '') +
+        '<div style="font-size:8px;color:#3d3460;margin-top:3px;">' + escapeHtml(ts) + ' · ' + escapeHtml(ev.fonte || '') + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function _renderCards(cards, filter) {
+    var el    = document.getElementById('brain-cards-grid');
+    var count = document.getElementById('brain-cards-count');
+    if (!el) return;
+
+    var filtered = cards.filter(function(c) {
+      if (filter === 'all' || !filter) return true;
+      if (filter === 'comprar') return c.tipo === 'comprar' || c.tipo === 'antecipar_compra';
+      return c.tipo === filter;
+    });
+
+    if (count) count.textContent = filtered.length + ' cartão(ões)';
+
+    if (!filtered.length) {
+      el.innerHTML = '<div style="color:var(--text2);font-size:10px;padding:10px;">Nenhum cartão para o filtro selecionado.</div>';
+      return;
+    }
+
+    el.innerHTML = filtered.map(function(c) {
+      var tc  = TIPO_COLOR[c.tipo] || '#6b7280';
+      var inv = (c.invalida_se || []).slice(0,2);
+      var ds  = (c.dados_usados || []).slice(0,2);
+      var hasPrice = c.has_price;
+
+      return '<div style="background:#0d0d1a;border:1px solid #1e1a3a;border-top:2px solid ' + tc + ';border-radius:6px;padding:10px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">' +
+          '<span style="font-size:9px;font-weight:700;color:' + tc + ';letter-spacing:1px;">' + (c.tipo || '').toUpperCase() + '</span>' +
+          '<span style="font-size:9px;color:#a78bfa;background:#1a0a3a;padding:1px 5px;border-radius:3px;">' + escapeHtml(c.pais || '') + ' · ' + (c.score || 0) + 'pts</span>' +
+        '</div>' +
+        '<div style="font-size:10px;font-weight:600;color:var(--text);margin-bottom:4px;">' + escapeHtml(c.titulo || '') + '</div>' +
+        '<div style="font-size:9px;color:var(--text2);line-height:1.4;margin-bottom:5px;">' + escapeHtml((c.justificativa || c.tese || '').substring(0,120)) + (((c.justificativa || '').length > 120) ? '…' : '') + '</div>' +
+        (c.acao_recomendada ? '<div style="font-size:9px;color:#a78bfa;margin-bottom:4px;">→ ' + escapeHtml(c.acao_recomendada) + '</div>' : '') +
+        '<div style="border-top:1px solid #1e1a3a;margin-top:5px;padding-top:5px;font-size:8px;color:var(--text2);">' +
+          '<div style="color:#3d3460;margin-bottom:2px;">Válido até: ' + escapeHtml(c.validade_ate || '') + ' (' + escapeHtml(c.validade_label || '') + ')</div>' +
+          (inv.length ? '<div>Invalida se: ' + escapeHtml(inv.join('; ')) + '</div>' : '') +
+          (!hasPrice ? '<div style="color:#eab308;margin-top:2px;">⚠ Sem preço local — tipo máx: monitorar</div>' : '') +
+          (c.cenario_contrario ? '<div style="color:#6b7280;margin-top:2px;font-style:italic;">Contrário: ' + escapeHtml(c.cenario_contrario.substring(0,80)) + '…</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  window.brainFilterCards = function(filter) {
+    _brainActiveFilter = filter;
+    document.querySelectorAll('[id^="bcard-"]').forEach(function(b) {
+      b.style.background = '';
+      b.style.borderColor = '';
+      b.style.color = '';
+    });
+    var active = document.getElementById('bcard-' + filter);
+    if (active) {
+      active.style.background = '#1a0a3a';
+      active.style.borderColor = '#7c3aed';
+      active.style.color = '#a78bfa';
+    }
+    _renderCards(_brainData.cards, filter);
+  };
+
+  window.showRadarHorizon = function(horizon) {
+    _brainActiveHorizon = horizon;
+
+    document.querySelectorAll('[id^="radar-"]').forEach(function(b) {
+      b.style.background = '';
+      b.style.borderColor = '';
+      b.style.color = '';
+    });
+    var active = document.getElementById('radar-' + horizon);
+    if (active) {
+      active.style.background = '#1a0a3a';
+      active.style.borderColor = '#7c3aed';
+      active.style.color = '#a78bfa';
+    }
+
+    var el = document.getElementById('brain-radar-view');
+    if (!el) return;
+
+    if (!_brainData.radar || !_brainData.radar.radar) {
+      el.innerHTML = '<div style="color:var(--text2);font-size:10px;">Dados de radar não disponíveis.</div>';
+      return;
+    }
+
+    var h = _brainData.radar.radar[horizon];
+    if (!h) {
+      el.innerHTML = '<div style="color:var(--text2);font-size:10px;">Horizonte não disponível.</div>';
+      return;
+    }
+
+    var riskColors = { critico:'#ef4444', alto:'#f97316', elevado:'#eab308', moderado:'#3b82f6', baixo:'#22c55e' };
+    var rc = riskColors[h.risk_level] || '#6b7280';
+    var countries = (h.countries_at_risk || []).join(', ') || 'nenhum';
+    var confPct   = Math.round((h.confidence_mult || 0) * 100);
+
+    el.innerHTML = '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">' +
+      '<div style="font-size:24px;font-weight:700;color:' + rc + ';">' + (h.risk_level || '?').toUpperCase() + '</div>' +
+      '<div>' +
+        '<div style="font-size:9px;color:var(--text2);">Horizonte: <span style="color:#a78bfa;">' + escapeHtml(horizon) + '</span></div>' +
+        '<div style="font-size:9px;color:var(--text2);">Países em risco: <span style="color:' + rc + ';">' + escapeHtml(countries) + '</span></div>' +
+        '<div style="font-size:9px;color:var(--text2);">Confiança: <span style="color:#a78bfa;">' + confPct + '%</span></div>' +
+      '</div>' +
+    '</div>' +
+    (h.events && h.events.length ? '<div style="margin-bottom:6px;">' + h.events.slice(0,3).map(function(ev) {
+      var gc = GRAVITY_COLOR[ev.gravidade] || '#6b7280';
+      return '<div style="font-size:9px;color:var(--text2);border-left:2px solid ' + gc + ';padding-left:6px;margin-bottom:3px;">' +
+        escapeHtml(ev.titulo || '') + ' — ' + escapeHtml(ev.pais_nome || ev.pais || '') +
+      '</div>';
+    }).join('') + '</div>' : '') +
+    '<div style="font-size:8px;color:#3d3460;font-style:italic;">' + escapeHtml(h.note || '') + '</div>' +
+    (h.events && !h.events.length && horizon !== 'agora' ?
+      '<div style="font-size:9px;color:var(--text2);">Sem eventos específicos projetados para este horizonte.<br>Use dados climáticos atuais como referência.</div>' : '');
+  };
+
+  window.sendBrainCommand = function() {
+    var input = document.getElementById('brain-cmd-input');
+    var result = document.getElementById('brain-cmd-result');
+    if (!input || !result) return;
+
+    var cmd = input.value.trim();
+    if (!cmd) return;
+
+    result.innerHTML = '<div style="color:#a78bfa;font-size:10px;">Processando comando...</div>';
+
+    fetch('/api/nias/brain/command', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({command: cmd})
+    }).then(function(r) { return r.json(); }).then(function(res) {
+      if (!res || res.status === 'error') {
+        result.innerHTML = '<div style="color:#ef4444;font-size:10px;">Erro: ' + escapeHtml((res && res.message) || 'Falha na requisição') + '</div>';
+        return;
+      }
+      var data = res.data || {};
+      var intent = data.intent || 'unknown';
+      var tipo   = data.tipo  || '';
+
+      result.innerHTML = _renderCommandResult(data, intent, tipo);
+    }).catch(function(e) {
+      result.innerHTML = '<div style="color:#ef4444;font-size:10px;">Erro de conexão: ' + escapeHtml(e.message || '') + '</div>';
+    });
+  };
+
+  function _renderCommandResult(data, intent, tipo) {
+    var html = '<div style="background:#0d0d1a;border:1px solid #2d1f6e;border-left:3px solid #7c3aed;border-radius:5px;padding:10px;margin-top:4px;">';
+    html += '<div style="font-size:9px;color:#a78bfa;letter-spacing:1px;margin-bottom:6px;">' + escapeHtml(tipo.toUpperCase().replace(/_/g,' ')) + '</div>';
+
+    if (intent === 'pulse') {
+      var pulse = data.resultado || {};
+      html += '<div style="font-size:10px;color:var(--text);">Saúde: <strong>' + escapeHtml(pulse.health || '?') + '</strong></div>';
+      var recs = pulse.recommendations || {};
+      html += '<div style="font-size:9px;color:var(--text2);margin-top:4px;">Alertas: ' + (recs.alertas||0) + ' · Comprar: ' + (recs.comprar||0) + ' · Monitorar: ' + (recs.monitorar||0) + '</div>';
+
+    } else if (intent === 'risks') {
+      var events = data.eventos || [];
+      html += '<div style="font-size:10px;color:#ef4444;margin-bottom:4px;">' + (data.total||0) + ' evento(s) de risco detectado(s)</div>';
+      events.slice(0,4).forEach(function(ev) {
+        var gc = GRAVITY_COLOR[ev.gravidade] || '#6b7280';
+        html += '<div style="font-size:9px;color:var(--text2);border-left:2px solid ' + gc + ';padding-left:6px;margin-bottom:3px;">' +
+          '<strong style="color:' + gc + ';">' + escapeHtml(ev.titulo||'') + '</strong> — ' + escapeHtml(ev.pais_nome||ev.pais||'') +
+          (ev.acao ? '<br><span style="color:#a78bfa;">→ ' + escapeHtml(ev.acao) + '</span>' : '') +
+        '</div>';
+      });
+
+    } else if (intent === 'opportunities') {
+      var cards = data.cards || [];
+      html += '<div style="font-size:10px;color:#22c55e;margin-bottom:4px;">' + (data.total||0) + ' oportunidade(s) com preço real</div>';
+      cards.slice(0,3).forEach(function(c) {
+        html += '<div style="font-size:9px;color:var(--text2);border-left:2px solid #22c55e;padding-left:6px;margin-bottom:3px;">' +
+          '<strong>' + escapeHtml(c.titulo||'') + '</strong> (' + escapeHtml(c.pais||'') + ' · ' + (c.score||0) + 'pts)<br>' +
+          escapeHtml((c.acao_recomendada||'').substring(0,80)) +
+        '</div>';
+      });
+      if (!cards.length) html += '<div style="font-size:9px;color:#eab308;">Sem oportunidades com preço local disponível. Execute o pipeline de preços.</div>';
+
+    } else if (intent === 'climate') {
+      var events2 = data.eventos || [];
+      html += '<div style="font-size:10px;color:#3b82f6;margin-bottom:4px;">' + (data.polos||0) + ' polo(s) monitorado(s) · ' + events2.length + ' evento(s) climático(s)</div>';
+      events2.slice(0,4).forEach(function(ev) {
+        var gc = GRAVITY_COLOR[ev.gravidade] || '#6b7280';
+        html += '<div style="font-size:9px;color:var(--text2);border-left:2px solid ' + gc + ';padding-left:6px;margin-bottom:2px;">' +
+          escapeHtml(ev.titulo||'') + ' · ' + escapeHtml(ev.regiao||'') +
+        '</div>';
+      });
+      if (!events2.length) html += '<div style="font-size:9px;color:#22c55e;">Nenhum evento climático extremo detectado.</div>';
+
+    } else if (intent === 'prices') {
+      var prices = data.precos || [];
+      html += '<div style="font-size:10px;color:var(--text);margin-bottom:4px;">' + (data.total||0) + ' registro(s) de preço</div>';
+      prices.slice(0,5).forEach(function(p) {
+        html += '<div style="font-size:9px;color:var(--text2);display:flex;justify-content:space-between;">' +
+          '<span>' + escapeHtml(p.product_normalized||p.product||'') + ' (' + escapeHtml(p.country_code||'') + ')</span>' +
+          '<span style="color:#a78bfa;">' + (p.price_per_kg||p.price||'?') + ' ' + escapeHtml(p.currency||'') + '/kg</span>' +
+        '</div>';
+      });
+      if (!prices.length) html += '<div style="font-size:9px;color:#eab308;">Sem preços disponíveis para o filtro. Execute o pipeline.</div>';
+
+    } else if (intent === 'thesis' || intent === 'summary') {
+      var thesis = data.tese || {};
+      if (thesis.status === 'sem_dado') {
+        html += '<div style="font-size:9px;color:#eab308;">' + escapeHtml(thesis.message||'Sem dados.') + '</div>';
+      } else {
+        html += '<div style="font-size:10px;color:var(--text);line-height:1.5;margin-bottom:4px;">' + escapeHtml(thesis.thesis||'') + '</div>';
+        if (thesis.climate_signals && thesis.climate_signals.length) {
+          html += '<div style="font-size:9px;color:#f97316;margin-top:4px;">Sinais: ' + escapeHtml(thesis.climate_signals.join(' · ')) + '</div>';
+        }
+        html += '<div style="font-size:8px;color:#3d3460;margin-top:4px;">Fontes: ' + escapeHtml((thesis.fontes||[]).join(', ')) + '</div>';
+      }
+
+    } else {
+      // resumo geral
+      var pulso = data.pulso || {};
+      var evSummary = data.eventos || {};
+      html += '<div style="font-size:10px;color:var(--text);">Saúde: <strong>' + escapeHtml(pulso.health||'?') + '</strong></div>';
+      html += '<div style="font-size:9px;color:var(--text2);margin-top:4px;">Eventos: ' + (evSummary.total||0) + ' (' + (evSummary.criticos||0) + ' críticos)</div>';
+      if (data.nota) html += '<div style="font-size:9px;color:#a78bfa;margin-top:4px;">' + escapeHtml(data.nota||'') + '</div>';
+    }
+
+    if (data.nota && intent !== 'unknown') {
+      html += '<div style="font-size:8px;color:#3d3460;margin-top:6px;font-style:italic;">' + escapeHtml(data.nota) + '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  // Expor para o hook de showPanel já existente
+  window._brainReady = true;
 
 })();
 </script>
