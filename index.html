@@ -2260,35 +2260,28 @@ tr:hover td{background:rgba(0,212,255,.04);}
 
     <!-- ═══ PANEL: WAR ROOM ═══ -->
     <div class="panel" id="panel-warroom">
-      <div class="panel-header"><span class="panel-title">🛡️ WAR ROOM — PROTOCOLO DE ALERTAS NIA$</span><span class="panel-badge" style="background:rgba(255,61,61,.2);color:#ff3d3d;border-color:#ff3d3d;">TEMPO REAL</span><span class="panel-badge" style="background:rgba(59,130,246,.1);color:#3B82F6;border-color:#3B82F6;">VFR + PE</span></div>
+      <div class="panel-header">
+        <span class="panel-title">🛡️ WAR ROOM — INTELIGÊNCIA AO VIVO</span>
+        <span class="panel-badge" style="background:rgba(255,61,61,.2);color:#ff3d3d;border-color:#ff3d3d;">● AO VIVO</span>
+        <span class="panel-badge" style="background:rgba(59,130,246,.1);color:#3B82F6;border-color:#3B82F6;">VFR · CLIMA · LOGÍSTICA</span>
+        <span id="wr-next-refresh" style="margin-left:auto;font-size:9px;color:var(--text2);letter-spacing:1px;"></span>
+      </div>
       <div style="flex:1;display:flex;overflow:hidden;">
-        <!-- LEFT: Protocol Feed -->
-        <div id="wr-protocol-feed" style="flex:1;overflow-y:auto;border-right:1px solid var(--border);">
-          <div style="padding:30px;text-align:center;color:var(--text2);">Carregando alertas...</div>
+        <!-- ALERTAS ATIVOS -->
+        <div id="wr-protocol-feed" style="flex:2;overflow-y:auto;border-right:1px solid var(--border);">
+          <div style="padding:30px;text-align:center;color:var(--text2);">Conectando ao sistema ao vivo…</div>
         </div>
-        <!-- RIGHT: Scenarios + Controls -->
-        <div style="width:300px;padding:14px;overflow-y:auto;flex-shrink:0;">
-          <div style="color:var(--danger);font-size:10px;letter-spacing:2px;margin-bottom:10px;">⚡ CENÁRIOS DE ESTRESSE</div>
-          <div id="war-scenarios" style="display:flex;flex-direction:column;gap:6px;"></div>
-          <div style="margin-top:14px;color:var(--accent);font-size:10px;letter-spacing:2px;margin-bottom:8px;">PARÂMETROS MANUAIS</div>
-          <div style="font-size:10px;">
-            <label style="display:block;margin-bottom:4px;color:var(--text2);">Seca (dias sem chuva):</label>
-            <input type="range" id="war-seca" min="0" max="60" value="0" style="width:100%;" oninput="warUpdate()"><span id="war-seca-val" style="color:var(--warn);">0d</span>
-            <label style="display:block;margin:8px 0 4px;color:var(--text2);">Bloqueio logístico (%):</label>
-            <input type="range" id="war-bloq" min="0" max="100" value="0" style="width:100%;" oninput="warUpdate()"><span id="war-bloq-val" style="color:var(--danger);">0%</span>
-            <label style="display:block;margin:8px 0 4px;color:var(--text2);">Variação cambial (R$/US$):</label>
-            <input type="range" id="war-cambio" min="4" max="8" value="5" step="0.1" style="width:100%;" oninput="warUpdate()"><span id="war-cambio-val" style="color:var(--accent);">5.0</span>
-            <button onclick="warSimulate()" style="width:100%;margin-top:12px;padding:8px;background:rgba(255,61,61,.2);border:1px solid var(--danger);color:var(--danger);font-family:var(--font);font-size:10px;letter-spacing:2px;border-radius:4px;cursor:pointer;">⚡ SIMULAR CENÁRIO</button>
-          </div>
+        <!-- CLIMA + LOGÍSTICA AO VIVO -->
+        <div id="wr-live-status" style="flex:1;overflow-y:auto;border-right:1px solid var(--border);padding:10px;">
+          <div style="color:var(--accent);font-size:9px;letter-spacing:2px;margin-bottom:8px;">⚡ CLIMA CRÍTICO — POLOS ATIVOS</div>
+          <div id="wr-climate-live" style="font-size:10px;color:var(--text2);">Carregando…</div>
+          <div style="color:var(--warn);font-size:9px;letter-spacing:2px;margin:14px 0 8px;">🚛 STATUS LOGÍSTICO</div>
+          <div id="wr-logistics-live" style="font-size:10px;color:var(--text2);">Carregando…</div>
+          <div style="color:var(--accent2);font-size:9px;letter-spacing:2px;margin:14px 0 8px;">🤖 DECISÃO DA IA</div>
+          <div id="wr-ai-decision" style="font-size:10px;color:var(--text2);line-height:1.6;">Aguardando dados…</div>
         </div>
-        <div style="flex:1;padding:14px;overflow-y:auto;">
-          <div style="color:var(--danger);font-size:10px;letter-spacing:2px;margin-bottom:8px;">RESULTADO DA SIMULAÇÃO</div>
-          <div id="war-climate-alerts" style="margin-bottom:10px;"></div>
-          <div id="war-result" style="font-size:10px;line-height:1.6;">Selecione um cenário ou ajuste os parâmetros e clique em SIMULAR.</div>
-          <div style="margin-top:14px;color:var(--accent);font-size:10px;letter-spacing:2px;margin-bottom:8px;">HISTÓRICO DE GREVES E BLOQUEIOS</div>
-          <div id="war-history"></div>
-        </div>
-        <div class="live-feed" style="width:240px;"><div class="lf-title"><span class="pulse" style="width:6px;height:6px;background:var(--danger);"></span> WAR LOG</div><div class="lf-list" id="war-log"></div></div>
+        <!-- WAR LOG -->
+        <div class="live-feed" style="width:240px;"><div class="lf-title"><span class="pulse" style="width:6px;height:6px;background:var(--danger);"></span> WAR LOG AO VIVO</div><div class="lf-list" id="war-log"></div></div>
       </div>
     </div>
 
@@ -3511,7 +3504,7 @@ function showPanel(id) {
     if (id === 'hyperlocal' && !window._hyperInit) { try { initHyperLocal(); } catch(e) { console.error('hyperlocal init error:', e); } }
     if (id === 'sentiment' && !window._sentInit) { try { initSentiment(); } catch(e) { console.error('sentiment init error:', e); } }
     if (id === 'esg' && !window._esgInit) { try { initESG(); } catch(e) { console.error('esg init error:', e); } }
-    if (id === 'warroom' && !window._warInit) { try { initWarRoom(); } catch(e) { console.error('warroom init error:', e); } }
+    if (id === 'warroom' && !window._warInit) { window._warInit = true; }
     if (id === 'warroom') setTimeout(() => { try { WarRoomProtocol.refresh(); } catch(e) { console.error('warroom refresh error:', e); } }, 200);
     if (id === 'overview') { try { loadPulso(false); } catch(e) { console.error('pulso load error:', e); } }
     if (id === 'brain' && !window._brainInit) { try { initBrainPanel(); } catch(e) { console.error('brain init error:', e); } }
@@ -3540,124 +3533,238 @@ function toggleNavGroup(groupId) {
 // WAR ROOM — Protocolo de Priorização de Alertas (3 Níveis)
 // VFR = Volume Financeiro em Risco · PE = Proximidade do Evento
 // ═══════════════════════════════════════════════════════════════════
-const WarRoomProtocol = {
+var WarRoomProtocol = {
   LEVELS: {
-    N1: { name:'NACIONAL', color:'#EF4444', icon:'🔴', min:10000000, css:'wr-alert-n1', action:'CONTINGÊNCIA IMEDIATA' },
-    N2: { name:'REGIONAL', color:'#F59E0B', icon:'🟡', min:1000000,  css:'wr-alert-n2', action:'REBALANCEAR ESTOQUE' },
-    N3: { name:'ESTADUAL', color:'#3B82F6', icon:'🔵', min:100000,   css:'wr-alert-n3', action:'MONITORAR CUSTO/SACA' },
+    N1: { name:'NACIONAL', color:'#EF4444', icon:'🔴', css:'wr-alert-n1', action:'CONTINGÊNCIA IMEDIATA' },
+    N2: { name:'REGIONAL', color:'#F59E0B', icon:'🟡', css:'wr-alert-n2', action:'REBALANCEAR ESTOQUE' },
+    N3: { name:'ESTADUAL', color:'#3B82F6', icon:'🔵', css:'wr-alert-n3', action:'MONITORAR CUSTO/SACA' },
   },
+  _refreshTimer: null,
+  _countdown: 300,
 
   classifyAlert(vfr) {
     if (vfr >= 10000000) return 'N1';
-    if (vfr >= 1000000) return 'N2';
+    if (vfr >= 1000000)  return 'N2';
     return 'N3';
   },
 
   calculateVFR(culture, impactPct, baseVolumeTons) {
-    const pricePerTon = {tomate:2500,banana:1800,laranja:800,manga:3200,uva:5500,cebola:2200,batata:1600,mamao:2800,melancia:600,abacaxi:1500,alho:12000,melao:2000,soja:2100,milho:1200}[culture] || 2000;
-    return Math.round(baseVolumeTons * pricePerTon * Math.abs(impactPct) / 100);
+    const ppt = {tomate:2500,banana:1800,laranja:800,manga:3200,uva:5500,cebola:2200,batata:1600,mamao:2800,melancia:600,abacaxi:1500,alho:12000,melao:2000,soja:2100,milho:1200}[culture] || 2000;
+    return Math.round(baseVolumeTons * ppt * Math.abs(impactPct) / 100);
   },
 
-  generateAlerts() {
+  _logEntry(msg, color) {
+    const log = document.getElementById('war-log');
+    if (!log) return;
+    const ts = new Date().toLocaleTimeString('pt-BR');
+    const d = document.createElement('div');
+    d.style.cssText = 'padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.04);font-size:9px;';
+    d.innerHTML = `<span style="color:${color||'var(--danger)'};">${ts}</span> ${msg}`;
+    log.insertBefore(d, log.firstChild);
+    // Keep max 50 entries
+    while (log.children.length > 50) log.removeChild(log.lastChild);
+  },
+
+  async _loadAlerts() {
     const alerts = [];
-    // Scan FLV alerts from DB
     try {
-      fetch('/api/flv/alerts?severity=all').then(r=>r.json()).then(data => {
-        if (!Array.isArray(data)) return;
+      const data = await fetch('/api/flv/alerts?severity=all').then(r=>r.json()).catch(()=>[]);
+      if (Array.isArray(data)) {
         data.forEach(a => {
-          const vfr = this.calculateVFR(a.culture_slug || 'tomate', a.impact_price_pct || 10, 50000);
+          const vfr = this.calculateVFR(a.culture_slug||'tomate', a.impact_price_pct||10, 50000);
           const level = this.classifyAlert(vfr);
           alerts.push({
             level, vfr,
             culture: a.culture_name || a.culture_slug || '—',
             region: `${a.mun_name||''} (${a.state_uf||''})`,
             event: a.alert_type || '—',
-            severity: a.severity || 'amarelo',
             message: a.message || '',
             action: this.LEVELS[level].action,
             recommendation: vfr > 5000000 ? 'VENDER posição antes do impacto' : vfr > 1000000 ? 'AGUARDAR — monitorar evolução' : 'COMPRAR — oportunidade de preço baixo',
+            source: 'FLV · CEASA',
+            ts: a.created_at || a.ts || null,
           });
         });
-        this._renderAlerts(alerts);
+      }
+    } catch(e) { console.warn('WarRoom FLV alerts:', e); }
+
+    // Enrich with poles at risk from /api/nias/regions
+    try {
+      const rd = await fetch('/api/nias/regions').then(r=>r.json()).catch(()=>null);
+      const poles = (rd && rd.data && rd.data.regions) || [];
+      poles.forEach(p => {
+        if ((p.importance === 'muito_alta' || p.importance === 'alta') && p.alerts && p.alerts.length > 0) {
+          p.alerts.forEach(al => {
+            const vfr = this.calculateVFR(p.main_culture||'soja', al.impact_pct||8, p.area_ha ? p.area_ha*2 : 30000);
+            const level = this.classifyAlert(vfr);
+            alerts.push({
+              level, vfr,
+              culture: p.main_culture || p.name,
+              region: `${p.name} (${p.state_or_department||p.country||'SA'})`,
+              event: al.type || al.title || 'ALERTA DE POLO',
+              message: al.description || al.message || '',
+              action: this.LEVELS[level].action,
+              recommendation: 'Monitorar polo — dado NIAS Regions',
+              source: 'NIAS · Regions',
+              ts: null,
+            });
+          });
+        }
       });
-    } catch(e) { console.warn('WarRoom alerts error:', e); }
+    } catch(e) { console.warn('WarRoom regions:', e); }
 
-    // Add synthetic macro alerts
-    alerts.push({
-      level:'N1', vfr:45000000, culture:'Soja/Milho', region:'BR-163 Nacional',
-      event:'GARGALO LOGÍSTICO', severity:'vermelho',
-      message:'Congestão prevista na BR-163 (Sinop→Miritituba) impactando escoamento de 2.1Mt de grãos para exportação.',
-      action:'CONTINGÊNCIA IMEDIATA', recommendation:'VENDER contratos futuros — hedge contra atraso portuário',
-    });
-    alerts.push({
-      level:'N2', vfr:8500000, culture:'Tomate/Cebola', region:'Vale do São Francisco (PE/BA)',
-      event:'ONDA DE CALOR', severity:'laranja',
-      message:'Temperatura máxima >40°C prevista para próximos 7 dias. Irrigação sob pressão hídrica.',
-      action:'REBALANCEAR ESTOQUE', recommendation:'AGUARDAR — preço deve subir 15-25% em 10 dias',
-    });
-    alerts.push({
-      level:'N3', vfr:620000, culture:'Banana', region:'Vale do Ribeira (SP)',
-      event:'CHUVA EXCESSIVA', severity:'amarelo',
-      message:'Precipitação acumulada >150mm/7d. Risco de sigatoka e atraso na colheita.',
-      action:'MONITORAR CUSTO/SACA', recommendation:'COMPRAR — excesso temporário de oferta reduzirá preços',
-    });
+    return alerts;
+  },
 
-    this._renderAlerts(alerts);
+  async _loadClimateRisk() {
+    // Pontos críticos de monitoramento climático SA
+    const checkpoints = [
+      { name:'Mato Grosso (MT)', lat:-12.5, lon:-55.7, culture:'Soja/Milho' },
+      { name:'Vale São Francisco (PE)', lat:-9.4, lon:-40.5, culture:'Tomate/Manga' },
+      { name:'Triângulo Mineiro (MG)', lat:-18.9, lon:-48.3, culture:'Tomate/Batata' },
+      { name:'Sul/Serra Gaúcha (RS)', lat:-29.2, lon:-51.2, culture:'Maçã/Uva' },
+      { name:'Cerrado Goiano (GO)', lat:-16.3, lon:-49.3, culture:'Soja/Milho' },
+    ];
+    const results = [];
+    for (const cp of checkpoints) {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${cp.lat}&longitude=${cp.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America%2FSao_Paulo&forecast_days=3`;
+        const d = await fetch(url).then(r=>r.json()).catch(()=>null);
+        if (!d || !d.daily) { results.push({...cp, status:'indisponível'}); continue; }
+        const tmax = d.daily.temperature_2m_max[0];
+        const tmin = d.daily.temperature_2m_min[0];
+        const prec = d.daily.precipitation_sum[0];
+        let alert = null, color = 'var(--accent2)';
+        if (tmax >= 38) { alert = `🌡 CALOR EXTREMO ${tmax}°C`; color = '#EF4444'; }
+        else if (tmin <= 4) { alert = `❄ RISCO DE GEADA ${tmin}°C`; color = '#3B82F6'; }
+        else if (prec >= 50) { alert = `🌧 CHUVA INTENSA ${prec}mm`; color = '#F59E0B'; }
+        else if (prec === 0 && tmax >= 33) { alert = `🏜 SECO E QUENTE ${tmax}°C`; color = '#F59E0B'; }
+        results.push({...cp, tmax, tmin, prec, alert, color});
+      } catch(e) { results.push({...cp, status:'erro'}); }
+    }
+    return results;
   },
 
   _renderAlerts(alerts) {
-    // Sort: N1 first, then by VFR desc
     alerts.sort((a,b) => {
       const lo = {N1:0,N2:1,N3:2};
       if (lo[a.level] !== lo[b.level]) return lo[a.level] - lo[b.level];
       return b.vfr - a.vfr;
     });
-
     const feed = document.getElementById('wr-protocol-feed');
     if (!feed) return;
-
     const n1 = alerts.filter(a=>a.level==='N1').length;
     const n2 = alerts.filter(a=>a.level==='N2').length;
     const n3 = alerts.filter(a=>a.level==='N3').length;
-
+    const ts = new Date().toLocaleTimeString('pt-BR');
     feed.innerHTML = `
-      <div style="display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);align-items:center;">
         <div style="flex:1;text-align:center;padding:4px;border:1px solid #EF4444;border-radius:4px;background:rgba(239,68,68,.08);">
-          <div style="font-size:16px;font-weight:bold;color:#EF4444;">${n1}</div>
+          <div style="font-size:18px;font-weight:bold;color:#EF4444;">${n1}</div>
           <div style="font-size:8px;color:#EF4444;letter-spacing:1px;">NACIONAL</div>
         </div>
         <div style="flex:1;text-align:center;padding:4px;border:1px solid #F59E0B;border-radius:4px;background:rgba(245,158,11,.06);">
-          <div style="font-size:16px;font-weight:bold;color:#F59E0B;">${n2}</div>
+          <div style="font-size:18px;font-weight:bold;color:#F59E0B;">${n2}</div>
           <div style="font-size:8px;color:#F59E0B;letter-spacing:1px;">REGIONAL</div>
         </div>
         <div style="flex:1;text-align:center;padding:4px;border:1px solid #3B82F6;border-radius:4px;background:rgba(59,130,246,.05);">
-          <div style="font-size:16px;font-weight:bold;color:#3B82F6;">${n3}</div>
+          <div style="font-size:18px;font-weight:bold;color:#3B82F6;">${n3}</div>
           <div style="font-size:8px;color:#3B82F6;letter-spacing:1px;">ESTADUAL</div>
         </div>
+        <div style="font-size:9px;color:var(--text2);text-align:right;flex-shrink:0;">Atualizado<br>${ts}</div>
       </div>
-    ` + alerts.map(a => {
-      const L = this.LEVELS[a.level];
-      return `
-        <div class="alert-card ${L.css}" style="padding:10px 12px;border-bottom:1px solid var(--border);">
+    ` + (alerts.length === 0
+      ? `<div style="padding:40px;text-align:center;color:var(--accent2);">✅ Nenhum alerta crítico ativo agora.<br><span style="color:var(--text2);font-size:10px;">Sistema monitorando ${checkpoints ? checkpoints.length : 5} polos SA.</span></div>`
+      : alerts.map(a => {
+        const L = this.LEVELS[a.level];
+        return `<div class="alert-card ${L.css}" style="padding:10px 12px;border-bottom:1px solid var(--border);">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-            <span style="font-size:11px;font-weight:bold;color:${L.color};">${L.icon} NÍVEL ${a.level.replace('N','')} — ${L.name}</span>
-            <span style="font-size:10px;color:${L.color};font-weight:bold;">VFR: R$ ${(a.vfr/1000000).toFixed(1)}M</span>
+            <span style="font-size:11px;font-weight:bold;color:${L.color};">${L.icon} N${a.level.replace('N','')} — ${L.name}</span>
+            <span style="font-size:10px;color:${L.color};font-weight:bold;">VFR R$ ${(a.vfr/1e6).toFixed(1)}M</span>
           </div>
-          <div style="font-size:11px;color:var(--text);font-weight:bold;">${a.culture} — ${a.event}</div>
+          <div style="font-size:11px;color:var(--text);font-weight:bold;">${a.culture} · ${a.event}</div>
           <div style="font-size:10px;color:var(--text2);margin-top:2px;">${a.region}</div>
-          <div style="font-size:10px;color:var(--text2);margin-top:3px;line-height:1.4;">${a.message}</div>
-          <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
+          ${a.message ? `<div style="font-size:10px;color:var(--text2);margin-top:3px;line-height:1.4;">${a.message}</div>` : ''}
+          <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap;">
             <span style="font-size:9px;padding:2px 8px;border:1px solid ${L.color};color:${L.color};border-radius:3px;">${a.action}</span>
-            <span style="font-size:9px;color:var(--text2);">Recomendação:</span>
             <span style="font-size:9px;color:var(--text);font-weight:bold;">${a.recommendation}</span>
+            <span style="font-size:9px;color:var(--text2);margin-left:auto;">${a.source||''}</span>
           </div>
+        </div>`;
+      }).join('')
+    );
+  },
+
+  _renderClimate(results) {
+    const el = document.getElementById('wr-climate-live');
+    if (!el) return;
+    if (!results || !results.length) { el.textContent = 'Dados de clima indisponíveis.'; return; }
+    el.innerHTML = results.map(r => {
+      if (r.status) return `<div style="padding:4px 0;border-bottom:1px solid var(--border);color:var(--text2);">${r.name} — ${r.status}</div>`;
+      return `<div style="padding:5px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:var(--text);font-size:10px;font-weight:bold;">${r.name}</span>
+          <span style="font-size:9px;color:var(--text2);">${r.tmax}°C / ${r.tmin}°C · ${r.prec}mm</span>
         </div>
-      `;
+        <div style="font-size:9px;color:var(--text2);">${r.culture}</div>
+        ${r.alert ? `<div style="font-size:9px;font-weight:bold;color:${r.color};margin-top:2px;">${r.alert}</div>` : '<div style="font-size:9px;color:var(--accent2);">✅ Normal</div>'}
+      </div>`;
     }).join('');
   },
 
-  refresh() {
-    this.generateAlerts();
+  async _renderAIDecision(alerts, climate) {
+    const el = document.getElementById('wr-ai-decision');
+    if (!el) return;
+    // Build a concise context for the AI
+    const criticals = alerts.filter(a=>a.level==='N1').slice(0,3).map(a=>`${a.culture} (${a.region}): ${a.event}`).join('; ');
+    const climateAlerts = (climate||[]).filter(c=>c.alert).map(c=>`${c.name}: ${c.alert}`).join('; ');
+    if (!criticals && !climateAlerts) {
+      el.innerHTML = '<span style="color:var(--accent2);">✅ Sem ação urgente. Sistema estável.</span>';
+      return;
+    }
+    el.innerHTML = '<span style="color:var(--text2);">Consultando IA…</span>';
+    const prompt = `War Room NIAS. Alertas críticos: ${criticals||'nenhum'}. Clima: ${climateAlerts||'normal'}. Dê 2 recomendações de ação imediata em 1 linha cada, direto.`;
+    try {
+      const r = await fetch('/api/nias/brain/command', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ command: prompt })
+      }).then(r=>r.json()).catch(()=>null);
+      const txt = r && (r.response || r.answer || r.text || r.result);
+      el.innerHTML = txt
+        ? txt.replace(/\n/g,'<br>')
+        : '<span style="color:var(--text2);">IA indisponível no momento.</span>';
+    } catch(e) {
+      el.innerHTML = '<span style="color:var(--text2);">IA offline.</span>';
+    }
+  },
+
+  async refresh() {
+    const el = document.getElementById('wr-next-refresh');
+    if (el) el.textContent = '↻ Atualizando…';
+    this._logEntry('Atualização ao vivo iniciada', 'var(--accent)');
+
+    const [alerts, climate] = await Promise.all([
+      this._loadAlerts(),
+      this._loadClimateRisk(),
+    ]);
+
+    this._renderAlerts(alerts);
+    this._renderClimate(climate);
+    this._renderAIDecision(alerts, climate);
+
+    // Log summary
+    const n1 = alerts.filter(a=>a.level==='N1').length;
+    const climCrit = (climate||[]).filter(c=>c.alert).length;
+    this._logEntry(`${alerts.length} alertas · ${n1} NACIONAIS · ${climCrit} riscos climáticos`, n1 > 0 ? '#EF4444' : 'var(--accent2)');
+
+    // Countdown to next refresh (5 min)
+    clearInterval(this._refreshTimer);
+    this._countdown = 300;
+    this._refreshTimer = setInterval(() => {
+      this._countdown--;
+      if (el) el.textContent = `↻ próxima atualização em ${this._countdown}s`;
+      if (this._countdown <= 0) { clearInterval(this._refreshTimer); this.refresh(); }
+    }, 1000);
   }
 };
 
@@ -9198,84 +9305,7 @@ function initESG() {
 // ═══════════════════════════════════════════════════════════════════
 // WAR ROOM — Simulação de Estresse Sistêmico
 // ═══════════════════════════════════════════════════════════════════
-function initWarRoom() {
-  window._warInit = true;
-  const scenarios = document.getElementById('war-scenarios');
-  const presets = [
-    { name:'Seca severa no PR + BR-163 bloqueada', seca:30, bloq:85, cambio:5.5, icon:'🔥' },
-    { name:'Canal de Suez fechado + greve portuária Santos', seca:0, bloq:95, cambio:6.2, icon:'⚓' },
-    { name:'El Niño extremo + quebra Argentina', seca:45, bloq:40, cambio:5.8, icon:'🌊' },
-    { name:'Greve de caminhoneiros nacional', seca:0, bloq:100, cambio:5.3, icon:'🚛' },
-    { name:'Pandemia 2.0 + colapso logístico', seca:15, bloq:70, cambio:7.0, icon:'🦠' },
-    { name:'Massa polar + Geada Sul/Sudeste — polos tomate', seca:0, bloq:55, cambio:5.3, icon:'❄️', climateEvent:'geada' },
-    { name:'Neve Serra Catarinense + BR-282 bloqueada', seca:0, bloq:90, cambio:5.1, icon:'🌨️', climateEvent:'neve' },
-    { name:'Chuvas extremas Triângulo/PR — enchentes HF', seca:0, bloq:65, cambio:5.3, icon:'🌊', climateEvent:'enchente' },
-  ];
-  scenarios.innerHTML = presets.map(p => `<button onclick="warLoadPreset(${p.seca},${p.bloq},${p.cambio})" style="text-align:left;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-family:var(--font);font-size:10px;color:var(--text);transition:border-color .2s;" onmouseover="this.style.borderColor='var(--danger)'" onmouseout="this.style.borderColor='var(--border)'">${p.icon} ${p.name}</button>`).join('');
-  const history = document.getElementById('war-history');
-  const events = [
-    { date:'Mai/2018', event:'Greve dos caminhoneiros — 11 dias', impact:'PIB -1.2%, frete +300%' },
-    { date:'Mar/2020', event:'COVID-19 — lockdown portos', impact:'Exportação -18% (2 meses)' },
-    { date:'Out/2021', event:'Crise de fertilizantes (Rússia)', impact:'Preço ureia +180%' },
-    { date:'Fev/2022', event:'Guerra Ucrânia — grãos bloqueados', impact:'Trigo +60%, milho +40%' },
-    { date:'Nov/2022', event:'Bloqueios BR pós-eleição', impact:'Perdas R$ 15 bi em perecíveis' },
-  ];
-  history.innerHTML = events.map(e => `<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:10px;">
-    <span style="color:var(--warn);font-weight:bold;">${e.date}</span> · ${e.event}<br><span style="color:var(--text2);font-size:9px;">Impacto: ${e.impact}</span></div>`).join('');
-}
-
-function warUpdate() {
-  document.getElementById('war-seca-val').textContent = document.getElementById('war-seca').value + 'd';
-  document.getElementById('war-bloq-val').textContent = document.getElementById('war-bloq').value + '%';
-  document.getElementById('war-cambio-val').textContent = parseFloat(document.getElementById('war-cambio').value).toFixed(1);
-}
-
-function warLoadPreset(seca, bloq, cambio) {
-  document.getElementById('war-seca').value = seca;
-  document.getElementById('war-bloq').value = bloq;
-  document.getElementById('war-cambio').value = cambio;
-  warUpdate();
-  warSimulate();
-}
-
-function warSimulate() {
-  const seca = parseInt(document.getElementById('war-seca').value);
-  const bloq = parseInt(document.getElementById('war-bloq').value);
-  const cambio = parseFloat(document.getElementById('war-cambio').value);
-  const result = document.getElementById('war-result');
-  const ndviLoss = Math.min(0.25, seca * 0.005);
-  const yieldLoss = Math.round(ndviLoss * 100 / 0.7 * 18);
-  const freightInc = Math.round(bloq * 3.5);
-  const priceImpact = (cambio - 5.0) * 12 + (seca > 20 ? 15 : 0) + (bloq > 60 ? 8 : 0);
-  const lossR = ((yieldLoss * 0.14) + (freightInc * 0.008) + Math.abs(priceImpact) * 0.05).toFixed(1);
-  const severity = (seca > 30 || bloq > 80) ? 'CRÍTICO' : (seca > 15 || bloq > 50) ? 'ALTO' : 'MODERADO';
-  const sevColor = severity === 'CRÍTICO' ? 'var(--danger)' : severity === 'ALTO' ? 'var(--warn)' : 'var(--accent)';
-  result.innerHTML = `
-    <div style="background:rgba(255,61,61,.08);border:1px solid ${sevColor};border-radius:6px;padding:12px;margin-bottom:10px;">
-      <div style="font-size:14px;font-weight:bold;color:${sevColor};margin-bottom:6px;">⚡ NÍVEL DE RISCO: ${severity}</div>
-      <div style="font-size:11px;color:var(--text);line-height:1.6;">
-        <b>Impacto na Safra:</b> NDVI médio cai ${ndviLoss.toFixed(3)} → quebra estimada de <b style="color:var(--danger);">${yieldLoss}%</b> na produção<br>
-        <b>Logística:</b> Frete sobe <b style="color:var(--warn);">+${freightInc}%</b> · ETA médio +${Math.round(bloq*0.8)}h<br>
-        <b>Preço no Porto:</b> ${priceImpact > 0 ? '+' : ''}R$ ${priceImpact.toFixed(2)}/sc (câmbio R$ ${cambio.toFixed(1)})<br>
-        <b>Perda Estimada Total:</b> <span style="color:var(--danger);font-size:14px;font-weight:bold;">R$ ${lossR} bilhões</span>
-      </div>
-    </div>
-    <div style="font-size:10px;color:var(--accent);font-weight:bold;margin-bottom:6px;">RECOMENDAÇÕES DA IA:</div>
-    <div style="font-size:10px;line-height:1.6;color:var(--text);">
-      ${seca > 20 ? '🌧 Acionar seguro agrícola para municípios com NDVI < 0.40 (PROAGRO).<br>' : ''}
-      ${bloq > 60 ? '🚂 Desviar 30% do fluxo para modal ferroviário (FNS/Rumo) e hidroviário (Tapajós).<br>' : ''}
-      ${cambio > 5.5 ? '💱 Aproveitar câmbio favorável para antecipar contratos de exportação.<br>' : ''}
-      ${bloq > 80 ? '⚓ Redirecionar embarques de Santos para Paranaguá/São Luís.<br>' : ''}
-      📊 Hedge recomendado: ${priceImpact > 10 ? 'VENDER futuro B3 para travar preço' : 'Manter posição, monitorar'}.<br>
-      🛰 Intensificar cobertura SATVeg nos municípios afetados (intervalo 8 dias).
-    </div>`;
-  const log = document.getElementById('war-log');
-  const ts = new Date().toLocaleTimeString('pt-BR');
-  const entry = document.createElement('div');
-  entry.style.cssText = 'padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.04);font-size:9px;';
-  entry.innerHTML = `<span style="color:var(--danger);">${ts}</span> Simulação: Seca ${seca}d, Bloq ${bloq}%, Câmbio ${cambio} → <b style="color:${sevColor}">${severity}</b>`;
-  log.insertBefore(entry, log.firstChild);
-}
+// War Room — sem simulação. Dados reais via WarRoomProtocol.refresh()
 
 // ═══════════════════════════════════════════════════════════════════
 // NEWS & MEDIA FEED — Agro Intelligence
