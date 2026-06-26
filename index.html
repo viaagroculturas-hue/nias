@@ -13443,25 +13443,48 @@ const NiasOS = (function() {
   }
 
   function _activateMapCanvas() {
-    // showPanel('map') dispara initMap() + todos os hooks de resize
-    try { showPanel('map'); } catch(e) { console.error('showPanel map', e); }
+    // ── Força dimensões explícitas no panel-map (não depende de flex cascade) ──
+    const mp = document.getElementById('panel-map');
+    if (mp) {
+      // Calcula a altura disponível: viewport menos headers OS + dock
+      const headerH = 28 + 20 + 18; // topbar(28) + ticker(20) + failsafe(18) em OS mode
+      const dockH   = 68;
+      const panelH  = Math.max(300, window.innerHeight - headerH - dockH);
+      mp.style.cssText = [
+        'display:flex',
+        'flex:1 1 auto',
+        'width:100%',
+        'min-height:' + panelH + 'px',
+        'height:' + panelH + 'px',
+        'position:relative',
+        'overflow:hidden',
+        'visibility:visible',
+        'opacity:1',
+      ].join('!important;') + '!important;';
+      mp.classList.add('active');
+    }
 
-    // Cascata de invalidateSize para garantir que Leaflet recalcula após o layout estabilizar
-    const _inv = () => {
+    // ── Inicializa o mapa diretamente (sem depender do showPanel chain) ──
+    if (!window._mapInit) {
+      window._mapInit = true;
+      try { initMap(); } catch(e) { console.error('NiasOS initMap:', e); }
+    }
+
+    // ── Cascata de invalidateSize ──────────────────────────────────────
+    const inv = () => {
       try { window.leafletMap && leafletMap.invalidateSize(true); } catch(e) {}
     };
-    [50, 200, 500, 1000, 2000].forEach(d => setTimeout(_inv, d));
+    [80, 250, 550, 1100, 2200].forEach(d => setTimeout(inv, d));
 
-    // Após estabilização: force redraw completo dos tiles
+    // panBy força reload de tiles na viewport
     setTimeout(() => {
       try {
         if (window.leafletMap) {
           leafletMap.invalidateSize(true);
-          // panBy(0,0) força o Leaflet a recarregar tiles na viewport atual
           leafletMap.panBy([0, 0], { animate: false });
         }
       } catch(e) {}
-    }, 600);
+    }, 700);
   }
 
   function _firstLoad() {
