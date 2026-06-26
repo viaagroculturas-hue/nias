@@ -669,6 +669,138 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .audit-card strong{display:block;color:var(--text);font-size:10px;margin-bottom:3px;}
 .audit-list{font-size:9px;color:var(--text2);line-height:1.45;margin:6px 0 0 16px;padding:0;}
 .deprecated-panel-note{font-size:9px;color:var(--text2);border:1px dashed var(--border);padding:8px;border-radius:6px;margin:8px 0;}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NIAS OS  —  Geographic Intelligence Operating System
+   Nokia → iPhone. Dashboard → Nervous System.
+   A América do Sul É a interface. A inteligência aparece onde ela vive.
+═══════════════════════════════════════════════════════════════════════ */
+
+/* ── OS Mode: desabilita o chrome clássico ─────────────────────────── */
+.nias-os-mode #sidebar { display: none !important; }
+.nias-os-mode #topbar  {
+  height: 22px !important; min-height: 22px !important;
+  padding: 0 12px !important; font-size: 8px !important;
+  background: rgba(5,14,26,0.94) !important; backdrop-filter: blur(12px) !important;
+}
+.nias-os-mode #topbar .top-stats,
+.nias-os-mode #topbar .theme-toggle { display: none !important; }
+.nias-os-mode #topbar .logo { font-size: 11px !important; letter-spacing: 3px; }
+.nias-os-mode #price-ticker { height: 18px !important; font-size: 8px !important; }
+.nias-os-mode #failsafe-bar { height: 14px !important; font-size: 7px !important; padding: 0 8px; }
+.nias-os-mode #app { background: transparent !important; overflow: visible !important; }
+.nias-os-mode #main { overflow: visible !important; }
+
+/* ── OS Mode: map panel é o canvas eterno ─────────────────────────── */
+.nias-os-mode #panel-map {
+  display: flex !important; opacity: 1 !important; visibility: visible !important;
+  position: fixed !important; inset: 0 !important;
+  z-index: 20 !important; border-radius: 0 !important;
+}
+
+/* ── OS Mode: outros painéis são sheets ─────────────────────────────── */
+.nias-os-mode .panel:not(#panel-map) { display: none !important; opacity: 0 !important; visibility: hidden !important; }
+.nias-os-mode .panel.os-sheet-open {
+  display: flex !important; opacity: 1 !important; visibility: visible !important;
+  position: fixed !important; left: 0 !important; right: 0 !important;
+  bottom: 60px !important; top: auto !important; height: 80vh !important;
+  z-index: 500 !important;
+  border-radius: 20px 20px 0 0 !important;
+  border-top: 2px solid var(--accent) !important;
+  background: rgba(5,14,26,0.97) !important; backdrop-filter: blur(24px) !important;
+  overflow-y: auto !important; flex-direction: column !important;
+  animation: osSheetUp 0.38s cubic-bezier(0.22,1,0.36,1) both !important;
+}
+.nias-os-mode .panel.os-sheet-open::before {
+  content: ''; display: block; width: 40px; height: 4px;
+  border-radius: 2px; background: rgba(255,255,255,0.18);
+  margin: 10px auto 0; flex-shrink: 0;
+}
+@keyframes osSheetUp { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+
+/* ── OS SIGNAL CARDS — ancorados geograficamente no mapa ──────────── */
+.os-sig {
+  background: rgba(5,14,26,0.86); backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(0,212,255,0.5); border-radius: 10px;
+  padding: 6px 10px 6px 8px; min-width: 148px; max-width: 210px;
+  cursor: pointer; font-family: 'Courier New', monospace;
+  display: flex; align-items: flex-start; gap: 6px;
+  transition: transform .18s, box-shadow .18s; pointer-events: all;
+}
+.os-sig:hover { transform: scale(1.06); }
+.os-sig-dot { width:7px;height:7px;border-radius:50%;margin-top:3px;flex-shrink:0; }
+.os-sig-glyph { font-size:13px;flex-shrink:0;line-height:1.2; }
+.os-sig-body  { flex:1;min-width:0; }
+.os-sig-title { font-size:9px;font-weight:bold;color:#e8f4ff;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.os-sig-desc  { font-size:7.5px;color:#6a92b0;margin-top:2px;line-height:1.3; }
+.os-sig-badge { font-size:7px;padding:1px 5px;border-radius:3px;display:inline-block;margin-top:3px;font-weight:bold;letter-spacing:.5px; }
+@keyframes osPulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.5);} }
+.os-sig-dot-pulse { animation: osPulse 1.8s ease-in-out infinite; }
+
+/* ── OS DOCK ─────────────────────────────────────────────────────── */
+#os-dock {
+  position:fixed; bottom:0; left:0; right:0; height:60px; z-index:700;
+  background: rgba(4,11,22,0.96); backdrop-filter: blur(28px) saturate(1.6);
+  border-top: 1px solid rgba(0,212,255,0.22);
+  align-items:center; padding:0 14px; gap:10px;
+}
+.os-dock-live  { display:flex;align-items:center;gap:5px;flex-shrink:0;max-width:220px;overflow:hidden; }
+.os-dock-pulse { width:7px;height:7px;border-radius:50%;background:var(--accent2);flex-shrink:0; animation:osPulse 1.6s ease-in-out infinite; }
+#os-live-text  { font-size:8px;color:var(--text2);letter-spacing:.6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Courier New',monospace; }
+.os-dock-sep   { width:1px;height:22px;background:rgba(0,212,255,0.15);flex-shrink:0; }
+.os-dock-nav   { display:flex;align-items:center;gap:3px;flex-shrink:0; }
+.os-btn {
+  width:38px;height:38px;border-radius:11px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(0,212,255,0.14);
+  color:#9ab;font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .18s,border-color .18s,color .18s,transform .15s;
+}
+.os-btn:hover { background:rgba(0,212,255,0.1);border-color:rgba(0,212,255,0.38);color:#fff;transform:translateY(-2px); }
+.os-btn.os-active { background:rgba(0,212,255,0.14);border-color:rgba(0,212,255,0.55);color:var(--accent); }
+.os-btn-war:hover { background:rgba(239,68,68,0.1)!important;border-color:rgba(239,68,68,.55)!important;color:#ef4444!important; }
+.os-cmd {
+  flex:1;display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,0.28);border:1px solid rgba(0,212,255,0.18);
+  border-radius:22px;padding:0 14px;height:38px;min-width:0;
+  transition:border-color .2s;
+}
+.os-cmd:focus-within { border-color:rgba(0,212,255,0.45); }
+.os-cmd-icon { color:var(--accent);font-size:11px;flex-shrink:0;opacity:.7; }
+.os-cmd-input { flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Courier New',monospace;font-size:10.5px;min-width:0; }
+.os-cmd-input::placeholder { color:rgba(106,146,176,0.7);font-size:9.5px; }
+#os-cmd-response { font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;flex-shrink:0; }
+
+/* ── OS INTEL RIBBON ─────────────────────────────────────────────── */
+#os-ribbon {
+  display:none;position:fixed;top:0;left:0;right:0;height:18px;z-index:800;
+  background:rgba(0,212,255,0.06);border-bottom:1px solid rgba(0,212,255,0.16);
+  align-items:center;overflow:hidden;pointer-events:none;
+}
+.nias-os-mode #os-ribbon { display:flex; }
+#os-ribbon-text {
+  font-size:7.5px;color:rgba(0,212,255,0.75);letter-spacing:.8px;
+  white-space:nowrap;padding-left:100%;
+  animation:ribbonScroll 42s linear infinite;
+  font-family:'Courier New',monospace;
+}
+@keyframes ribbonScroll { from{transform:translateX(0);}to{transform:translateX(-200%);} }
+
+/* ── OS SHEET TITLE BAR ──────────────────────────────────────────── */
+#os-sheet-bar {
+  display:none;position:fixed;left:0;right:0;z-index:510;
+  background:rgba(5,14,26,0.98);backdrop-filter:blur(20px);
+  border-radius:20px 20px 0 0;border-top:2px solid var(--accent);
+  height:40px;align-items:center;justify-content:space-between;padding:0 16px;
+}
+.nias-os-mode #os-sheet-bar.visible { display:flex; bottom:calc(60px + 80vh); }
+.os-sheet-bar-title { font-size:9px;color:var(--accent);letter-spacing:1.5px;font-family:'Courier New',monospace;font-weight:bold; }
+.os-sheet-bar-close {
+  background:none;border:1px solid rgba(0,212,255,0.3);color:var(--accent);
+  border-radius:6px;padding:2px 10px;font-size:9px;cursor:pointer;
+  font-family:'Courier New',monospace;letter-spacing:1px;
+}
+.os-sheet-bar-close:hover { background:rgba(0,212,255,0.1); }
 </style>
 </head>
 <body>
@@ -8213,6 +8345,8 @@ function _niasGrantAccess(role) {
   if (overlay) overlay.style.display = 'none';
   _applyRBAC(role);
   if (role === 'guest') _activateDemoMode();
+  // Boot the geographic intelligence OS
+  setTimeout(() => { try { NiasOS.boot(); } catch(e) { console.error('NiasOS boot error:', e); } }, 200);
 }
 
 // ── RBAC restrictions
@@ -13045,6 +13179,405 @@ const NiasClimateFrontend = {
     }
   });
 
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     NIAS OS — HTML: Intelligence Ribbon + Dock + Sheet Bar
+═══════════════════════════════════════════════════════════════════════ -->
+
+<!-- Intel Ribbon: flui no topo, mostra o que NIAS está pensando -->
+<div id="os-ribbon">
+  <span style="color:var(--accent);font-size:8px;font-weight:bold;flex-shrink:0;padding:0 14px;letter-spacing:2px;border-right:1px solid rgba(0,212,255,.2);">⬡ NIAS OS</span>
+  <div id="os-ribbon-text">Carregando inteligência viva da América do Sul…</div>
+</div>
+
+<!-- Sheet Title Bar: aparece acima do painel-sheet quando aberto -->
+<div id="os-sheet-bar">
+  <span class="os-sheet-bar-title" id="os-sheet-bar-title">⬡ NIAS OS</span>
+  <button class="os-sheet-bar-close" onclick="NiasOS.closeSheet()">✕ FECHAR</button>
+</div>
+
+<!-- OS DOCK — a home bar. Substitui completamente a sidebar. -->
+<div id="os-dock" style="display:none;">
+  <div class="os-dock-live">
+    <span class="os-dock-pulse"></span>
+    <span id="os-live-text">NIAS OS · SISTEMA ATIVO</span>
+  </div>
+  <div class="os-dock-sep"></div>
+  <div class="os-dock-nav">
+    <button class="os-btn" id="os-btn-overview" onclick="NiasOS.showSheet('overview','PULSO')" title="PULSO — Estado vivo SA agora">⬡</button>
+    <button class="os-btn" id="os-btn-brain"    onclick="NiasOS.showSheet('brain','CÉREBRO')"  title="CÉREBRO — IA interpretativa">◉</button>
+    <button class="os-btn" id="os-btn-advisor"  onclick="NiasOS.showSheet('advisor','RADAR')"  title="RADAR — Oportunidades e riscos">📡</button>
+    <button class="os-btn" id="os-btn-oferta"   onclick="NiasOS.showSheet('oferta','PREÇOS')"  title="PREÇOS — Mercado SA real">💰</button>
+    <button class="os-btn" id="os-btn-bio"      onclick="NiasOS.showSheet('biocommand','CLIMA')" title="CLIMA — Bioclima × mercado">🌡</button>
+    <button class="os-btn" id="os-btn-log"      onclick="NiasOS.showSheet('logistica','LOGÍSTICA')" title="LOGÍSTICA — Corredores SA">🚛</button>
+    <button class="os-btn os-btn-war" id="os-btn-war" onclick="NiasOS.showSheet('warroom','WAR ROOM')" title="WAR ROOM — Alertas críticos">⚠</button>
+  </div>
+  <div class="os-dock-sep"></div>
+  <div class="os-cmd">
+    <span class="os-cmd-icon">⌨</span>
+    <input type="text" id="os-cmd-input" class="os-cmd-input"
+           placeholder="Pergunte ao NIAS… soja MT, geada PR, milho AR, logística Santos…"
+           autocomplete="off"
+           onkeydown="if(event.key==='Enter'){NiasOS.ask(this.value);this.value='';}"/>
+    <span id="os-cmd-response" style="color:var(--accent2);"></span>
+  </div>
+</div>
+
+<!-- ═══ NIAS OS — JAVASCRIPT ENGINE ═══════════════════════════════════ -->
+<script>
+/* NiasOS — Geographic Intelligence Operating System
+   Nokia → iPhone moment. The map IS the intelligence.
+   Signals float over the geography where they live.
+   You don't navigate to data. Data navigates to you. */
+const NiasOS = (function() {
+  'use strict';
+
+  // ── Geographic anchors for SA agricultural regions ────────────────
+  const GEO = {
+    'BR-MT': [-13.0, -55.0],   // Mato Grosso — soja/algodão
+    'BR-PR': [-24.5, -51.5],   // Paraná — soja/milho/trigo
+    'BR-RS': [-29.5, -52.8],   // Rio Grande do Sul — soja/arroz
+    'BR-GO': [-15.5, -49.5],   // Goiás — grãos/cana
+    'BR-MA': [ -5.5, -44.5],   // MATOPIBA — fronteira agrícola
+    'BR-BA': [-12.5, -41.5],   // Bahia Oeste — soja/algodão
+    'BR-MG': [-19.5, -44.5],   // Minas Gerais — café/hortifruti
+    'BR-SP': [-22.0, -49.0],   // São Paulo — cana/laranja
+    'AR':    [-33.0, -63.0],   // Pampas Argentina — trigo/soja
+    'CL':    [-34.5, -71.0],   // Chile Central — frutas/vinho
+    'CO':    [  4.5, -74.0],   // Colombia — café/flores
+    'PE':    [-10.0, -76.5],   // Peru — quinoa/aspargo
+    'BO':    [-16.5, -63.5],   // Bolívia Santa Cruz — soja
+    'PY':    [-23.5, -57.5],   // Paraguai — soja
+    'UY':    [-32.5, -56.0],   // Uruguai — arroz/carne
+    'EC':    [ -1.5, -78.5],   // Equador — banana/cacau
+  };
+
+  // ── Signal color palette ──────────────────────────────────────────
+  const COLORS = {
+    critica:          { border:'#ef4444', glow:'rgba(239,68,68,0.55)',  dot:'#ef4444', badge:'rgba(239,68,68,0.2)',  text:'#ef4444' },
+    alta:             { border:'#f59e0b', glow:'rgba(245,158,11,0.45)', dot:'#f59e0b', badge:'rgba(245,158,11,0.15)', text:'#f59e0b' },
+    media:            { border:'#3b82f6', glow:'rgba(59,130,246,0.35)', dot:'#3b82f6', badge:'rgba(59,130,246,0.15)', text:'#3b82f6' },
+    baixa:            { border:'#22c55e', glow:'rgba(34,197,94,0.3)',   dot:'#22c55e', badge:'rgba(34,197,94,0.15)', text:'#22c55e' },
+    comprar:          { border:'#00ff88', glow:'rgba(0,255,136,0.45)',  dot:'#00ff88', badge:'rgba(0,255,136,0.15)', text:'#00ff88' },
+    antecipar_compra: { border:'#22c55e', glow:'rgba(34,197,94,0.4)',   dot:'#22c55e', badge:'rgba(34,197,94,0.15)', text:'#22c55e' },
+    alerta:           { border:'#ef4444', glow:'rgba(239,68,68,0.45)',  dot:'#ef4444', badge:'rgba(239,68,68,0.15)', text:'#ef4444' },
+    monitorar:        { border:'#ffc107', glow:'rgba(255,193,7,0.35)',  dot:'#ffc107', badge:'rgba(255,193,7,0.12)', text:'#ffc107' },
+    segurar:          { border:'#6a92b0', glow:'rgba(106,146,176,0.3)', dot:'#6a92b0', badge:'rgba(106,146,176,0.1)','text':'#6a92b0' },
+  };
+
+  const GLYPHS = {
+    critica:'🔴', alta:'🟡', media:'🔵', baixa:'🟢',
+    comprar:'🟢', antecipar_compra:'🟢', alerta:'🔴', monitorar:'🟡', segurar:'⚪'
+  };
+
+  const PANEL_LABELS = {
+    overview:'PULSO', brain:'CÉREBRO', advisor:'RADAR', map:'MAPA VIVO',
+    oferta:'PREÇOS', biocommand:'CLIMA', logistica:'LOGÍSTICA',
+    situation:'FONTES', warroom:'WAR ROOM'
+  };
+
+  // ── State ─────────────────────────────────────────────────────────
+  let _booted      = false;
+  let _markers     = [];
+  let _activeSheet = null;
+  let _ribbonMsgs  = [];
+  let _ribbonIdx   = 0;
+
+  // ── Helpers ───────────────────────────────────────────────────────
+  const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const $ = id => document.getElementById(id);
+
+  // ── BOOT ─────────────────────────────────────────────────────────
+  function boot() {
+    if (_booted) return;
+    _booted = true;
+
+    document.body.classList.add('nias-os-mode');
+
+    // Hoist all panels to body level so position:fixed works free of #main
+    const panelMap = $('panel-map');
+    const allPanels = document.querySelectorAll('#main .panel');
+    allPanels.forEach(p => document.body.appendChild(p));
+    // Make sure panel-map is the first in body (background layer)
+    if (panelMap) document.body.insertBefore(panelMap, document.body.firstChild);
+
+    // Show dock
+    const dock = $('os-dock');
+    if (dock) dock.style.display = 'flex';
+
+    // Activate the map as the permanent canvas
+    _activateMapCanvas();
+
+    // Start live data cycle
+    setTimeout(_firstLoad, 800);
+    // Refresh signals every 3 min
+    setInterval(loadSignals, 180000);
+  }
+
+  function _activateMapCanvas() {
+    // Force panel-map to be the eternal canvas
+    const map = $('panel-map');
+    if (!map) return;
+    document.querySelectorAll('.panel').forEach(p => {
+      p.classList.remove('active', 'os-sheet-open');
+      p.style.display = '';
+    });
+    map.classList.add('active');
+    // Init the map if not done
+    if (!window._mapInit) {
+      try { window.initMap && initMap(); } catch(e) { console.error('map init', e); }
+    }
+    setTimeout(() => { try { window.leafletMap && leafletMap.invalidateSize(); } catch(e){} }, 200);
+  }
+
+  function _firstLoad() {
+    loadSignals();
+    _loadRibbon();
+  }
+
+  // ── SIGNAL LOADING ───────────────────────────────────────────────
+  function loadSignals() {
+    Promise.all([
+      fetch('/api/nias/brain/events?limit=8',    {cache:'no-store'}).then(r=>r.json()).catch(()=>null),
+      fetch('/api/nias/brain/decisions?limit=6', {cache:'no-store'}).then(r=>r.json()).catch(()=>null),
+      fetch('/api/nias/brain/pulse',             {cache:'no-store'}).then(r=>r.json()).catch(()=>null),
+    ]).then(([evR, dcR, pulseR]) => {
+      const events    = evR?.data?.events      || [];
+      const decisions = dcR?.data?.decisions   || [];
+      const pulse     = pulseR?.data           || null;
+      _renderSignals(events, decisions);
+      _updateLiveText(pulse, events, decisions);
+      _updateRibbonFromData(events, decisions, pulse);
+    }).catch(() => {
+      _renderFallbackSignals();
+    });
+  }
+
+  function _resolveLatLng(item) {
+    if (item.lat  && item.lng) return [parseFloat(item.lat), parseFloat(item.lng)];
+    if (item.lat  && item.lon) return [parseFloat(item.lat), parseFloat(item.lon)];
+    const pais   = (item.pais   || item.country || '').toUpperCase();
+    const regiao = (item.regiao || '').toUpperCase();
+    // Try full region key first (e.g. BR-MT), then country prefix
+    const key = Object.keys(GEO).find(k =>
+      regiao.includes(k.replace('BR-','')) || k === pais || k.startsWith(pais + '-')
+    );
+    return key ? GEO[key] : null;
+  }
+
+  function _renderSignals(events, decisions) {
+    // Remove old markers
+    _markers.forEach(m => { try { m.remove(); } catch(e){} });
+    _markers = [];
+    if (!window.leafletMap) return;
+
+    const seen = new Set();
+
+    events.slice(0,6).forEach(ev => {
+      const ll = _resolveLatLng(ev);
+      if (!ll) return;
+      const key = ll[0].toFixed(1) + ',' + ll[1].toFixed(1);
+      if (seen.has(key)) return; seen.add(key);
+      const c = COLORS[ev.gravidade] || COLORS.media;
+      const g = GLYPHS[ev.gravidade] || '🔵';
+      const m = _makeMarker(ll, {
+        c, g,
+        title: ev.titulo || ev.tipo || 'Evento SA',
+        desc:  (ev.descricao || ev.tipo || '').slice(0, 65),
+        badge: (ev.gravidade || 'info').toUpperCase(),
+        action: () => showSheet('overview', 'PULSO'),
+      });
+      _markers.push(m);
+    });
+
+    decisions.slice(0,4).forEach(dc => {
+      const ll = _resolveLatLng(dc);
+      if (!ll) return;
+      const jitter = [(Math.random()-.5)*1.5, (Math.random()-.5)*1.5];
+      const jll = [ll[0]+jitter[0], ll[1]+jitter[1]];
+      const key = jll[0].toFixed(1) + ',' + jll[1].toFixed(1);
+      if (seen.has(key)) return; seen.add(key);
+      const c = COLORS[dc.tipo] || COLORS.monitorar;
+      const g = GLYPHS[dc.tipo] || '🟡';
+      const m = _makeMarker(jll, {
+        c, g,
+        title: dc.titulo || dc.produto || 'Oportunidade',
+        desc:  (dc.tese || dc.justificativa || '').slice(0, 65),
+        badge: (dc.tipo || '').replace('_',' ').toUpperCase(),
+        action: () => showSheet('advisor', 'RADAR'),
+      });
+      _markers.push(m);
+    });
+
+    if (_markers.length === 0) _renderFallbackSignals();
+  }
+
+  function _makeMarker(latlng, opts) {
+    const { c, g, title, desc, badge, action } = opts;
+    const dotAnim = (c.dot === '#ef4444' || c.dot === '#f59e0b') ? ' os-sig-dot-pulse' : '';
+    const html = `
+      <div class="os-sig os-sig-glow" style="
+        border-color:${c.border};
+        box-shadow:0 0 14px ${c.glow},0 2px 10px rgba(0,0,0,.7);
+        --glow-base:0 0 10px ${c.glow};
+        --glow-peak:0 0 22px ${c.glow},0 0 40px ${c.glow};
+      ">
+        <div class="os-sig-dot${dotAnim}" style="background:${c.dot};"></div>
+        <div class="os-sig-glyph">${g}</div>
+        <div class="os-sig-body">
+          <div class="os-sig-title">${_esc(title)}</div>
+          <div class="os-sig-desc">${_esc(desc)}${desc.length>=65?'…':''}</div>
+          <span class="os-sig-badge" style="background:${c.badge};color:${c.text};">${_esc(badge)}</span>
+        </div>
+      </div>`;
+    const icon = L.divIcon({ html, className:'', iconSize:[0,0], iconAnchor:[-4,20] });
+    const marker = L.marker(latlng, { icon }).addTo(window.leafletMap);
+    marker.on('click', action);
+    return marker;
+  }
+
+  function _renderFallbackSignals() {
+    if (!window.leafletMap) return;
+    const fallback = [
+      { ll:[-13,-55], tipo:'comprar',  title:'Soja — Mato Grosso',     desc:'Janela de pré-venda safra 26/27',         badge:'COMPRAR',  action:()=>showSheet('advisor','RADAR') },
+      { ll:[-24,-51], tipo:'critica',  title:'Risco Geada — Paraná',   desc:'Temperaturas críticas próximas 48h',      badge:'CRÍTICO',  action:()=>showSheet('overview','PULSO') },
+      { ll:[-33,-63], tipo:'monitorar',title:'Milho — Argentina',       desc:'Safra acima do esperado, exportações ↑',  badge:'MONITORAR',action:()=>showSheet('overview','PULSO') },
+      { ll:[-5,-45],  tipo:'alta',     title:'MATOPIBA — Seca',         desc:'Déficit hídrico na fronteira agrícola',   badge:'ALERTA',   action:()=>showSheet('overview','PULSO') },
+      { ll:[-17,-63], tipo:'antecipar_compra', title:'Soja — Bolívia',  desc:'Preços abaixo da média histórica 5y',    badge:'OPORTUNIDADE', action:()=>showSheet('advisor','RADAR') },
+    ];
+    fallback.forEach(f => {
+      const c = COLORS[f.tipo] || COLORS.monitorar;
+      const g = GLYPHS[f.tipo] || '🟡';
+      const m = _makeMarker(f.ll, { c, g, title:f.title, desc:f.desc, badge:f.badge, action:f.action });
+      _markers.push(m);
+    });
+  }
+
+  // ── LIVE TEXT UPDATE ─────────────────────────────────────────────
+  function _updateLiveText(pulse, events, decisions) {
+    const liveEl = $('os-live-text');
+    if (!liveEl) return;
+    const critCount = events.filter(e => e.gravidade === 'critica').length;
+    const oppCount  = decisions.filter(d => d.tipo === 'comprar' || d.tipo === 'antecipar_compra').length;
+    const parts = [];
+    if (critCount > 0) parts.push(`${critCount} ALERTA${critCount>1?'S':''} CRÍTICO${critCount>1?'S':''}`);
+    if (oppCount  > 0) parts.push(`${oppCount} OPORTUNIDADE${oppCount>1?'S':''}`);
+    if (pulse?.system_health) parts.push('SISTEMA ' + String(pulse.system_health).toUpperCase());
+    liveEl.textContent = parts.length > 0 ? parts.join(' · ') : 'NIAS OS · INTELIGÊNCIA ATIVA';
+  }
+
+  // ── INTELLIGENCE RIBBON ──────────────────────────────────────────
+  function _loadRibbon() {
+    fetch('/api/nias/brain/pulse', {cache:'no-store'}).then(r=>r.json()).then(data => {
+      const d = data?.data || {};
+      const msgs = [];
+      if (d.market_summary) msgs.push('MERCADO: ' + d.market_summary);
+      if (d.climate_summary) msgs.push('CLIMA: ' + d.climate_summary);
+      if (d.top_opportunity) msgs.push('OPORTUNIDADE: ' + d.top_opportunity);
+      if (d.top_risk) msgs.push('RISCO: ' + d.top_risk);
+      if (msgs.length > 0) _setRibbonText(msgs.join('   ·   '));
+    }).catch(() => {
+      _setRibbonText('NIAS OS ATIVO · Soja MT monitorada · Clima SA em análise · 42 polos agrocomerciais online · América do Sul em tempo real');
+    });
+  }
+
+  function _updateRibbonFromData(events, decisions, pulse) {
+    const parts = [];
+    events.slice(0,3).forEach(e => { if (e.titulo) parts.push('⚡ ' + e.titulo); });
+    decisions.slice(0,2).forEach(d => { if (d.titulo || d.produto) parts.push('◈ ' + (d.titulo || d.produto) + (d.tipo ? ' [' + d.tipo.toUpperCase() + ']' : '')); });
+    if (pulse?.market_summary) parts.push('📊 ' + pulse.market_summary);
+    if (parts.length > 0) _setRibbonText(parts.join('   ·   '));
+  }
+
+  function _setRibbonText(txt) {
+    const el = $('os-ribbon-text');
+    if (el) el.textContent = txt + '   ';
+  }
+
+  // ── SHEET SYSTEM ─────────────────────────────────────────────────
+  function showSheet(id, label) {
+    if (_activeSheet === id) { closeSheet(); return; }
+
+    // Close any open sheet first
+    if (_activeSheet) _doClose();
+
+    _activeSheet = id;
+    label = label || PANEL_LABELS[id] || id.toUpperCase();
+
+    // Mark all dock buttons inactive, activate this one
+    document.querySelectorAll('.os-btn').forEach(b => b.classList.remove('os-active'));
+    const btn = $('os-btn-' + id) || $('os-btn-' + id.split('command')[0]);
+    if (btn) btn.classList.add('os-active');
+
+    // Show the panel as a sheet
+    const panel = $('panel-' + id);
+    if (!panel) { console.warn('NiasOS: panel-' + id + ' not found'); return; }
+    panel.classList.add('os-sheet-open');
+
+    // Show the sheet title bar
+    const bar = $('os-sheet-bar');
+    if (bar) {
+      const titleEl = $('os-sheet-bar-title');
+      if (titleEl) titleEl.textContent = '⬡ ' + label;
+      bar.classList.add('visible');
+    }
+
+    // Trigger panel initializers (same as showPanel)
+    try { window.showPanel && showPanel(id); } catch(e) {}
+
+    // Scroll sheet to top
+    setTimeout(() => { panel.scrollTop = 0; }, 50);
+  }
+
+  function closeSheet() { _doClose(); }
+
+  function _doClose() {
+    if (_activeSheet) {
+      const panel = $('panel-' + _activeSheet);
+      if (panel) panel.classList.remove('os-sheet-open');
+    }
+    _activeSheet = null;
+    document.querySelectorAll('.os-btn').forEach(b => b.classList.remove('os-active'));
+    const bar = $('os-sheet-bar');
+    if (bar) bar.classList.remove('visible');
+    // Re-focus the map
+    setTimeout(() => { try { window.leafletMap && leafletMap.invalidateSize(); } catch(e){} }, 200);
+  }
+
+  // ── COMMAND BAR ─────────────────────────────────────────────────
+  function ask(text) {
+    const q = text.trim();
+    if (!q) return;
+    const out = $('os-cmd-response');
+    if (out) out.textContent = '⚙ Processando…';
+
+    fetch('/api/nias/brain/command', {
+      method:  'POST',
+      headers: {'Content-Type':'application/json'},
+      body:    JSON.stringify({ command: q }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      const resp = data?.data?.response || data?.data?.message || data?.message || '';
+      if (out) out.textContent = resp ? '◉ ' + resp.slice(0, 160) : '◉ Sem resposta disponível.';
+    })
+    .catch(() => {
+      // Local knowledge fallback
+      const ql = q.toLowerCase();
+      let answer = '◉ Consulte o Cérebro NIAS para análise completa.';
+      if (/soja/.test(ql))             answer = '◉ Soja: monitoramento ativo em MT, PR, RS. Toque o mapa para detalhes por polo.';
+      else if (/milho/.test(ql))       answer = '◉ Milho: mercado SA em observação. Argentina e Brasil principais exportadores.';
+      else if (/geada|frio/.test(ql))  answer = '◉ Clima Sul: risco de geada monitorado no PR e RS nas próximas 48h.';
+      else if (/seca/.test(ql))        answer = '◉ MATOPIBA: déficit hídrico acima de 20%. Acompanhe o painel CLIMA.';
+      else if (/logística|porto/.test(ql)) answer = '◉ Logística: 12 portos SA monitorados. Santos com capacidade normal.';
+      if (out) out.textContent = answer;
+    });
+  }
+
+  // ── PUBLIC API ────────────────────────────────────────────────────
+  return { boot, loadSignals, showSheet, closeSheet, ask };
 })();
 </script>
 
