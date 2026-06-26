@@ -310,6 +310,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/api/ceagesp':
             self._serve_ceagesp()
             return
+        if self.path.startswith('/api/hortifruti/precos'):
+            from flv.horti_prices_api import handle_horti_prices
+            handle_horti_prices(self)
+            return
         if self.path == '/api/rodovias':
             self._serve_rodovias()
             return
