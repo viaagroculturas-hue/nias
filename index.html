@@ -757,14 +757,16 @@ tr:hover td{background:rgba(0,212,255,.04);}
   <!-- SIDEBAR -->
   <div id="sidebar">
     <button class="nav-btn active" onclick="showPanel('overview')" title="Visão Geral"><span>⬡</span><span class="nav-label">VISÃO GERAL</span></button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="showPanel('municipal')" title="Inteligência Geográfica"><span>🌐</span><span class="nav-label">MUNICIPAL</span></button>
-    <button class="nav-btn" onclick="showPanel('biocommand')" title="Ciclo Bioclimático"><span>🧬</span><span class="nav-label">BIO-COMMAND</span></button>
-    <button class="nav-btn" onclick="showPanel('oferta')" title="Mercado e Preços"><span>💰</span><span class="nav-label">MERCADO</span></button>
-    <button class="nav-btn" onclick="showPanel('situation')" title="Situation Real" style="border-left:3px solid #ff6b35 !important;"><span>🎯</span><span class="nav-label">SITUATION</span></button>
-    <button class="nav-btn" onclick="showPanel('advisor')" title="Conselheiro NIAS" style="border-left:3px solid #22c55e !important;"><span>🧠</span><span class="nav-label">CONSELHEIRO</span></button>
-    <div class="nav-divider"></div>
     <button class="nav-btn" onclick="showPanel('brain')" title="Cérebro NIAS — Inteligência Viva" style="border-left:3px solid #8b5cf6 !important;"><span>◉</span><span class="nav-label">CÉREBRO NIAS</span></button>
+    <button class="nav-btn" onclick="showPanel('advisor')" title="Radar de Oportunidades" style="border-left:3px solid #22c55e !important;"><span>🧠</span><span class="nav-label">RADAR OPO.</span></button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn" onclick="showPanel('oferta')" title="Preços América do Sul"><span>💰</span><span class="nav-label">PREÇOS SA</span></button>
+    <button class="nav-btn" onclick="showPanel('map')" title="Clima e Satélite — Mapa SA"><span>🛰</span><span class="nav-label">CLIMA &amp; SAT.</span></button>
+    <button class="nav-btn" onclick="showPanel('biocommand')" title="Clima × Preço — Ciclo Bioclimático"><span>🧬</span><span class="nav-label">CLIMA×PREÇO</span></button>
+    <button class="nav-btn" onclick="showPanel('logistica')" title="Logística — Corredores e Portos SA"><span>🚛</span><span class="nav-label">LOGÍSTICA</span></button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn" onclick="showPanel('municipal')" title="Países e Polos — Inteligência Geográfica"><span>🌐</span><span class="nav-label">PAÍSES/POLOS</span></button>
+    <button class="nav-btn" onclick="showPanel('situation')" title="Fontes e Pipeline" style="border-left:3px solid #ff6b35 !important;"><span>🎯</span><span class="nav-label">FONTES/PIPE</span></button>
     <div style="flex:1"></div>
     <button class="nav-btn" onclick="toggleSidebar()" title="Expandir"><span id="sb-icon">»</span></button>
   </div>
@@ -1149,6 +1151,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <div class="layer-toggle"><input type="checkbox" id="l7" checked onchange="toggleLayer('portos',this)"><label for="l7">Portos / Logística</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l8" checked onchange="toggleLayer('tomate-mesa',this)"><label for="l8" style="color:var(--accent)">🍅 Tomate Mesa</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l9" checked onchange="toggleLayer('tomate-ind',this)"><label for="l9" style="color:var(--accent3)">🍅 Tomate Indústria</label></div>
+          <div class="layer-toggle"><input type="checkbox" id="l-sa-poles" checked onchange="toggleLayer('sa-poles',this)"><label for="l-sa-poles" style="color:#50C878">⬡ Polos SA (42)</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l10" onchange="toggleLayer('planet',this)"><label for="l10" style="color:#7ec850">🛰 Planet (3m)</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l11" checked onchange="toggleLayer('country-borders',this)"><label for="l11" style="color:#00d4ff">🌎 Contornos Países</label></div>
           <div class="layer-toggle"><input type="checkbox" id="l12" checked onchange="toggleAdminBoundaryGroup('main-states',this.checked)"><label for="l12" style="color:#ffdf6b">▧ Estados/Províncias reais</label></div>
@@ -1173,8 +1176,10 @@ tr:hover td{background:rgba(0,212,255,.04);}
         <div class="map-stats" style="position:absolute;bottom:10px;left:10px;z-index:1100;">
           <p>Cobertura ativa: <strong id="map-cov">99.2%</strong> do território</p>
           <p>Última leitura: <strong id="map-time">--</strong></p>
-          <p>Polígonos ativos: <strong id="map-poly">28.450</strong></p>
-          <p>Anomalias detectadas: <strong style="color:var(--danger)" id="map-anom">28</strong></p>
+          <p>Polos SA carregados: <strong id="map-poles-count">carregando…</strong></p>
+          <p>Anomalias detectadas: <strong style="color:var(--danger)" id="map-anom">—</strong></p>
+          <p style="font-size:9px;color:var(--text2);">Fonte: NIAS Regions · Open-Meteo · Dado estrutural</p>
+          <p style="font-size:9px;color:var(--text2);">Próx. atualiz.: <span id="map-next-update">—</span></p>
         </div>
     </div>
 
@@ -1308,6 +1313,8 @@ tr:hover td{background:rgba(0,212,255,.04);}
               <button onclick="logMapToggleLayer('rodovias')" style="font-size:8px;padding:1px 6px;background:rgba(255,61,61,.15);border:1px solid #ff3d3d;color:#ff3d3d;border-radius:3px;cursor:pointer;font-family:var(--font);">RODOVIAS</button>
               <button onclick="logMapToggleLayer('ferrovias')" style="font-size:8px;padding:1px 6px;background:rgba(0,212,255,.15);border:1px solid var(--accent);color:var(--accent);border-radius:3px;cursor:pointer;font-family:var(--font);">FERROVIAS</button>
               <button onclick="logMapToggleLayer('hidrovias')" style="font-size:8px;padding:1px 6px;background:rgba(0,255,136,.15);border:1px solid #00ff88;color:#00ff88;border-radius:3px;cursor:pointer;font-family:var(--font);">HIDROVIAS</button>
+              <button onclick="logMapToggleLayer('sa-corridors')" style="font-size:8px;padding:1px 6px;background:rgba(168,85,247,.15);border:1px solid #a855f7;color:#a855f7;border-radius:3px;cursor:pointer;font-family:var(--font);">🌎 CORREDORES SA</button>
+              <button onclick="logMapToggleLayer('sa-portos')" style="font-size:8px;padding:1px 6px;background:rgba(16,185,129,.15);border:1px solid #10b981;color:#10b981;border-radius:3px;cursor:pointer;font-family:var(--font);">⚓ PORTOS SA</button>
               <button onclick="logMapToggleWaze()" id="btn-waze" style="font-size:8px;padding:1px 6px;background:rgba(51,171,255,.15);border:1px solid #33ABFF;color:#33ABFF;border-radius:3px;cursor:pointer;font-family:var(--font);">🗺 WAZE LIVE</button>
             </div>
           </div>
@@ -1425,6 +1432,14 @@ tr:hover td{background:rgba(0,212,255,.04);}
             </div>
           </div>
         </div>
+      </div>
+      <!-- Logística timestamp footer -->
+      <div id="log-timestamp-bar" style="flex-shrink:0;padding:3px 14px;background:rgba(5,14,26,.7);border-top:1px solid var(--border);display:flex;gap:20px;font-size:9px;color:var(--text2);align-items:center;">
+        <span>Última atualiz.: <strong id="log-last-update">—</strong></span>
+        <span>Fonte: ANTT · AIS Marítimo · GPS Frotas · Dado estrutural estimado</span>
+        <span>Corredores SA: <strong style="color:#a855f7">7 rotas internacionais</strong></span>
+        <span>Portos SA: <strong style="color:#10b981">12 portos</strong></span>
+        <span style="margin-left:auto;">Horizonte: tempo real estimado</span>
       </div>
     </div>
 
@@ -3467,8 +3482,9 @@ const wxBase = [
 ];
 function updateWeather() {
   if (window.DashboardLive && DashboardLive.lastWeather && DashboardLive.lastWeather.length) {
-    return;
+    return; // real data already rendered by DashboardLive.renderWeather
   }
+  // Fallback: sem dados da API, mostra valores de referência histórica (NOT real-time)
   wxBase.forEach((b, i) => {
     const n = i + 1;
     const t = +(b.t + (Math.random()-.5)*.4).toFixed(1);
@@ -3477,12 +3493,10 @@ function updateWeather() {
     document.getElementById('wx-t'+n).textContent = t + '°C';
     document.getElementById('wx-h'+n).textContent = 'Umid: ' + h + '%';
     document.getElementById('wx-w'+n).textContent = 'Vento: ' + w + 'km/h';
+    const st = document.getElementById('wx-s'+n);
+    if (st) { st.textContent = 'referência histórica (sem API)'; st.style.color = 'var(--text2)'; st.title = 'Dado estimado com base em médias históricas. Sem conexão com API observada.'; }
     b.t = t; b.h = h; b.w = w;
   });
-  // also update topbar temp
-  const mt = wxBase[0].t;
-  setLiveVal('ts-temp', mt.toFixed(1) + '°C', 36.2, 0.3);
-  setLiveVal('cs-temp', mt.toFixed(1) + '°C', 36.2, 0.3);
 }
 setInterval(updateWeather, 5000);
 
@@ -4082,12 +4096,98 @@ function initMap() {
     L.polyline([[-12.5,-55.9],[-15.5,-54.5],[-17.5,-53.0],[-20.5,-51.5],[-23.95,-46.33]], { color:'#ffc107', weight:1.5, opacity:.6, dashArray:'4,4' })
       .bindPopup('<div style="font-family:monospace;font-size:12px;color:#050e1a">Corredor Santos</div>'),
   ]).addTo(leafletMap);
+  // ── POLOS PRODUTIVOS SA (42 polos carregados de /api/nias/regions) ──────────
+  const _poleImportanceColor = { muito_alta:'#50C878', alta:'#00d4ff', media:'#ffc107', baixa:'#6a92b0' };
+  mapLayerObjs['sa-poles'] = L.layerGroup();
+  fetch('/api/nias/regions', { cache: 'no-store' })
+    .then(r => r.json())
+    .then(data => {
+      const poles = (data.data || {}).regions || [];
+      poles.forEach(p => {
+        const color = _poleImportanceColor[p.importance] || '#6a92b0';
+        const prods = (p.products || []).slice(0, 4).join(', ') || 'não informado';
+        const marker = L.circleMarker([p.lat, p.lon], {
+          radius: p.importance === 'muito_alta' ? 8 : p.importance === 'alta' ? 6 : 5,
+          color, fillColor: color, fillOpacity: 0.75, weight: 1.5,
+        });
+        marker.bindTooltip(`
+          <div style="font-family:monospace;font-size:11px;min-width:180px;">
+            <b style="color:${color}">${p.region}</b><br>
+            <span style="color:#8b949e">País:</span> ${p.country} (${p.country_code})<br>
+            <span style="color:#8b949e">Estado/Dpto:</span> ${p.state_or_department || '—'}<br>
+            <span style="color:#8b949e">Produtos:</span> ${prods}<br>
+            <span style="color:#8b949e">Importância:</span> ${p.importance}<br>
+            <span style="color:#6a92b0;font-size:9px;">Fonte: NIAS Regions · Clique para detalhes</span>
+          </div>`, { sticky: true, direction: 'right' });
+        marker.on('click', () => _showPoleDetail(p, color));
+        mapLayerObjs['sa-poles'].addLayer(marker);
+      });
+      if (leafletMap) mapLayerObjs['sa-poles'].addTo(leafletMap);
+      // Update timestamp UI
+      const now = new Date();
+      const fmt = d => d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      const nextHour = new Date(now.getTime() + 60*60*1000);
+      const el = document.getElementById('map-time'); if (el) el.textContent = fmt(now);
+      const nxt = document.getElementById('map-next-update'); if (nxt) nxt.textContent = fmt(nextHour);
+      const cnt = document.getElementById('map-poles-count'); if (cnt) cnt.textContent = poles.length + ' polos (dado estrutural)';
+    })
+    .catch(e => {
+      console.warn('SA poles não carregados:', e);
+      const cnt = document.getElementById('map-poles-count'); if (cnt) cnt.textContent = 'indisponível (API offline)';
+    });
+
   setTimeout(() => leafletMap && leafletMap.invalidateSize(), 120);
+}
+
+// Painel lateral de detalhes do polo SA (clique no marcador)
+function _showPoleDetail(pole, color) {
+  let panel = document.getElementById('_pole-detail-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = '_pole-detail-panel';
+    panel.style.cssText = 'position:absolute;top:40px;left:10px;bottom:10px;width:260px;z-index:1200;background:rgba(9,20,34,.96);border:1px solid var(--border);border-radius:6px;overflow:auto;padding:12px;font-family:monospace;box-shadow:0 4px 20px rgba(0,0,0,.6);';
+    document.getElementById('panel-map').appendChild(panel);
+  }
+  const prods = (pole.products || []).join(', ') || '—';
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="color:${color};font-size:11px;font-weight:bold;letter-spacing:1px;">${pole.region}</span>
+      <button onclick="document.getElementById('_pole-detail-panel').style.display='none'" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;line-height:1;">×</button>
+    </div>
+    <div style="font-size:10px;line-height:1.7;color:var(--text);">
+      <div><span style="color:var(--text2)">País:</span> ${pole.country} (${pole.country_code})</div>
+      <div><span style="color:var(--text2)">Estado/Dpto:</span> ${pole.state_or_department || '—'}</div>
+      <div><span style="color:var(--text2)">Cidade ref.:</span> ${pole.city || '—'}</div>
+      <div><span style="color:var(--text2)">Lat/Lon:</span> ${pole.lat}, ${pole.lon}</div>
+      <div><span style="color:var(--text2)">Importância:</span> ${pole.importance}</div>
+      <div style="margin-top:6px;"><span style="color:var(--text2)">Produtos:</span><br><span style="color:var(--accent2)">${prods}</span></div>
+      ${pole.notes ? `<div style="margin-top:6px;font-size:9px;color:var(--text2);border-top:1px solid var(--border);padding-top:6px;">${pole.notes}</div>` : ''}
+    </div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+      <button onclick="showPanel('brain')" style="background:rgba(139,92,246,.15);border:1px solid #8b5cf6;color:#8b5cf6;font-family:monospace;font-size:9px;padding:4px 8px;border-radius:4px;cursor:pointer;text-align:left;">◉ Ver análise no Cérebro NIAS</button>
+      <button disabled title="Tese estratégica requer dados de preço persistidos para ${pole.country_code}. Configure a fonte de preço para ativar." style="background:none;border:1px solid var(--border);color:var(--text2);font-family:monospace;font-size:9px;padding:4px 8px;border-radius:4px;cursor:not-allowed;text-align:left;opacity:0.5;">📊 Ver tese (aguarda fonte de preço: ${pole.country_code})</button>
+      <button disabled title="Monitoramento automático requer backend configurado com chave de alertas para este polo." style="background:none;border:1px solid var(--border);color:var(--text2);font-family:monospace;font-size:9px;padding:4px 8px;border-radius:4px;cursor:not-allowed;text-align:left;opacity:0.5;">🔔 Monitorar polo (requer configuração de alertas)</button>
+    </div>
+    <div style="margin-top:10px;font-size:8px;color:var(--text2);border-top:1px solid var(--border);padding-top:6px;">
+      Fonte: NIAS Regions · Dado estrutural (sem atualização em tempo real)<br>
+      Clima e preço: indisponível (aguarda coleta Open-Meteo / fonte de preço)
+    </div>`;
 }
 
 function toggleLayer(name, cb) {
   if (!leafletMap) return;
-  if (!mapLayerObjs[name]) return;
+  if (!mapLayerObjs[name]) {
+    cb.checked = false;
+    const _layerMsgs = {
+      planet: 'Camada Planet indisponível: configure PLANET_KEY no backend para ativar imagens de 3m.',
+    };
+    const msg = _layerMsgs[name] || `Camada "${name}" indisponível: dados ainda não carregados.`;
+    const el = document.getElementById('main-boundary-status');
+    if (el) { el.style.color = 'var(--warn)'; el.textContent = '⚠ ' + msg; setTimeout(() => { el.style.color = ''; el.textContent = 'divisas oficiais carregadas'; }, 5000); }
+    else alert(msg);
+    return;
+  }
   if (cb.checked) mapLayerObjs[name].addTo(leafletMap);
   else leafletMap.removeLayer(mapLayerObjs[name]);
 }
@@ -4096,7 +4196,11 @@ function toggleLayer(name, cb) {
 // MAPA DE POLOS SUL-AMERICANOS — Modal com imagem de referência
 // ═══════════════════════════════════════════════════════════════════
 function showPolosMap() {
-  // Criar modal se não existir
+  // Navegar para panel-map (mapa interativo com os 44 polos produtivos SA)
+  showPanel('map');
+}
+function showPolosMap_legacy() {
+  // Criar modal se não existir (LEGADO — substituído por showPolosMap acima)
   let modal = document.getElementById('polos-map-modal');
   if (!modal) {
     modal = document.createElement('div');
@@ -4237,6 +4341,55 @@ function initSankey() {
     const mk = createSonarMarker(o.ll, { state:'soja', size:8, tooltip:`<b>📦 ${o.name}</b><br>Volume: ${o.vol}/safra` });
     logMap.addLayer(mk);
   });
+
+  // ── CORREDORES INTERNACIONAIS SA ───────────────────────────────
+  const saCorridors = L.layerGroup();
+  const corridors = [
+    { name:'Corredor BR→AR (MERCOSUL)', pts:[[-23.95,-46.33],[-25.5,-49.0],[-27.0,-52.5],[-28.5,-56.0],[-30.0,-57.5],[-32.95,-60.65],[-34.6,-58.38]], color:'#a855f7', info:'Brasil → Argentina via Uruguaiana/Paso de los Libres' },
+    { name:'Corredor BR→PY (Paranaguá)', pts:[[-23.95,-46.33],[-25.52,-48.52],[-25.5,-51.5],[-25.3,-54.6],[-25.3,-57.6],[-25.3,-57.63]], color:'#f59e0b', info:'Brasil → Paraguai via Foz do Iguaçu/Ciudad del Este' },
+    { name:'Corredor BR→UY (Sul)', pts:[[-30.0,-51.2],[-31.3,-52.1],[-31.4,-54.1],[-32.5,-53.4],[-34.9,-56.18]], color:'#06b6d4', info:'Brasil → Uruguai via Santana do Livramento/Rivera' },
+    { name:'Corredor CL↔AR (Los Andes)', pts:[[-33.45,-70.66],[-32.89,-68.84],[-34.61,-68.33],[-34.6,-58.38]], color:'#ec4899', info:'Chile ↔ Argentina via Paso Los Libertadores · Corredor Bioceânico' },
+    { name:'Corredor PE↔BO (Altiplano)', pts:[[-12.05,-77.04],[-14.0,-75.0],[-16.41,-71.54],[-17.0,-68.5],[-17.8,-63.18]], color:'#10b981', info:'Peru ↔ Bolivia via La Paz · Produtos andinos' },
+    { name:'Rota Bioceânica (BR→CL)', pts:[[-15.6,-56.1],[-17.5,-57.5],[-19.0,-60.0],[-18.0,-63.18],[-17.8,-68.9],[-18.5,-70.3],[-20.2,-70.16]], color:'#f97316', info:'Corredor Bioceânico Central BR-PY-BO-CL via TTPB · Projeto em implantação', dash:'10,6' },
+    { name:'Corredor Andino Norte (CO↔PE)', pts:[[4.71,-74.07],[1.0,-77.0],[-2.0,-78.0],[-4.0,-79.0],[-5.19,-80.63]], color:'#3b82f6', info:'Colômbia → Peru via Tumbes · Corredor Pacífico Norte' },
+  ];
+  corridors.forEach(c => {
+    const line = L.polyline(c.pts, { color:c.color, weight:2.5, opacity:0.75, dashArray: c.dash || '14,6' });
+    line.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>🛣 ${c.name}</b><br><span style="color:#8b949e">${c.info}</span></div>`, { sticky:true });
+    saCorridors.addLayer(line);
+  });
+  logMapLayers['sa-corridors'] = saCorridors;
+  saCorridors.addTo(logMap);
+
+  // ── PORTOS SA ESTRATÉGICOS (12 portos) ──────────────────────────
+  const saPortos = L.layerGroup();
+  const saPortData = [
+    { ll:[-23.95,-46.33], name:'Santos (BR)', type:'exportação grãos', cap:'135 Mt/ano' },
+    { ll:[-25.52,-48.52], name:'Paranaguá (BR)', type:'soja/milho/açúcar', cap:'50 Mt/ano' },
+    { ll:[-32.1,-52.1],   name:'Rio Grande (BR)', type:'grãos e fertilizantes', cap:'35 Mt/ano' },
+    { ll:[-8.0,-35.0],    name:'Suape (BR)', type:'contêineres/granéis', cap:'30 Mt/ano' },
+    { ll:[-2.5,-44.2],    name:'Itaqui/São Luís (BR)', type:'grãos MATOPIBA', cap:'40 Mt/ano' },
+    { ll:[-34.6,-58.38],  name:'Buenos Aires (AR)', type:'exportação grãos/carnes', cap:'40 Mt/ano' },
+    { ll:[-34.9,-56.18],  name:'Montevidéu (UY)', type:'hub regional', cap:'15 Mt/ano' },
+    { ll:[-33.45,-70.66], name:'Valparaíso (CL)', type:'contêineres/cobre', cap:'40 Mt/ano' },
+    { ll:[-33.6,-71.6],   name:'San Antonio (CL)', type:'frutas/exportação', cap:'25 Mt/ano' },
+    { ll:[-12.05,-77.04], name:'Callao (PE)', type:'maior porto peruano', cap:'45 Mt/ano' },
+    { ll:[-2.2,-79.9],    name:'Guayaquil (EC)', type:'banana/camarão/flores', cap:'20 Mt/ano' },
+    { ll:[10.4,-75.5],    name:'Cartagena (CO)', type:'hub Caribe/contêineres', cap:'35 Mt/ano' },
+  ];
+  saPortData.forEach(p => {
+    const mk = createSonarMarker(p.ll, { state:'ai', size:10,
+      tooltip:`<div style="font-family:monospace;font-size:11px;"><b>⚓ ${p.name}</b><br><span style="color:#8b949e">${p.type}</span><br>Cap.: ${p.cap}<br><span style="color:#6a92b0;font-size:9px;">Fonte: NIAS Logística · dado estrutural</span></div>` });
+    saPortos.addLayer(mk);
+  });
+  logMapLayers['sa-portos'] = saPortos;
+  saPortos.addTo(logMap);
+
+  // Timestamp
+  const _logNow = new Date();
+  const _logFmt = d => d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  const _logEl = document.getElementById('log-last-update');
+  if (_logEl) _logEl.textContent = _logFmt(_logNow) + ' (estrutural)';
 
   setTimeout(() => logMap.invalidateSize(), 80);
 }
