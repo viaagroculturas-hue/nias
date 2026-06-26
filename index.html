@@ -735,10 +735,15 @@ tr:hover td{background:rgba(0,212,255,.04);}
   overflow:   hidden   !important;
 }
 
-/* ── OS Mode: outros painéis ocultos — sheets aparecem como overlay */
-.nias-os-mode .panel:not(#panel-map) {
+/* ── OS Mode: todos os painéis ocultos (0-2-0) */
+.nias-os-mode .panel {
   display: none !important; opacity: 0 !important; visibility: hidden !important;
 }
+/* panel-map sempre visível (1-1-0 > 0-2-0) */
+.nias-os-mode #panel-map {
+  display: flex !important; opacity: 1 !important; visibility: visible !important;
+}
+/* Sheet aberto (0-3-0 > 0-2-0) — especificidade maior que .panel sozinho */
 .nias-os-mode .panel.os-sheet-open {
   /* position:fixed aqui é em relação ao VIEWPORT (não ao #main),
      porque #main não tem transform/filter/will-change */
