@@ -64,9 +64,11 @@ def test_navigation_existing_panels_preserved():
 
 
 def test_existing_nav_buttons_preserved():
-    """Botões de navegação existentes não devem ser removidos."""
+    """Botões de navegação dos 9 centros NIAS Revolution devem existir."""
     html = _html()
-    for panel_name in ['overview', 'situation', 'chat', 'oferta', 'municipal', 'biocommand']:
+    # NIAS Revolution: 9 centros (municipal removido da nav primária)
+    for panel_name in ['overview', 'situation', 'oferta', 'biocommand',
+                       'brain', 'advisor', 'map', 'logistica', 'warroom']:
         assert f"showPanel('{panel_name}')" in html, \
             f"Botão de navegação para '{panel_name}' foi removido"
 

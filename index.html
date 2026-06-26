@@ -754,33 +754,33 @@ tr:hover td{background:rgba(0,212,255,.04);}
 <!-- APP -->
 <div id="app">
 
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR — 9 centros do sistema operacional NIAS -->
   <div id="sidebar">
-    <button class="nav-btn active" onclick="showPanel('overview')" title="Visão Geral"><span>⬡</span><span class="nav-label">VISÃO GERAL</span></button>
-    <button class="nav-btn" onclick="showPanel('brain')" title="Cérebro NIAS — Inteligência Viva" style="border-left:3px solid #8b5cf6 !important;"><span>◉</span><span class="nav-label">CÉREBRO NIAS</span></button>
-    <button class="nav-btn" onclick="showPanel('advisor')" title="Radar de Oportunidades" style="border-left:3px solid #22c55e !important;"><span>🧠</span><span class="nav-label">RADAR OPO.</span></button>
+    <button class="nav-btn active" onclick="showPanel('overview')" title="Pulso — Estado vivo da América do Sul agora" style="border-left:3px solid #00d4ff !important;"><span>⬡</span><span class="nav-label">PULSO</span></button>
+    <button class="nav-btn" onclick="showPanel('brain')" title="Cérebro NIAS — Inteligência interpretativa e decisões" style="border-left:3px solid #8b5cf6 !important;"><span>◉</span><span class="nav-label">CÉREBRO</span></button>
+    <button class="nav-btn" onclick="showPanel('advisor')" title="Radar — Oportunidades e riscos por produto/país/horizonte" style="border-left:3px solid #22c55e !important;"><span>📡</span><span class="nav-label">RADAR</span></button>
+    <button class="nav-btn" onclick="showPanel('map')" title="Mapa Vivo — 42 polos produtivos SA com dados em tempo real" style="border-left:3px solid #10b981 !important;"><span>🌎</span><span class="nav-label">MAPA VIVO</span></button>
     <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="showPanel('oferta')" title="Preços América do Sul"><span>💰</span><span class="nav-label">PREÇOS SA</span></button>
-    <button class="nav-btn" onclick="showPanel('map')" title="Clima e Satélite — Mapa SA"><span>🛰</span><span class="nav-label">CLIMA &amp; SAT.</span></button>
-    <button class="nav-btn" onclick="showPanel('biocommand')" title="Clima × Preço — Ciclo Bioclimático"><span>🧬</span><span class="nav-label">CLIMA×PREÇO</span></button>
-    <button class="nav-btn" onclick="showPanel('logistica')" title="Logística — Corredores e Portos SA"><span>🚛</span><span class="nav-label">LOGÍSTICA</span></button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="showPanel('municipal')" title="Países e Polos — Inteligência Geográfica"><span>🌐</span><span class="nav-label">PAÍSES/POLOS</span></button>
-    <button class="nav-btn" onclick="showPanel('situation')" title="Fontes e Pipeline" style="border-left:3px solid #ff6b35 !important;"><span>🎯</span><span class="nav-label">FONTES/PIPE</span></button>
+    <button class="nav-btn" onclick="showPanel('oferta')" title="Preços — Mercado SA real e curado"><span>💰</span><span class="nav-label">PREÇOS</span></button>
+    <button class="nav-btn" onclick="showPanel('biocommand')" title="Clima — Ciclo bioclimático × preço"><span>🌡</span><span class="nav-label">CLIMA</span></button>
+    <button class="nav-btn" onclick="showPanel('logistica')" title="Logística — Corredores SA, portos e rotas"><span>🚛</span><span class="nav-label">LOGÍSTICA</span></button>
+    <button class="nav-btn" onclick="showPanel('situation')" title="Fontes — Pipeline, banco, freshness e status por país" style="border-left:3px solid #ff6b35 !important;"><span>📊</span><span class="nav-label">FONTES</span></button>
+    <button class="nav-btn" onclick="showPanel('warroom')" title="War Room — Alertas críticos e situação de emergência" style="border-left:3px solid #ef4444 !important;"><span>⚠</span><span class="nav-label">WAR ROOM</span></button>
     <div style="flex:1"></div>
-    <button class="nav-btn" onclick="toggleSidebar()" title="Expandir"><span id="sb-icon">»</span></button>
+    <button class="nav-btn" onclick="toggleSidebar()" title="Expandir/Recolher menu"><span id="sb-icon">»</span></button>
   </div>
 
   <!-- MAIN -->
   <div id="main">
 
-    <!-- ═══ PANEL: OVERVIEW ═══ -->
+    <!-- ═══ PANEL: PULSO — Estado vivo da América do Sul ═══ -->
     <div class="panel active" id="panel-overview">
       <div class="panel-header">
-        <span class="panel-title">STATUS GERAL — AMÉRICA DO SUL</span>
-        <span class="panel-badge ok">SISTEMA OPERACIONAL</span>
-        <span class="panel-badge warn" id="ph-delta">δ_clima = 0.968</span>
-        <span class="panel-badge danger" id="ph-alerts">4 ALERTAS ATIVOS</span>
+        <span class="panel-title">PULSO — ESTADO VIVO DA AMÉRICA DO SUL</span>
+        <span class="panel-badge ok" id="pulse-health-badge">SISTEMA OPERACIONAL</span>
+        <span class="panel-badge warn" id="ph-delta">δ_clima —</span>
+        <span class="panel-badge danger" id="ph-alerts">carregando alertas…</span>
+        <span style="margin-left:auto;font-size:9px;color:var(--text2);">Atualiz.: <span id="pulse-last-update">—</span> · Próx.: <span id="pulse-next-update">—</span></span>
         <span class="badge-live">● LIVE</span>
       </div>
       <div id="alerts-strip">
@@ -812,6 +812,44 @@ tr:hover td{background:rgba(0,212,255,.04);}
         <div class="kpi-card"><div class="kpi-label">BOI GORDO (equiv.)</div><div class="kpi-value" id="kpi-boi">—</div><div class="kpi-delta up" id="kd-boi">aguardando API</div><canvas class="kpi-spark" id="sp-boi"></canvas></div>
         <div class="kpi-card"><div class="kpi-label">HORTIFRUTIS</div><div class="kpi-value" id="kpi-horti">—</div><div class="kpi-delta down" id="kd-horti">aguardando API</div><canvas class="kpi-spark" id="sp-horti"></canvas></div>
       </div>
+
+      <!-- ═══ PULSO VIVO — Cérebro NIAS em tempo real ═══ -->
+      <div id="pulse-live-section" style="display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;min-height:130px;max-height:160px;">
+        <!-- Alertas ativos -->
+        <div style="flex:1;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:5px 10px;background:rgba(239,68,68,.08);border-bottom:1px solid rgba(239,68,68,.2);display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <span style="width:6px;height:6px;background:#ef4444;border-radius:50%;display:inline-block;animation:pulse-dot 1.5s ease-in-out infinite;"></span>
+            <span style="color:#ef4444;font-size:9px;font-weight:bold;letter-spacing:1.5px;">ALERTAS ATIVOS</span>
+            <span id="pulse-events-count" style="margin-left:auto;font-size:8px;color:var(--text2);">carregando…</span>
+          </div>
+          <div id="pulse-events-list" style="flex:1;overflow-y:auto;padding:2px 0;font-size:9px;"></div>
+        </div>
+        <!-- Oportunidades top -->
+        <div style="flex:1;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:5px 10px;background:rgba(0,255,136,.06);border-bottom:1px solid rgba(0,255,136,.2);display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <span style="width:6px;height:6px;background:#00ff88;border-radius:50%;display:inline-block;"></span>
+            <span style="color:#00ff88;font-size:9px;font-weight:bold;letter-spacing:1.5px;">OPORTUNIDADES</span>
+            <span id="pulse-cards-count" style="margin-left:auto;font-size:8px;color:var(--text2);">carregando…</span>
+          </div>
+          <div id="pulse-decisions-list" style="flex:1;overflow-y:auto;padding:2px 0;font-size:9px;"></div>
+        </div>
+        <!-- Saúde do sistema -->
+        <div style="width:200px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:5px 10px;background:rgba(139,92,246,.06);border-bottom:1px solid rgba(139,92,246,.2);display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <span style="color:#8b5cf6;font-size:9px;font-weight:bold;letter-spacing:1.5px;">CÉREBRO NIAS</span>
+          </div>
+          <div id="pulse-brain-health" style="flex:1;padding:6px 10px;font-size:9px;color:var(--text);display:flex;flex-direction:column;gap:4px;justify-content:center;">
+            <div style="color:var(--text2);">Saúde: <span id="ph-brain-health" style="color:var(--accent2);">—</span></div>
+            <div style="color:var(--text2);">Cobertura clima: <span id="ph-climate-coverage">—</span></div>
+            <div style="color:var(--text2);">Cobertura preço: <span id="ph-price-coverage">—</span></div>
+            <div style="color:var(--text2);">Polos monitorados: <span id="ph-poles-count">—</span></div>
+            <button onclick="showPanel('brain')" style="margin-top:4px;background:rgba(139,92,246,.15);border:1px solid #8b5cf6;color:#8b5cf6;font-family:monospace;font-size:8px;padding:3px 6px;border-radius:3px;cursor:pointer;text-align:left;">◉ Abrir Cérebro NIAS →</button>
+          </div>
+        </div>
+      </div>
+      <style>
+        @keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+      </style>
 
       <!-- HORTIFRUTIS ROW -->
       <div id="horti-section">
@@ -2482,23 +2520,26 @@ tr:hover td{background:rgba(0,212,255,.04);}
 
 
     <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- CONSELHEIRO NIAS                                               -->
+    <!-- RADAR — Central de Oportunidades e Riscos                      -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div class="panel" id="panel-advisor" style="background:#0a0a0a;flex-direction:column;overflow-y:auto;">
 
       <!-- Header -->
       <div class="panel-header" style="flex-shrink:0;">
-        <span class="panel-title">🧠 CONSELHEIRO NIAS — INTELIGÊNCIA AGROCOMERCIAL</span>
+        <span class="panel-title">📡 RADAR — OPORTUNIDADES E RISCOS · AMÉRICA DO SUL</span>
         <span class="panel-badge ok" id="advisor-status-badge">CARREGANDO</span>
         <span class="panel-badge" style="color:#22c55e;border-color:#22c55e;">AMÉRICA DO SUL</span>
-        <button onclick="loadAdvisor(true)" style="margin-left:auto;background:none;border:1px solid #333;color:#888;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:10px;">↺ ATUALIZAR</button>
+        <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+          <span style="font-size:9px;color:var(--text2);">Atualiz.: <span id="radar-last-update">—</span></span>
+          <button onclick="loadAdvisor(true)" style="background:none;border:1px solid #333;color:#888;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:10px;">↺ ATUALIZAR</button>
+        </div>
       </div>
 
       <!-- Resumo Executivo -->
       <div style="padding:16px 20px 0;flex-shrink:0;">
         <div id="advisor-summary" style="background:#111;border:1px solid #1e3a2e;border-radius:8px;padding:16px 20px;margin-bottom:16px;">
-          <div style="font-size:10px;color:#22c55e;letter-spacing:1.5px;margin-bottom:8px;">RESUMO EXECUTIVO</div>
-          <div id="advisor-summary-text" style="color:#ccc;font-size:13px;line-height:1.6;">Carregando análise do Conselheiro NIAS…</div>
+          <div style="font-size:10px;color:#22c55e;letter-spacing:1.5px;margin-bottom:8px;">RESUMO EXECUTIVO DO RADAR</div>
+          <div id="advisor-summary-text" style="color:#ccc;font-size:13px;line-height:1.6;">Carregando análise do Radar NIAS…</div>
           <div id="advisor-summary-stats" style="display:flex;gap:24px;margin-top:12px;flex-wrap:wrap;"></div>
         </div>
       </div>
@@ -3208,6 +3249,7 @@ function showPanel(id) {
     if (id === 'esg' && !window._esgInit) { try { initESG(); } catch(e) { console.error('esg init error:', e); } }
     if (id === 'warroom' && !window._warInit) { try { initWarRoom(); } catch(e) { console.error('warroom init error:', e); } }
     if (id === 'warroom') setTimeout(() => { try { WarRoomProtocol.refresh(); } catch(e) { console.error('warroom refresh error:', e); } }, 200);
+    if (id === 'overview') { try { loadPulso(false); } catch(e) { console.error('pulso load error:', e); } }
     if (id === 'brain' && !window._brainInit) { try { initBrainPanel(); } catch(e) { console.error('brain init error:', e); } }
     if (id === 'brain') { try { loadBrain(false); } catch(e) { console.error('brain load error:', e); } }
     if (id === 'chat' && !window._chatInit) { try { initChatIA(); runSystemAudit(false); } catch(e) { console.error('chat init error:', e); } }
@@ -12873,6 +12915,135 @@ const NiasClimateFrontend = {
 
   // Expor para o hook de showPanel já existente
   window._brainReady = true;
+
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     PULSO — JavaScript do painel de estado vivo da América do Sul
+     Carrega brain/pulse + brain/events + brain/decisions em paralelo
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  const _esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const _fmt  = iso => { try { return new Date(iso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); } catch(e) { return iso || '—'; } };
+
+  let _pulsoLoading = false;
+  let _pulsoLastLoad = 0;
+
+  window.loadPulso = function(force) {
+    const now = Date.now();
+    if (!force && _pulsoLoading) return;
+    if (!force && (now - _pulsoLastLoad) < 45000) return; // debounce 45s
+    _pulsoLoading = true;
+    _pulsoLastLoad = now;
+
+    // Carregar pulse + events + decisions em paralelo
+    Promise.all([
+      fetch('/api/nias/brain/pulse', { cache: 'no-store' }).then(r => r.json()).catch(() => null),
+      fetch('/api/nias/brain/events?limit=5', { cache: 'no-store' }).then(r => r.json()).catch(() => null),
+      fetch('/api/nias/brain/decisions?limit=5', { cache: 'no-store' }).then(r => r.json()).catch(() => null),
+    ]).then(([pulseResp, eventsResp, decisionsResp]) => {
+      _renderPulsoHealth(pulseResp);
+      _renderPulsoEvents(eventsResp);
+      _renderPulsoDecisions(decisionsResp);
+      // Timestamp no header
+      const ts = _fmt(new Date().toISOString());
+      const lup = document.getElementById('pulse-last-update'); if (lup) lup.textContent = ts;
+      const nup = document.getElementById('pulse-next-update');
+      if (nup) { const n = new Date(Date.now() + 30*60*1000); nup.textContent = _fmt(n.toISOString()); }
+    }).catch(e => console.warn('[PULSO] load error:', e))
+    .finally(() => { _pulsoLoading = false; });
+  };
+
+  function _renderPulsoHealth(resp) {
+    if (!resp || resp.status === 'error') return;
+    const d = resp.data || {};
+    const health = d.health || '—';
+    const hColors = { saudavel:'#00ff88', ok:'#00d4ff', atencao:'#ffc107', degradado:'#ef4444', desconhecido:'#6a92b0' };
+    const hc = hColors[health] || '#6a92b0';
+
+    const hBadge = document.getElementById('pulse-health-badge');
+    if (hBadge) { hBadge.textContent = health.toUpperCase(); hBadge.style.color = hc; hBadge.style.borderColor = hc; }
+
+    const bh = document.getElementById('ph-brain-health');
+    if (bh) { bh.textContent = health; bh.style.color = hc; }
+
+    const cov = d.coverage || {};
+    const cc = document.getElementById('ph-climate-coverage');
+    if (cc) cc.textContent = (cov.weather_poles || 0) + ' polos';
+    const pc = document.getElementById('ph-price-coverage');
+    if (pc) pc.textContent = (cov.price_countries || 0) + ' países';
+    const poles = document.getElementById('ph-poles-count');
+    if (poles) poles.textContent = (cov.weather_poles || '—') + ' / 42';
+
+    // Atualiza delta header com recomendações
+    const recs = d.recommendations || [];
+    const delta = document.getElementById('ph-delta');
+    if (delta && recs.length) delta.textContent = 'REC: ' + recs[0].slice(0,40);
+  }
+
+  function _renderPulsoEvents(resp) {
+    const list = document.getElementById('pulse-events-list');
+    const cnt  = document.getElementById('pulse-events-count');
+    if (!list) return;
+    const events = (resp && resp.data && resp.data.events) ? resp.data.events : [];
+    if (cnt) cnt.textContent = events.length + ' evento(s)';
+
+    const alertBadge = document.getElementById('ph-alerts');
+    if (alertBadge) alertBadge.textContent = events.length + ' ALERTAS VIVOS';
+
+    if (!events.length) {
+      list.innerHTML = '<div style="padding:8px 10px;color:var(--text2);">Sem alertas ativos no momento.</div>';
+      return;
+    }
+    const gravColors = { critica:'#ef4444', alta:'#f59e0b', warn:'#ffc107', info:'#6a92b0' };
+    list.innerHTML = events.slice(0,5).map(ev => {
+      const c = gravColors[ev.gravidade] || '#6a92b0';
+      return `<div style="padding:4px 10px;border-left:2px solid ${c};margin:1px 0;cursor:pointer;" onclick="showPanel('brain')" title="${_esc(ev.descricao)}">
+        <span style="color:${c};font-size:8px;font-weight:bold;">[${_esc(ev.gravidade||'').toUpperCase()}]</span>
+        <span style="color:var(--text);margin-left:4px;font-size:9px;">${_esc(ev.titulo)}</span>
+        <span style="float:right;color:var(--text2);font-size:8px;">${_esc(ev.pais||'SA')}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function _renderPulsoDecisions(resp) {
+    const list = document.getElementById('pulse-decisions-list');
+    const cnt  = document.getElementById('pulse-cards-count');
+    if (!list) return;
+    const cards = (resp && resp.data && resp.data.decisions) ? resp.data.decisions : [];
+    if (cnt) cnt.textContent = cards.length + ' card(s)';
+
+    if (!cards.length) {
+      list.innerHTML = '<div style="padding:8px 10px;color:var(--text2);">Sem oportunidades no momento. Aguardando dados de preço.</div>';
+      return;
+    }
+    const typeColors = { comprar:'#00ff88', antecipar_compra:'#22c55e', alerta:'#ef4444', monitorar:'#ffc107', segurar:'#6a92b0' };
+    list.innerHTML = cards.slice(0,5).map(c => {
+      const tc = typeColors[c.tipo] || '#6a92b0';
+      const score = c.score || 0;
+      const valid_until = c.valid_until || c.validade_ate || '';
+      const generated_at = c.generated_at || c.gerado_em || '';
+      const valLabel = valid_until ? `válido até ${valid_until}` : '';
+      return `<div style="padding:4px 10px;border-left:2px solid ${tc};margin:1px 0;cursor:pointer;" onclick="showPanel('advisor')" title="${_esc(c.tese)}">
+        <span style="color:${tc};font-size:8px;font-weight:bold;">[${_esc((c.tipo||'').toUpperCase())}]</span>
+        <span style="color:var(--text);margin-left:4px;font-size:9px;">${_esc(c.titulo||c.produto||'—')}</span>
+        <span style="float:right;color:var(--text2);font-size:8px;">${score}/100</span>
+        ${valLabel ? `<div style="font-size:7px;color:var(--text2);margin-top:1px;">⏱ ${_esc(valLabel)}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // Auto-load quando o painel overview é o ativo inicial
+  document.addEventListener('DOMContentLoaded', () => {
+    const panel = document.getElementById('panel-overview');
+    if (panel && panel.classList.contains('active')) {
+      setTimeout(() => { try { loadPulso(true); } catch(e) {} }, 800);
+    }
+  });
 
 })();
 </script>

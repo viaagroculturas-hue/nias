@@ -64,13 +64,16 @@ def handle_nias_api(handler, raw_path: str):
 
 def _dispatch(path: str, params: dict) -> dict:
     """Mapeia path para handler."""
-    # Status / Health
+    # Status / Health / Pulse (top-level aliases)
     if path in ('status', ''):
         return _status()
     if path == 'health':
         return _health()
     if path == 'docs':
         return _docs()
+    # /api/nias/pulse → alias para brain/pulse (acesso rápido para o painel PULSO)
+    if path == 'pulse':
+        return _brain_pulse()
 
     # Regiões sul-americanas
     if path in ('regions', 'regions/south-america'):

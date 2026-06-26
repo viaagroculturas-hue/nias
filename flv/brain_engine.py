@@ -484,6 +484,8 @@ class NiasBrainEngine:
                 'invalida_se':      invalida_se,
                 'scope':            advice.get('scope', 'south_america'),
                 'gerado_em':        self._now.isoformat(),
+                'generated_at':     self._now.isoformat(),
+                'valid_until':      validade_ate,
             }
             cards.append(card)
 
