@@ -4252,8 +4252,8 @@ function setBoundaryStatus(elId, msg, ok=true) {
 // ═══════════════════════════════════════════════════════════════════
 // MAP
 // ═══════════════════════════════════════════════════════════════════
-const mapLayerObjs = {};
-let leafletMap;
+var mapLayerObjs = {}; // var para expor window.mapLayerObjs ao NiasOS
+var leafletMap; // var (não let) para expor window.leafletMap e evitar TDZ
 function initMap() {
   window._mapInit = true;
   leafletMap = L.map('map', { center: [-10, -60], zoom: 3, zoomControl: true });
