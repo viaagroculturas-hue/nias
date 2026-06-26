@@ -23,6 +23,12 @@ def handle_nias_api_post(handler, raw_path: str):
     except Exception:
         body = {}
 
+    # memory/store usa handler direto (lê rfile internamente)
+    if path == 'memory/store':
+        from flv.memory_api import handle_memory_store
+        handle_memory_store(handler, raw_path)
+        return
+
     try:
         if path == 'brain/command':
             result = _brain_command(body)
@@ -44,6 +50,29 @@ def handle_nias_api(handler, raw_path: str):
     """Entry point chamado pelo server.py para /api/nias/*."""
     parsed = urlparse(raw_path)
     path = parsed.path.replace('/api/nias/', '').rstrip('/')
+
+    # ── Novos módulos com handler direto ──────────────────────────────
+    if path == 'narrative':
+        from flv.narrative_api import handle_narrative
+        handle_narrative(handler, raw_path)
+        return
+
+    if path == 'arbitragem':
+        from flv.arbitragem_api import handle_arbitragem
+        handle_arbitragem(handler, raw_path)
+        return
+
+    if path == 'memory':
+        from flv.memory_api import handle_memory
+        handle_memory(handler, raw_path)
+        return
+
+    if path == 'memory/store':
+        from flv.memory_api import handle_memory_store
+        handle_memory_store(handler, raw_path)
+        return
+    # ─────────────────────────────────────────────────────────────────
+
     params = parse_qs(parsed.query)
 
     try:

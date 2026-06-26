@@ -235,6 +235,38 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             from flv.nias_api.router import handle_nias_api_post
             handle_nias_api_post(self, self.path)
             return
+        if self.path.startswith('/api/alerts/'):
+            from flv.push_alerts_api import handle_push_alerts
+            handle_push_alerts(self, self.path)
+            return
+        if self.path.startswith('/api/agents/'):
+            from flv.multi_agent_api import handle_multi_agent
+            handle_multi_agent(self, self.path)
+            return
+        if self.path.startswith('/api/chain/register'):
+            from flv.chain_trace_api import handle_register
+            handle_register(self, self.path)
+            return
+        if self.path.startswith('/api/produtor/score'):
+            from flv.producer_score_api import handle_producer_score
+            handle_producer_score(self, self.path)
+            return
+        if self.path.startswith('/api/logistica/rota'):
+            from flv.route_optimizer_api import handle_route_optimizer
+            handle_route_optimizer(self, self.path)
+            return
+        if self.path.startswith('/api/nias/pre-venda'):
+            from flv.pre_venda_api import handle_pre_venda
+            handle_pre_venda(self, self.path)
+            return
+        if self.path.startswith('/api/esg/carbono'):
+            from flv.carbon_api import handle_carbon
+            handle_carbon(self, self.path)
+            return
+        if self.path.startswith('/api/mcp/'):
+            from flv.mcp_server import handle_mcp
+            handle_mcp(self, self.path)
+            return
         if self.path.startswith('/proxy/'):
             self._proxy('POST')
         else:
@@ -246,6 +278,18 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
         if self.path.startswith('/api/nias/'):
             self._serve_nias_api()
+            return
+        if self.path.startswith('/api/geobrain/'):
+            from flv.geobrain_api import handle_geobrain_anomaly
+            handle_geobrain_anomaly(self, self.path)
+            return
+        if self.path.startswith('/api/alerts/'):
+            from flv.push_alerts_api import handle_push_alerts
+            handle_push_alerts(self, self.path)
+            return
+        if self.path.startswith('/api/agents/'):
+            from flv.multi_agent_api import handle_multi_agent
+            handle_multi_agent(self, self.path)
             return
         if self.path.startswith('/api/intelligence/'):
             self._serve_intelligence_api()
@@ -320,6 +364,34 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
         if self.path.startswith('/api/predictix/intel'):
             self._serve_predictix_intelligence_api()
+            return
+        if self.path.startswith('/api/nias/demanda'):
+            from flv.demand_api import handle_demanda
+            handle_demanda(self, self.path)
+            return
+        if self.path.startswith('/api/clima/bioclima'):
+            from flv.bioclima_api import handle_bioclima
+            handle_bioclima(self, self.path)
+            return
+        if self.path.startswith('/api/risk/produtor'):
+            from flv.counterparty_api import handle_produtor
+            handle_produtor(self, self.path)
+            return
+        if self.path.startswith('/api/chain/'):
+            from flv.chain_trace_api import handle_chain
+            handle_chain(self, self.path)
+            return
+        if self.path.startswith('/api/produtor/score'):
+            from flv.producer_score_api import handle_producer_score
+            handle_producer_score(self, self.path)
+            return
+        if self.path.startswith('/api/esg/carbono'):
+            from flv.carbon_api import handle_carbon
+            handle_carbon(self, self.path)
+            return
+        if self.path.startswith('/api/mcp/'):
+            from flv.mcp_server import handle_mcp
+            handle_mcp(self, self.path)
             return
         if self.path.startswith('/proxy/'):
             self._proxy('GET')
