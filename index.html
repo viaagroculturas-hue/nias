@@ -4202,19 +4202,34 @@ function addBoundaryLayerToMap(map, groupKey, geojson, kind='country', label='')
   return layer;
 }
 
+// CDN único Natural Earth — 1 request em vez de 26 requests para geoBoundaries.org
+const _NE_COUNTRIES_URL = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson';
+const _NE_STATES_URL    = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_1_states_provinces.geojson';
+
 async function addCountryContours(map, groupKey, isoList) {
   const group = L.layerGroup().addTo(map);
   ADMIN_BOUNDARY.layers[groupKey] = ADMIN_BOUNDARY.layers[groupKey] || [];
   ADMIN_BOUNDARY.layers[groupKey].push(group);
-  for (const iso of isoList) {
-    try {
-      const gj = await fetchGeoBoundaries(iso, 'ADM0');
-      L.geoJSON(gj, {
-        style: () => adminBoundaryStyle('country'),
-        onEachFeature: (feature, lyr) => lyr.bindTooltip(`País: ${adminBoundaryName(feature)}`, {sticky:true, className:'admin-boundary-tooltip'})
-      }).addTo(group);
-    } catch(e) { console.warn('contorno país falhou', iso, e); }
-  }
+  try {
+    const gj = await fetchGeoJSON(_NE_COUNTRIES_URL);
+    const isoSet = new Set(isoList);
+    const filtered = {
+      type: 'FeatureCollection',
+      features: (gj.features || []).filter(f => {
+        const p = f.properties || {};
+        const iso = p.ISO_A3 || p.iso_a3 || p.ADM0_A3 || p.ISO_A3_EH || '';
+        return isoSet.has(iso);
+      })
+    };
+    L.geoJSON(filtered, {
+      style: () => adminBoundaryStyle('country'),
+      onEachFeature: (feature, lyr) => {
+        const p = feature.properties || {};
+        const name = p.NAME || p.ADMIN || p.name || adminBoundaryName(feature);
+        lyr.bindTooltip(`País: ${name}`, {sticky:true, className:'admin-boundary-tooltip'});
+      }
+    }).addTo(group);
+  } catch(e) { console.warn('contornos países SA falhou, usando fallback local', e); }
   return group;
 }
 
@@ -4222,15 +4237,26 @@ async function addStateContours(map, groupKey, isoList) {
   const group = L.layerGroup().addTo(map);
   ADMIN_BOUNDARY.layers[groupKey] = ADMIN_BOUNDARY.layers[groupKey] || [];
   ADMIN_BOUNDARY.layers[groupKey].push(group);
-  for (const iso of isoList) {
-    try {
-      const gj = await fetchGeoBoundaries(iso, 'ADM1');
-      L.geoJSON(gj, {
-        style: () => adminBoundaryStyle('state'),
-        onEachFeature: (feature, lyr) => lyr.bindTooltip(`${iso} · ${adminBoundaryName(feature)}`, {sticky:true, className:'admin-boundary-tooltip'})
-      }).addTo(group);
-    } catch(e) { console.warn('contorno estadual/provincial falhou', iso, e); }
-  }
+  try {
+    const gj = await fetchGeoJSON(_NE_STATES_URL);
+    const isoSet = new Set(isoList);
+    const filtered = {
+      type: 'FeatureCollection',
+      features: (gj.features || []).filter(f => {
+        const p = f.properties || {};
+        const iso = p.iso_a3 || p.ISO_A3 || p.adm0_a3 || p.ADM0_A3 || '';
+        return isoSet.has(iso);
+      })
+    };
+    L.geoJSON(filtered, {
+      style: () => adminBoundaryStyle('state'),
+      onEachFeature: (feature, lyr) => {
+        const p = feature.properties || {};
+        const name = p.name || p.NAME || p.gn_name || adminBoundaryName(feature);
+        lyr.bindTooltip(`Estado/Prov.: ${name}`, {sticky:true, className:'admin-boundary-tooltip'});
+      }
+    }).addTo(group);
+  } catch(e) { console.warn('contornos estados SA falhou', e); }
   return group;
 }
 
@@ -4256,7 +4282,7 @@ var mapLayerObjs = {}; // var para expor window.mapLayerObjs ao NiasOS
 var leafletMap; // var (não let) para expor window.leafletMap e evitar TDZ
 function initMap() {
   window._mapInit = true;
-  leafletMap = L.map('map', { center: [-10, -60], zoom: 3, zoomControl: true });
+  leafletMap = L.map('map', { center: [-15, -55], zoom: 4, zoomControl: true });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19, subdomains: 'abc' }).addTo(leafletMap);
   addLocalAdminFallback(leafletMap, 'main-local-fallback', true); setBoundaryStatus('main-boundary-status','fallback local ativo; carregando divisas reais…',false);
   addCountryContours(leafletMap, 'main-countries-real', ADMIN_BOUNDARY.southAmerica).then(() => setBoundaryStatus('main-boundary-status','países reais carregados',true)).catch(() => setBoundaryStatus('main-boundary-status','países: fallback local',false));
@@ -4420,7 +4446,10 @@ function initMap() {
             <span style="color:#8b949e">Importância:</span> ${p.importance}<br>
             <span style="color:#6a92b0;font-size:9px;">Fonte: NIAS Regions · Clique para detalhes</span>
           </div>`, { sticky: true, direction: 'right' });
-        marker.on('click', () => _showPoleDetail(p, color));
+        marker.on('click', () => {
+          if (window.leafletMap) window.leafletMap.flyTo([p.lat, p.lng], 6, { duration: 1.2, easeLinearity: 0.1 });
+          _showPoleDetail(p, color);
+        });
         mapLayerObjs['sa-poles'].addLayer(marker);
       });
       if (leafletMap) mapLayerObjs['sa-poles'].addTo(leafletMap);
@@ -13421,21 +13450,7 @@ const NiasOS = (function() {
   // #main vira o canvas full-screen via CSS (position:fixed; top:0; bottom:60px).
   // panel-map fica dentro de #main como position:relative; flex:1 — Leaflet
   // mede o container DEPOIS do CSS ser pintado e recebe tamanho correto.
-  // ── DEBUG overlay: mostra status do mapa na tela ─────────────────
-  function _dbg(msg) {
-    let el = document.getElementById('nias-mapdbg');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'nias-mapdbg';
-      el.style.cssText = 'position:fixed;bottom:76px;left:8px;z-index:9999;' +
-        'background:rgba(0,0,0,0.93);color:#30D158;font-size:10px;' +
-        'font-family:monospace;padding:8px 12px;border-radius:10px;' +
-        'border:1px solid #30D158;max-width:320px;white-space:pre-wrap;' +
-        'pointer-events:none;line-height:1.5;';
-      document.body.appendChild(el);
-    }
-    el.textContent = '[' + new Date().toLocaleTimeString() + ']\n' + msg;
-  }
+  function _dbg() {}
 
   function boot() {
     if (_booted) return;
@@ -13633,7 +13648,10 @@ const NiasOS = (function() {
       </div>`;
     const icon = L.divIcon({ html, className:'', iconSize:[0,0], iconAnchor:[-4,20] });
     const marker = L.marker(latlng, { icon }).addTo(window.leafletMap);
-    marker.on('click', action);
+    marker.on('click', () => {
+      try { if (window.leafletMap) window.leafletMap.flyTo(latlng, 6, { duration: 1.2, easeLinearity: 0.1 }); } catch(e) {}
+      if (action) action();
+    });
     return marker;
   }
 
