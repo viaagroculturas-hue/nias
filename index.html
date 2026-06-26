@@ -689,9 +689,9 @@ tr:hover td{background:rgba(0,212,255,.04);}
 .nias-os-mode #topbar  {
   height: 28px !important; min-height: 28px !important;
   padding: 0 16px !important;
-  background: rgba(0,0,0,0.75) !important;
+  background: rgba(40,40,46,0.88) !important;
   backdrop-filter: blur(40px) saturate(1.8) !important;
-  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.12) !important;
 }
 .nias-os-mode #topbar .top-stats { display: none !important; }
 .nias-os-mode #topbar .theme-toggle { display: none !important; }
@@ -770,7 +770,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
 /* ── Apple Signal Cards — clean notification style ───────────────── */
 @keyframes osPulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.6);} }
 .os-sig {
-  background: rgba(28,28,30,0.92);
+  background: rgba(60,60,68,0.93);
   backdrop-filter: blur(20px) saturate(1.6);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 14px;
@@ -797,11 +797,11 @@ tr:hover td{background:rgba(0,212,255,.04);}
 /* ── Apple Dock — macOS/iOS style frosted glass ──────────────────── */
 #os-dock {
   position: fixed; bottom: 0; left: 0; right: 0; height: 68px; z-index: 700;
-  background: rgba(20,20,22,0.85);
+  background: rgba(58,58,64,0.88);
   backdrop-filter: blur(40px) saturate(1.8);
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(255,255,255,0.15);
   align-items: center; padding: 0 20px; gap: 12px;
-  box-shadow: 0 -1px 0 rgba(255,255,255,0.05);
+  box-shadow: 0 -1px 0 rgba(255,255,255,0.08);
 }
 .os-dock-live  { display:flex;align-items:center;gap:6px;flex-shrink:0; }
 .os-dock-pulse {
@@ -819,21 +819,21 @@ tr:hover td{background:rgba(0,212,255,.04);}
 /* Apple-style icon button */
 .os-btn {
   width: 44px; height: 44px; border-radius: 13px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.12);
   border: none;
-  color: rgba(255,255,255,0.55); font-size: 18px; cursor: pointer;
+  color: rgba(255,255,255,0.75); font-size: 18px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: background .15s, color .15s, transform .2s cubic-bezier(.34,1.56,.64,1);
   position: relative;
 }
 .os-btn:hover {
-  background: rgba(255,255,255,0.14);
-  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.22);
+  color: rgba(255,255,255,1);
   transform: translateY(-3px) scale(1.08);
 }
 .os-btn.os-active {
-  background: rgba(10,132,255,0.25);
-  color: #0A84FF;
+  background: rgba(10,132,255,0.35);
+  color: #60B3FF;
 }
 .os-btn.os-active::after {
   content: '';
@@ -871,10 +871,10 @@ tr:hover td{background:rgba(0,212,255,.04);}
   bottom: 68px !important; top: auto !important; height: 78vh !important;
   z-index: 500 !important;
   border-radius: 20px 20px 0 0 !important;
-  background: rgba(28,28,30,0.97) !important;
-  backdrop-filter: blur(40px) saturate(1.8) !important;
+  background: rgba(50,50,56,0.96) !important;
+  backdrop-filter: blur(40px) saturate(1.6) !important;
   overflow-y: auto !important; flex-direction: column !important;
-  box-shadow: 0 -8px 60px rgba(0,0,0,0.6) !important;
+  box-shadow: 0 -8px 60px rgba(0,0,0,0.45) !important;
   border-top: none !important;
   animation: osSheetUp 0.4s cubic-bezier(0.22,1,0.36,1) both !important;
 }
@@ -887,14 +887,19 @@ tr:hover td{background:rgba(0,212,255,.04);}
 }
 @keyframes osSheetUp { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
 
+/* OSM tiles — filtro suave para harmonizar com UI escura */
+.nias-os-mode .leaflet-tile-pane {
+  filter: brightness(0.82) saturate(0.85);
+}
+
 /* ── Sheet title bar ─────────────────────────────────────────────── */
 #os-sheet-bar {
   display: none; position: fixed; left: 0; right: 0; z-index: 510;
-  background: rgba(28,28,30,0.98);
+  background: rgba(58,58,64,0.98);
   backdrop-filter: blur(40px);
   border-radius: 20px 20px 0 0;
   height: 44px; align-items: center; justify-content: space-between; padding: 0 20px;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
 }
 .nias-os-mode #os-sheet-bar.visible {
   display: flex;
@@ -4252,7 +4257,7 @@ let leafletMap;
 function initMap() {
   window._mapInit = true;
   leafletMap = L.map('map', { center: [-10, -60], zoom: 3, zoomControl: true });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB', maxZoom: 18 }).addTo(leafletMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19, subdomains: 'abc' }).addTo(leafletMap);
   addLocalAdminFallback(leafletMap, 'main-local-fallback', true); setBoundaryStatus('main-boundary-status','fallback local ativo; carregando divisas reais…',false);
   addCountryContours(leafletMap, 'main-countries-real', ADMIN_BOUNDARY.southAmerica).then(() => setBoundaryStatus('main-boundary-status','países reais carregados',true)).catch(() => setBoundaryStatus('main-boundary-status','países: fallback local',false));
   addStateContours(leafletMap, 'main-states', ADMIN_BOUNDARY.southAmerica).then(() => setBoundaryStatus('main-boundary-status','países + estados/províncias reais ativos',true)).catch(() => setBoundaryStatus('main-boundary-status','estados/províncias: fonte externa indisponível',false));
@@ -4544,7 +4549,7 @@ function initSankey() {
   if (!el || logMap) { if (logMap) setTimeout(() => logMap.invalidateSize(), 80); return; }
 
   logMap = L.map('logMap', { center:[-10,-60], zoom:3, zoomControl:true, attributionControl:false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:18, subdomains:'abcd' }).addTo(logMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, subdomains:'abc', attribution:'© OpenStreetMap' }).addTo(logMap);
 
   // ── RODOVIAS (principais corredores de escoamento) ────────────
   const rodovias = L.layerGroup();
@@ -6711,8 +6716,8 @@ let activePolygons = {};
 function initMunicipal() {
   window._munInit = true;
   munMap = L.map('map-municipal', { center: [-10, -60], zoom: 3, zoomControl: true });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    { attribution:'© CartoDB', maxZoom:18 }).addTo(munMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { attribution:'© OpenStreetMap', maxZoom:19, subdomains:'abc' }).addTo(munMap);
 
   addLocalAdminFallback(munMap, 'municipal-local-fallback', true);
   addCountryContours(munMap, 'municipal-countries-real', ADMIN_BOUNDARY.southAmerica).catch(e => console.warn('municipal countries', e));
@@ -8252,9 +8257,9 @@ let currentTheme = 'dark';
 let _tileLayers = {}; // map id → L.TileLayer
 
 const TILE_URLS = {
-  dark:  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  cyber: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  dark:  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  light: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  cyber: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 };
 
 function swapTileLayer(mapInstance, mapKey, theme) {
@@ -8603,7 +8608,7 @@ function initBioCommand() {
   if (_bcInit) { setTimeout(() => bcMap && bcMap.invalidateSize(), 80); return; }
   _bcInit = true;
   bcMap = L.map('bc-map', { center:[-10,-60], zoom:3, zoomControl:true, attributionControl:false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:19, subdomains:'abcd' }).addTo(bcMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, subdomains:'abc', attribution:'© OpenStreetMap' }).addTo(bcMap);
 
   // Fetch SIDRA data for ALL cultures
   window._bcSidraData = {};
@@ -10299,7 +10304,7 @@ const FLVModule = {
       const container = document.getElementById('flv-heatmap-container');
       if (!this._heatMap) {
         this._heatMap = L.map(container, {zoomControl:true, attributionControl:false}).setView([-10, -60], 3);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom:18}).addTo(this._heatMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, subdomains:'abc', attribution:'© OpenStreetMap'}).addTo(this._heatMap);
         this._heatMarkers = L.layerGroup().addTo(this._heatMap);
       }
       this._heatMarkers.clearLayers();
@@ -10570,7 +10575,7 @@ window.Predictix = {
   init() {
     if (!this._initialized) {
       this._map = L.map('px-map', { zoomControl:true, attributionControl:false }).setView([-10, -60], 3);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {maxZoom:18, opacity:0.7}).addTo(this._map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, subdomains:'abc', opacity:0.7, attribution:'© OpenStreetMap'}).addTo(this._map);
       addLocalAdminFallback(this._map, 'predictx-local-fallback', true);
       // Thin state borders
       this._flowLayer = L.layerGroup().addTo(this._map);
