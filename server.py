@@ -2,6 +2,76 @@ import http.server, urllib.request, urllib.parse, json, os, re, time, base64, th
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════════════════════════════
+# AUTENTICAÇÃO — X-API-Key header obrigatório para endpoints sensíveis
+# Configure NIAS_API_KEY=<sua-chave> no Render Environment.
+# Sem a variável: auth desabilitada (modo dev local).
+# ═══════════════════════════════════════════════════════════════════
+NIAS_API_KEY = os.environ.get('NIAS_API_KEY', '')
+
+def _auth_ok(handler):
+    """Retorna True se a requisição está autenticada ou auth está desabilitada."""
+    if not NIAS_API_KEY:
+        return True
+    key = (handler.headers.get('X-API-Key') or
+           handler.headers.get('Authorization', '').replace('Bearer ', '').strip())
+    return key == NIAS_API_KEY
+
+def _serve_auth_error(handler):
+    handler.send_response(401)
+    handler._cors()
+    handler.send_header('Content-Type', 'application/json')
+    handler.end_headers()
+    handler.wfile.write(json.dumps({
+        'error': 'unauthorized',
+        'message': 'X-API-Key header obrigatório para este endpoint.',
+    }).encode())
+
+# ═══════════════════════════════════════════════════════════════════
+# CIRCUIT BREAKER — rastreia falhas por fonte e marca dados cacheados
+# ═══════════════════════════════════════════════════════════════════
+_cb: dict = {}  # {source: {failures, last_ok_ts, open}}
+_CB_THRESHOLD = 3  # falhas antes de abrir o circuito
+
+def _cb_ok(source: str):
+    _cb[source] = {'failures': 0, 'last_ok_ts': time.time(), 'open': False}
+
+def _cb_fail(source: str):
+    s = _cb.setdefault(source, {'failures': 0, 'last_ok_ts': None, 'open': False})
+    s['failures'] += 1
+    if s['failures'] >= _CB_THRESHOLD:
+        if not s['open']:
+            print(f'[CB] ⚡ Circuito ABERTO para {source} após {s["failures"]} falhas')
+        s['open'] = True
+
+def _cb_half_open(source: str):
+    """Tenta refechar após 30 min."""
+    s = _cb.get(source, {})
+    if s.get('open') and s.get('last_ok_ts'):
+        if time.time() - s['last_ok_ts'] > 1800:
+            s['open'] = False
+            s['failures'] = 0
+
+def _data_quality(source: str, cache_ts: float = None) -> dict:
+    """Metadado de qualidade anexado a toda resposta de API."""
+    s = _cb.get(source, {})
+    degraded = s.get('open', False)
+    age_min = int((time.time() - cache_ts) / 60) if cache_ts else None
+    if degraded:
+        return {
+            'status': 'CACHE',
+            'label': 'DADO CACHEADO — fonte indisponível',
+            'source_degraded': True,
+            'cache_age_min': age_min,
+            'last_ok': datetime.fromtimestamp(s['last_ok_ts']).strftime('%H:%M') if s.get('last_ok_ts') else None,
+        }
+    return {
+        'status': 'LIVE',
+        'label': 'DADO REAL',
+        'source_degraded': False,
+        'cache_age_min': age_min,
+    }
+
+# ═══════════════════════════════════════════════════════════════════
 # SISTEMA AUTÔNOMO NIA$ v6.0
 # ═══════════════════════════════════════════════════════════════════
 AUTONOMOUS_MODE = os.environ.get("NIAS_AUTONOMOUS_MODE", "0") == "1"  # seguro por padrão
@@ -115,10 +185,16 @@ def _fetch_cepea():
                 }
         except Exception as e:
             print(f'[CEPEA] Erro scraping {key}: {e}')
+            _cb_fail('CEPEA')
     if result:
+        _cb_ok('CEPEA')
         _cepea_cache['data'] = result
         _cepea_cache['ts'] = time.time()
-    return result
+        _cepea_cache['data']['_quality'] = _data_quality('CEPEA', _cepea_cache['ts'])
+    elif _cepea_cache.get('data'):
+        # Retorna cache com flag de degradação
+        _cepea_cache['data']['_quality'] = _data_quality('CEPEA', _cepea_cache.get('ts'))
+    return result or _cepea_cache.get('data', {})
 
 # ── CONAB PROHORT + Preços Semanais — Dados reais massivos ─────────
 _conab_cache = {}
@@ -757,9 +833,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
         # NIA$ Soberano Digital v5.0 - Novos Endpoints
         if self.path.startswith('/api/warroom/'):
+            if not _auth_ok(self): _serve_auth_error(self); return
             self._serve_warroom_api()
             return
         if self.path.startswith('/api/crisis/'):
+            if not _auth_ok(self): _serve_auth_error(self); return
             self._serve_crisis_api()
             return
         if self.path.startswith('/api/growth/'):
@@ -787,9 +865,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self._serve_autonomous_api()
             return
         if self.path.startswith('/api/predictx/live') or self.path.startswith('/api/predictx/events'):
+            if not _auth_ok(self): _serve_auth_error(self); return
             self._serve_predictx_live_api()
             return
         if self.path.startswith('/api/predictix/intel'):
+            if not _auth_ok(self): _serve_auth_error(self); return
             self._serve_predictix_intelligence_api()
             return
         if self.path.startswith('/api/nias/demanda'):
@@ -801,6 +881,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             handle_bioclima(self, self.path)
             return
         if self.path.startswith('/api/risk/produtor'):
+            if not _auth_ok(self): _serve_auth_error(self); return
             from flv.counterparty_api import handle_produtor
             handle_produtor(self, self.path)
             return
@@ -809,6 +890,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             handle_chain(self, self.path)
             return
         if self.path.startswith('/api/produtor/score'):
+            if not _auth_ok(self): _serve_auth_error(self); return
             from flv.producer_score_api import handle_producer_score
             handle_producer_score(self, self.path)
             return
@@ -3120,6 +3202,12 @@ def _fetch_satellite_analysis():
             'total_regioes': len(regioes_result),
             'proxima_analise': (datetime.now() + timedelta(hours=8)).strftime('%H:%M'),
             'run_count': _sat_analysis_cache.get('runs', 0) + 1,
+            # Transparência de fonte — regra de ouro
+            'ndvi_source': 'PROXY',
+            'ndvi_method': 'Open-Meteo LAI → Beer-Lambert (1 - exp(-0.45 × LAI))',
+            'ndvi_disclaimer': 'Estimativa proxy via LAI. Não é dado espectral real (Sentinel-2/MODIS).',
+            'ceasa_source': _data_quality('CEASA-ALL'),
+            'data_quality': 'REFERENCIAL+PROXY — ver ndvi_disclaimer e ceasa_source',
         }
     }
     _sat_analysis_cache['data'] = result

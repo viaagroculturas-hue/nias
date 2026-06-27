@@ -2178,7 +2178,7 @@ tr:hover td{background:rgba(10,132,255,.04);}
         <div class="layer-toggle" onclick="document.getElementById('l-sat-ia').click()">
           <input type="checkbox" id="l-sat-ia" checked onchange="toggleLayer('sat-ia',this)">
           <span class="layer-sw" onclick="event.stopPropagation();document.getElementById('l-sat-ia').click()"></span>
-          <span class="layer-lbl" style="color:#30d158;">🛰 Satélite IA <span id="sat-ia-status" style="font-size:7px;color:rgba(48,209,88,.6);letter-spacing:.3px;">carregando…</span></span>
+          <span class="layer-lbl" style="color:#30d158;">🛰 Satélite IA <span id="sat-ia-status" style="font-size:7px;color:rgba(48,209,88,.6);letter-spacing:.3px;">carregando…</span> <span id="sat-proxy-badge" title="NDVI estimado via LAI (Open-Meteo) — não é dado espectral real" style="display:none;font-size:7px;padding:1px 4px;border-radius:3px;background:rgba(255,149,0,0.15);border:1px solid rgba(255,149,0,0.35);color:#ff9500;font-weight:700;cursor:help;">PROXY</span></span>
         </div>
 
         <div class="layer-toggle" onclick="document.getElementById('l7').click()">
@@ -5797,6 +5797,7 @@ function _satPopupHTML(rk, reg) {
       <!-- NDVI bar -->
       <div style="display:flex;align-items:center;gap:8px;">
         <span style="font-size:9px;color:#8e8e93;width:32px;">NDVI</span>
+        <span style="font-size:7px;padding:1px 4px;border-radius:3px;background:rgba(255,149,0,0.18);color:#ff9f0a;font-weight:700;letter-spacing:.3px;flex-shrink:0;">PROXY</span>
         <div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
           <div style="height:100%;width:${ndviBar}%;background:${ndviColor};border-radius:2px;transition:width 1s ease;"></div>
         </div>
@@ -5834,9 +5835,17 @@ function _satPopupHTML(rk, reg) {
       <div style="font-size:9px;color:#636366;letter-spacing:1px;margin-bottom:2px;padding-top:8px;">CULTURAS ATIVAS — VALORES CEASA</div>
       ${cultsHTML || '<div style="color:#636366;font-size:10px;padding:8px 0;">Sem culturas em estágio ativo neste período</div>'}
     </div>
-    <!-- Footer -->
-    <div style="padding:8px 16px;background:rgba(255,255,255,0.03);border-top:1px solid rgba(255,255,255,0.06);font-size:8px;color:#48484a;">
-      🛰 NDVI via Open-Meteo LAI · Calendário IBGE/MAPA · Preços CEASA-GO/MG/RN
+    <!-- Footer — transparência de fonte (regra de ouro) -->
+    <div style="padding:8px 16px;background:rgba(255,255,255,0.03);border-top:1px solid rgba(255,255,255,0.06);">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span style="background:rgba(255,149,0,0.18);border:1px solid rgba(255,149,0,0.45);border-radius:4px;padding:1px 6px;color:#ff9f0a;font-weight:700;font-size:8px;letter-spacing:.5px;">NDVI PROXY</span>
+        <span style="font-size:8px;color:#636366;">Estimativa via LAI (Open-Meteo) — não é dado espectral real</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px;">
+        <span style="background:rgba(0,122,255,0.15);border:1px solid rgba(0,122,255,0.35);border-radius:4px;padding:1px 6px;color:#64d2ff;font-weight:700;font-size:8px;letter-spacing:.5px;">VOL. REF.</span>
+        <span style="font-size:8px;color:#636366;">Volume referencial FAO/IBGE — não é colheita confirmada</span>
+      </div>
+      <div style="font-size:7px;color:#48484a;margin-top:3px;">Calendário IBGE/MAPA · Preços CEASA-GO/MG/RN · Sentinel dados não disponíveis</div>
     </div>
   </div>`;
 }
@@ -5898,12 +5907,20 @@ async function loadSatelliteLayer() {
     const cb = document.getElementById('l-sat-ia');
     if (cb && cb.checked) mapLayerObjs['sat-ia'].addTo(leafletMap);
 
-    // Atualiza status
+    // Atualiza status com badge de qualidade
+    const meta = data.meta || {};
     const satStatus = document.getElementById('sat-ia-status');
     if (satStatus) satStatus.textContent = `${totalRegioes} regiões · ${totalVolume.toFixed(1)} Mt`;
 
+    // Badge PROXY visível no HUD satélite
+    const satProxyBadge = document.getElementById('sat-proxy-badge');
+    if (satProxyBadge) {
+      satProxyBadge.style.display = 'inline-flex';
+      satProxyBadge.title = meta.ndvi_disclaimer || 'NDVI estimado via LAI';
+    }
+
     _satLayerLoaded = true;
-    console.log(`[SAT-IA] ${totalRegioes} regiões carregadas, ${totalVolume.toFixed(2)} Mt estimado`);
+    console.log(`[SAT-IA] ${totalRegioes} regiões | NDVI: ${meta.ndvi_source || 'PROXY'} | ${meta.data_quality}`);
 
     // Reagenda: 3×/dia = a cada 8h
     setTimeout(loadSatelliteLayer, 8 * 60 * 60 * 1000);
