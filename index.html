@@ -340,9 +340,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 
 /* SONAR MARKERS */
 .sonar-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
-.sonar-ring{position:absolute;border-radius:50%;opacity:0;animation:sonar-expand 5s ease-out infinite;}
-.sonar-ring:nth-child(2){animation-delay:1.7s;}
-.sonar-ring:nth-child(3){animation-delay:3.4s;}
+.sonar-ring{position:absolute;border-radius:50%;opacity:0;animation:sonar-expand 6s ease-out infinite;}
+.sonar-ring:nth-child(2){animation-delay:2s;}
+.sonar-ring:nth-child(3){animation-delay:4s;}
 .sonar-core{border-radius:50%;z-index:2;}
 .sonar-state-alert .sonar-ring{border:2px solid #FF3B3B;}.sonar-state-alert .sonar-core{background:#FF3B3B;color:#FF3B3B;}
 .sonar-state-ai .sonar-ring{border:2px solid #0a84ff;}.sonar-state-ai .sonar-core{background:#0a84ff;color:#0a84ff;}
@@ -359,7 +359,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .sonar-state-laranja .sonar-ring{border:2px solid #FF7043;}.sonar-state-laranja .sonar-core{background:#FF7043;color:#FF7043;}
 .sonar-state-cafe .sonar-ring{border:2px solid #795548;}.sonar-state-cafe .sonar-core{background:#795548;color:#795548;}
 .sonar-state-pastagem .sonar-ring{border:2px solid #A5D6A7;}.sonar-state-pastagem .sonar-core{background:#A5D6A7;color:#A5D6A7;}
-.sonar-sev-critical .sonar-ring{animation-duration:2s !important;border-color:#FF3B3B !important;}.sonar-sev-critical .sonar-core{background:#FF3B3B !important;color:#FF3B3B !important;}
+.sonar-sev-critical .sonar-ring{animation-duration:3s !important;border-color:#FF3B3B !important;}.sonar-sev-critical .sonar-core{background:#FF3B3B !important;color:#FF3B3B !important;}
 .sonar-sev-high .sonar-ring{animation-duration:3s;}
 
 /* CLIMATE INTELLIGENCE */
@@ -372,7 +372,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .odi-medium{background:rgba(10,132,255,.15);color:var(--accent);}
 .odi-low{background:rgba(48,209,88,.15);color:#30d158;}
 @keyframes climatePulse{0%,100%{opacity:1}50%{opacity:.5}}
-@keyframes sonar-expand{0%{transform:scale(.4);opacity:.5;}100%{transform:scale(2.5);opacity:0;}}
+@keyframes sonar-expand{0%{transform:scale(.5);opacity:.25;}100%{transform:scale(1.6);opacity:0;}}
 /* ── MAP PANEL — Apple-grade redesign ─────────────────────────────── */
 @keyframes mapLivePulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.45;transform:scale(1.25);}}
 @keyframes orbitSpin{0%{stroke-dashoffset:188;}100%{stroke-dashoffset:0;}}
@@ -6036,8 +6036,8 @@ function createSonarMarker(latlng, opts) {
   const state = opts.state || 'normal';
   const sev   = opts.severity || 'ok';
   const s     = (opts.size || 5) * 2;
-  const rs    = s * 2.5;
-  const coreSize = Math.max(4, s * 0.5);
+  const rs    = s * 1.6;
+  const coreSize = Math.max(4, s * 0.45);
   const sevClass = sev === 'ok' ? '' : ` sonar-sev-${sev}`;
   const html  = `<div class="sonar-wrap sonar-state-${state}${sevClass}" style="width:${rs}px;height:${rs}px;">` +
     `<div class="sonar-ring" style="width:${rs}px;height:${rs}px;"></div>` +
