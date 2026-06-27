@@ -217,6 +217,124 @@ def _fetch_conab():
         _conab_cache['ts'] = time.time()
     return result
 
+# ── CEASA-GO Goiás — PDF diário ─────────────────────────────────────
+_ceasa_go_cache = {}
+
+def _fetch_ceasa_go():
+    if _ceasa_go_cache.get('data') and time.time() - _ceasa_go_cache.get('ts', 0) < 3600:
+        return _ceasa_go_cache['data']
+    try:
+        import pdfplumber, io
+    except ImportError:
+        return {'error': 'pdfplumber não instalado', 'produtos': {}, 'categorias': {}}
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    }
+
+    # Tenta até 5 dias retroativos (fins de semana/feriados sem publicação)
+    pdf_bytes = None
+    pdf_date = None
+    for days_back in range(0, 6):
+        d = datetime.now() - timedelta(days=days_back)
+        dd = d.strftime('%d')
+        mm = d.strftime('%m')
+        yyyy = d.strftime('%Y')
+        url = f'https://goias.gov.br/ceasa/wp-content/uploads/sites/48/{yyyy}/{mm}/{dd}-{mm}-{yyyy}.pdf'
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                if resp.status == 200:
+                    pdf_bytes = resp.read()
+                    pdf_date = f'{dd}/{mm}/{yyyy}'
+                    break
+        except Exception:
+            continue
+
+    if not pdf_bytes:
+        return {'error': 'PDF não disponível nos últimos 5 dias úteis', 'produtos': {}, 'categorias': {}}
+
+    # Parse PDF com pdfplumber
+    CATEGORIAS = [
+        'HORTALICAS FOLHAS', 'HORTALICAS FRUTOS', 'RAIZES/TUBERCULOS',
+        'FRUTAS NACIONAIS', 'FRUTAS IMPORTADAS', 'AVES E OVOS', 'DIVERSOS', 'CEREAIS'
+    ]
+    # Normaliza para comparação
+    CATS_NORM = [c.upper().replace('Ç', 'C').replace('Ã', 'A').replace('Á', 'A').replace('É', 'E').replace('Ó', 'O') for c in CATEGORIAS]
+
+    produtos = {}
+    categorias = {c: [] for c in CATEGORIAS}
+    cat_atual = None
+
+    def _parse_price(s):
+        if not s: return None
+        s = str(s).strip().replace('R$', '').replace(' ', '').replace('.', '').replace(',', '.')
+        try: return float(s)
+        except: return None
+
+    with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+        for page in pdf.pages:
+            tables = page.extract_tables()
+            for table in tables:
+                for row in table:
+                    if not row: continue
+                    cells = [str(c).strip() if c else '' for c in row]
+                    # Detectar linha de categoria
+                    first = cells[0].upper()
+                    norm = first.replace('Ç', 'C').replace('Ã', 'A').replace('Á', 'A').replace('É', 'E').replace('Ó', 'O')
+                    matched_cat = None
+                    for i, cn in enumerate(CATS_NORM):
+                        if cn in norm:
+                            matched_cat = CATEGORIAS[i]
+                            break
+                    if matched_cat:
+                        cat_atual = matched_cat
+                        continue
+                    # Linha de produto: Nome, Embalagem, Qtde KG, Classe, +Comum, Máximo, Mínimo, KG
+                    if len(cells) >= 7 and cells[0] and cells[0].upper() not in ('NOME PRODUTO', 'PRODUTO', ''):
+                        nome = cells[0].strip()
+                        if not nome or nome.upper() in ('NOME PRODUTO', 'PRODUTO'): continue
+                        emb = cells[1] if len(cells) > 1 else ''
+                        kg_emb = _parse_price(cells[2]) if len(cells) > 2 else None
+                        classe = cells[3] if len(cells) > 3 else ''
+                        comum = _parse_price(cells[4]) if len(cells) > 4 else None
+                        maximo = _parse_price(cells[5]) if len(cells) > 5 else None
+                        minimo = _parse_price(cells[6]) if len(cells) > 6 else None
+                        kg_price = _parse_price(cells[7]) if len(cells) > 7 else None
+                        if comum is None and maximo is None: continue
+                        key = nome.upper()
+                        entry = {
+                            'nome': nome,
+                            'embalagem': emb,
+                            'kg_embalagem': kg_emb,
+                            'classe': classe,
+                            'comum': comum,
+                            'maximo': maximo,
+                            'minimo': minimo,
+                            'preco_kg': kg_price,
+                            'categoria': cat_atual or 'OUTROS',
+                            'source': 'CEASA-GO',
+                            'date': pdf_date,
+                        }
+                        if key not in produtos:
+                            produtos[key] = entry
+                        if cat_atual and cat_atual in categorias:
+                            categorias[cat_atual].append(entry)
+
+    result = {
+        'produtos': produtos,
+        'categorias': categorias,
+        'meta': {
+            'source': 'CEASA Goiás',
+            'date': pdf_date,
+            'total': len(produtos),
+            'updated': time.strftime('%Y-%m-%d %H:%M'),
+        }
+    }
+    _ceasa_go_cache['data'] = result
+    _ceasa_go_cache['ts'] = time.time()
+    return result
+
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=DIR, **kw)
@@ -322,6 +440,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
         if self.path.startswith('/api/ceasa/prices') or self.path.startswith('/api/ceasa/precos'):
             self._serve_ceasa_prices_api()
+            return
+        if self.path.startswith('/api/ceasa/go'):
+            self._serve_ceasa_go_api()
             return
         if self.path.startswith('/api/dashboard/summary'):
             self._serve_dashboard_summary_api()
@@ -541,6 +662,36 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(result, ensure_ascii=False).encode())
+
+    def _serve_ceasa_go_api(self):
+        """CEASA-GO Goiás — preços diários do PDF oficial"""
+        from urllib.parse import urlparse, parse_qs
+        params = parse_qs(urlparse(self.path).query)
+        categoria = params.get('categoria', [None])[0]
+        busca = params.get('q', [None])[0]
+
+        data = _fetch_ceasa_go()
+
+        if categoria and 'categorias' in data:
+            cat_key = categoria.upper()
+            matched = {k: v for k, v in data.get('categorias', {}).items() if cat_key in k.upper()}
+            data = dict(data)
+            data['produtos'] = {}
+            data['categorias'] = matched
+            for items in matched.values():
+                for item in items:
+                    data['produtos'][item['nome'].upper()] = item
+
+        if busca and 'produtos' in data:
+            b = busca.upper()
+            data = dict(data)
+            data['produtos'] = {k: v for k, v in data['produtos'].items() if b in k}
+
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
 
     def _serve_produtores(self):
         """Serve producers data from database"""
