@@ -414,6 +414,217 @@ def _fetch_ceasa_mg():
     _ceasa_mg_cache['ts'] = time.time()
     return result
 
+# ── CEASA-RN Rio Grande do Norte — PDF sequencial ───────────────────
+_ceasa_rn_cache = {}
+
+def _fetch_ceasa_rn():
+    if _ceasa_rn_cache.get('data') and time.time() - _ceasa_rn_cache.get('ts', 0) < 3600:
+        return _ceasa_rn_cache['data']
+    try:
+        import pdfplumber, io
+    except ImportError:
+        return {'error': 'pdfplumber não instalado', 'produtos': {}}
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    base = 'https://transparencia.ceasa.rn.gov.br'
+
+    # Descobrir ID mais recente pelo índice de cotações
+    pdf_bytes = None
+    pdf_date = None
+    download_id = None
+    try:
+        req = urllib.request.Request(f'{base}/cotacoes', headers=headers)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+        import re as _re
+        # Pega primeiro link /download/NNNN
+        ids = _re.findall(r'/download/(\d+)', html)
+        if ids:
+            download_id = int(ids[0])
+    except Exception as e:
+        print(f'[CEASA-RN] Erro ao buscar índice: {e}')
+
+    # Fallback: estimar ID baseado na data (ID 1694 = 26/06/2026)
+    if not download_id:
+        base_id = 1694
+        base_date = datetime(2026, 6, 26)
+        delta_days = (datetime.now() - base_date).days
+        download_id = base_id + delta_days
+
+    # Tentar até 5 IDs retroativos (fins de semana sem publicação)
+    for attempt in range(5):
+        try_id = download_id - attempt
+        try:
+            req = urllib.request.Request(f'{base}/download/{try_id}', headers=headers)
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                if resp.status == 200 and 'pdf' in resp.headers.get('Content-Type', '').lower():
+                    pdf_bytes = resp.read()
+                    break
+                elif resp.status == 200:
+                    content = resp.read()
+                    if content[:4] == b'%PDF':
+                        pdf_bytes = content
+                        break
+        except Exception:
+            continue
+
+    if not pdf_bytes:
+        return {'error': 'PDF CEASA-RN não disponível', 'produtos': {}}
+
+    def _parse_price(s):
+        if not s: return None
+        s = str(s).strip().replace('R$', '').replace(' ', '').replace('.', '').replace(',', '.')
+        s = s.encode('ascii', errors='ignore').decode()
+        try: return float(s) if s else None
+        except: return None
+
+    # Parse: colunas: Nome | Unidade | Procedência | P.Mínimo | P.+Comum | P.Máximo | P.KG | Sit.Mercado
+    produtos = {}
+    cat_atual = 'GERAL'
+    data_str = None
+
+    with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+        for page in pdf.pages:
+            tables = page.extract_tables()
+            for table in tables:
+                for row in table:
+                    if not row or not row[0]: continue
+                    cells = [str(c).strip() if c else '' for c in row]
+                    first = cells[0].encode('ascii', errors='ignore').decode().upper().strip()
+
+                    # Detectar data no cabeçalho
+                    if not data_str and 'DIA' in first:
+                        import re as _re2
+                        m = _re2.search(r'(\d{2}/\d{2}/\d{4})', first)
+                        if m: data_str = m.group(1)
+
+                    # Detectar categoria (linha com apenas 1 célula preenchida, sem preços)
+                    if first in ('FRUTAS','VERDURAS','HORTALICAS','LEGUMES','GRAOS','CEREAIS','TEMPEROS','OUTROS') or \
+                       (len(cells) >= 2 and not cells[1] and not cells[3]):
+                        cat_simples = first.split()[0] if first else 'GERAL'
+                        if cat_simples and len(cat_simples) > 2:
+                            cat_atual = cat_simples
+                        continue
+
+                    # Linha de produto
+                    nome = cells[0].strip()
+                    if not nome or nome.upper() in ('', 'PRODUTO', 'NOME'): continue
+                    if len(cells) < 6: continue
+
+                    emb  = cells[1] if len(cells) > 1 else ''
+                    proc = cells[2] if len(cells) > 2 else ''
+                    minp = _parse_price(cells[3]) if len(cells) > 3 else None
+                    comu = _parse_price(cells[4]) if len(cells) > 4 else None
+                    maxp = _parse_price(cells[5]) if len(cells) > 5 else None
+                    kgp  = _parse_price(cells[6]) if len(cells) > 6 else None
+                    sit  = cells[7].strip() if len(cells) > 7 else ''
+
+                    if comu is None and kgp is None: continue
+
+                    nome_norm = nome.encode('ascii', errors='ignore').decode().upper().strip()
+                    if not nome_norm: continue
+
+                    produtos[nome_norm] = {
+                        'nome': nome_norm,
+                        'embalagem': emb,
+                        'procedencia': proc,
+                        'minimo': minp,
+                        'comum': comu,
+                        'maximo': maxp,
+                        'preco_kg': kgp,
+                        'situacao': sit.encode('ascii', errors='ignore').decode(),
+                        'categoria': cat_atual,
+                        'source': 'CEASA-RN',
+                        'uf': 'RN',
+                        'date': data_str or time.strftime('%d/%m/%Y'),
+                    }
+
+    result = {
+        'produtos': produtos,
+        'meta': {
+            'source': 'CEASA Rio Grande do Norte',
+            'date': data_str or time.strftime('%d/%m/%Y'),
+            'download_id': download_id,
+            'total': len(produtos),
+            'updated': time.strftime('%Y-%m-%d %H:%M'),
+        }
+    }
+    _ceasa_rn_cache['data'] = result
+    _ceasa_rn_cache['ts'] = time.time()
+    return result
+
+# ── CEASA UNIFICADO — agrega todas as fontes ─────────────────────────
+def _fetch_ceasa_all():
+    """Agrega CEASA-GO + CEASA-MG + CEASA-RN + CONAB em modelo unificado."""
+    unified = {}  # key: NOME_PRODUTO, value: dict com preços por fonte
+
+    def _add(fonte, uf, produto_dict):
+        """Normaliza e adiciona produto ao mapa unificado."""
+        nome = produto_dict.get('nome', '').upper().strip()
+        if not nome: return
+        if nome not in unified:
+            unified[nome] = {'nome': nome, 'fontes': {}, 'preco_kg_medio': None}
+        unified[nome]['fontes'][uf] = {
+            'fonte': fonte,
+            'uf': uf,
+            'embalagem': produto_dict.get('embalagem') or produto_dict.get('emb', ''),
+            'preco_comum': produto_dict.get('comum') or produto_dict.get('preco_medio'),
+            'preco_min': produto_dict.get('minimo') or produto_dict.get('preco_min'),
+            'preco_max': produto_dict.get('maximo') or produto_dict.get('preco_max'),
+            'preco_kg': produto_dict.get('preco_kg'),
+            'date': produto_dict.get('date', ''),
+            'categoria': produto_dict.get('categoria', ''),
+        }
+
+    erros = {}
+
+    # CEASA-GO
+    try:
+        go = _fetch_ceasa_go()
+        for p in go.get('produtos', {}).values():
+            _add('CEASA-GO', 'GO', p)
+    except Exception as e:
+        erros['GO'] = str(e)
+
+    # CEASA-MG
+    try:
+        mg = _fetch_ceasa_mg()
+        for p in mg.get('produtos', {}).values():
+            p2 = dict(p)
+            p2['preco_kg'] = p2.get('preco_medio')  # MG já dá R$/unidade, não por kg separado
+            _add('CEASA-MG', 'MG', p2)
+    except Exception as e:
+        erros['MG'] = str(e)
+
+    # CEASA-RN
+    try:
+        rn = _fetch_ceasa_rn()
+        for p in rn.get('produtos', {}).values():
+            _add('CEASA-RN', 'RN', p)
+    except Exception as e:
+        erros['RN'] = str(e)
+
+    # Calcular preço médio entre UFs para cada produto
+    for nome, info in unified.items():
+        kg_vals = [f['preco_kg'] for f in info['fontes'].values() if f.get('preco_kg')]
+        if kg_vals:
+            info['preco_kg_medio'] = round(sum(kg_vals) / len(kg_vals), 2)
+        common_vals = [f['preco_comum'] for f in info['fontes'].values() if f.get('preco_comum')]
+        if common_vals:
+            info['preco_comum_medio'] = round(sum(common_vals) / len(common_vals), 2)
+        info['uf_count'] = len(info['fontes'])
+
+    return {
+        'produtos': unified,
+        'fontes_ativas': [k for k in ['GO','MG','RN'] if k not in erros],
+        'erros': erros,
+        'meta': {
+            'total_produtos': len(unified),
+            'fontes': 'CEASA-GO + CEASA-MG + CEASA-RN',
+            'updated': time.strftime('%Y-%m-%d %H:%M'),
+        }
+    }
+
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=DIR, **kw)
@@ -525,6 +736,12 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
         if self.path.startswith('/api/ceasa/mg'):
             self._serve_ceasa_mg_api()
+            return
+        if self.path.startswith('/api/ceasa/rn'):
+            self._serve_ceasa_rn_api()
+            return
+        if self.path.startswith('/api/ceasa/all'):
+            self._serve_ceasa_all_api()
             return
         if self.path.startswith('/api/dashboard/summary'):
             self._serve_dashboard_summary_api()
@@ -769,6 +986,49 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             data = dict(data)
             data['produtos'] = {k: v for k, v in data['produtos'].items() if b in k}
 
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
+
+    def _serve_ceasa_rn_api(self):
+        """CEASA-RN Rio Grande do Norte — PDF diário sequencial"""
+        from urllib.parse import urlparse, parse_qs
+        params = parse_qs(urlparse(self.path).query)
+        busca = params.get('q', [None])[0]
+        data = _fetch_ceasa_rn()
+        if busca and 'produtos' in data:
+            b = busca.upper()
+            data = dict(data)
+            data['produtos'] = {k: v for k, v in data['produtos'].items() if b in k}
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
+
+    def _serve_ceasa_all_api(self):
+        """CEASA Unificado — agrega GO + MG + RN com modelo normalizado"""
+        from urllib.parse import urlparse, parse_qs
+        params = parse_qs(urlparse(self.path).query)
+        busca = params.get('q', [None])[0]
+        uf = params.get('uf', [None])[0]
+        data = _fetch_ceasa_all()
+        if busca and 'produtos' in data:
+            b = busca.upper()
+            data = dict(data)
+            data['produtos'] = {k: v for k, v in data['produtos'].items() if b in k}
+        if uf and 'produtos' in data:
+            u = uf.upper()
+            filtered = {}
+            for k, v in data['produtos'].items():
+                if u in v.get('fontes', {}):
+                    entry = dict(v)
+                    entry['fontes'] = {u: v['fontes'][u]}
+                    filtered[k] = entry
+            data = dict(data)
+            data['produtos'] = filtered
         self.send_response(200)
         self._cors()
         self.send_header('Content-Type', 'application/json')
