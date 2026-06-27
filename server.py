@@ -743,6 +743,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path.startswith('/api/ceasa/all'):
             self._serve_ceasa_all_api()
             return
+        if self.path.startswith('/api/satellite/analysis'):
+            self._serve_satellite_analysis()
+            return
         if self.path.startswith('/api/dashboard/summary'):
             self._serve_dashboard_summary_api()
             return
@@ -2551,5 +2554,442 @@ try:
     print('[FLV] Pipeline, watchdog e evolver iniciados')
 except Exception as e:
     print(f'[FLV] Init warning: {e}')
+
+# ═══════════════════════════════════════════════════════════════════
+# SATELLITE ANALYSIS ENGINE — NDVI × Calendário Agrícola × CEASA
+# Análise 3×/dia: plantio, colheita, volume, valor de mercado
+# ═══════════════════════════════════════════════════════════════════
+
+import math
+
+# Regiões agrícolas estratégicas do Brasil
+AGRI_REGIONS = {
+    'matopiba': {
+        'nome': 'MATOPIBA', 'lat': -10.5, 'lon': -45.5,
+        'area_ha': 12_000_000, 'estados': 'MA/TO/PI/BA',
+        'culturas_principais': ['soja', 'milho', 'algodao'],
+        'bounds': [[-50,-6],[-43,-6],[-43,-15],[-50,-15]],
+        'cor': '#30d158',
+    },
+    'cerrado_go': {
+        'nome': 'Cerrado Goiano', 'lat': -16.5, 'lon': -49.3,
+        'area_ha': 4_500_000, 'estados': 'GO',
+        'culturas_principais': ['soja', 'milho', 'tomate', 'sorgo'],
+        'bounds': [[-52,-13],[-46,-13],[-46,-20],[-52,-20]],
+        'cor': '#0a84ff',
+    },
+    'triangulo_mg': {
+        'nome': 'Triângulo Mineiro', 'lat': -18.9, 'lon': -47.9,
+        'area_ha': 2_500_000, 'estados': 'MG',
+        'culturas_principais': ['soja', 'milho', 'cafe', 'laranja'],
+        'bounds': [[-51,-17],[-46,-17],[-46,-21],[-51,-21]],
+        'cor': '#ff9f0a',
+    },
+    'sul_mg': {
+        'nome': 'Sul de Minas', 'lat': -21.5, 'lon': -45.5,
+        'area_ha': 1_200_000, 'estados': 'MG',
+        'culturas_principais': ['cafe', 'batata', 'morango', 'cebola'],
+        'bounds': [[-47,-20],[-44,-20],[-44,-23],[-47,-23]],
+        'cor': '#bf5af2',
+    },
+    'mogi_sp': {
+        'nome': 'Cinturão Verde SP', 'lat': -23.5, 'lon': -46.2,
+        'area_ha': 250_000, 'estados': 'SP',
+        'culturas_principais': ['tomate', 'pepino', 'pimentao', 'alface'],
+        'bounds': [[-47.5,-22.5],[-45.5,-22.5],[-45.5,-24.5],[-47.5,-24.5]],
+        'cor': '#ff453a',
+    },
+    'vale_sf': {
+        'nome': 'Vale do São Francisco', 'lat': -9.4, 'lon': -40.5,
+        'area_ha': 380_000, 'estados': 'BA/PE',
+        'culturas_principais': ['manga', 'uva', 'melao', 'banana'],
+        'bounds': [[-43,-7],[-38,-7],[-38,-12],[-43,-12]],
+        'cor': '#ffd60a',
+    },
+    'rn_ce_melao': {
+        'nome': 'Mossoró / Açu', 'lat': -5.2, 'lon': -37.3,
+        'area_ha': 180_000, 'estados': 'RN/CE',
+        'culturas_principais': ['melao', 'banana', 'castanha'],
+        'bounds': [[-39,-4],[-36,-4],[-36,-7],[-39,-7]],
+        'cor': '#64d2ff',
+    },
+    'sul_rs': {
+        'nome': 'Sul do RS', 'lat': -29.5, 'lon': -53.5,
+        'area_ha': 4_000_000, 'estados': 'RS',
+        'culturas_principais': ['soja', 'trigo', 'arroz', 'uva', 'maca'],
+        'bounds': [[-57,-27],[-49,-27],[-49,-33],[-57,-33]],
+        'cor': '#30d158',
+    },
+    'oeste_ba': {
+        'nome': 'Oeste da Bahia', 'lat': -12.3, 'lon': -45.0,
+        'area_ha': 3_800_000, 'estados': 'BA',
+        'culturas_principais': ['soja', 'milho', 'algodao'],
+        'bounds': [[-47,-10],[-43,-10],[-43,-14],[-47,-14]],
+        'cor': '#ff9f0a',
+    },
+    'pantanal_mt': {
+        'nome': 'MT Agrícola', 'lat': -13.5, 'lon': -56.0,
+        'area_ha': 9_000_000, 'estados': 'MT',
+        'culturas_principais': ['soja', 'milho', 'algodao', 'cana'],
+        'bounds': [[-60,-10],[-52,-10],[-52,-18],[-60,-18]],
+        'cor': '#0a84ff',
+    },
+    'norte_pr_ms': {
+        'nome': 'PR / MS Norte', 'lat': -23.0, 'lon': -53.0,
+        'area_ha': 5_500_000, 'estados': 'PR/MS',
+        'culturas_principais': ['soja', 'milho', 'cana', 'trigo'],
+        'bounds': [[-56,-22],[-49,-22],[-49,-26],[-56,-26]],
+        'cor': '#30d158',
+    },
+}
+
+# Calendário agrícola brasileiro (meses de referência)
+CROP_CALENDAR_BR = {
+    'soja':    {'plantio': [10,11,12], 'crescimento': [1,2,3], 'colheita': [3,4,5]},
+    'milho':   {'plantio': [10,11,1,2], 'crescimento': [12,1,2,3,4], 'colheita': [4,5,6,7]},
+    'algodao': {'plantio': [11,12,1], 'crescimento': [2,3,4], 'colheita': [5,6,7,8]},
+    'cafe':    {'plantio': [], 'crescimento': list(range(1,13)), 'colheita': [6,7,8,9,10]},
+    'cana':    {'plantio': [9,10,11], 'crescimento': list(range(1,13)), 'colheita': [5,6,7,8,9,10]},
+    'tomate':  {'plantio': [1,2,7,8], 'crescimento': [3,4,9,10], 'colheita': [5,6,11,12]},
+    'manga':   {'plantio': [9,10], 'crescimento': [11,12,1,2], 'colheita': [11,12,1,2,3]},
+    'uva':     {'plantio': [7,8], 'crescimento': [9,10,11], 'colheita': [12,1,2]},
+    'melao':   {'plantio': [3,4,9], 'crescimento': [4,5,10,11], 'colheita': [6,7,8,12,1]},
+    'batata':  {'plantio': [1,2,7,8], 'crescimento': [3,4,9,10], 'colheita': [5,6,11,12]},
+    'cebola':  {'plantio': [3,4,7,8], 'crescimento': [5,6,9,10], 'colheita': [7,8,11,12,1]},
+    'maca':    {'plantio': [], 'crescimento': [9,10,11,12,1], 'colheita': [2,3,4]},
+    'pimentao': {'plantio': [1,7], 'crescimento': [2,3,8,9], 'colheita': [4,5,6,10,11,12]},
+    'alface':  {'plantio': list(range(1,13)), 'crescimento': list(range(1,13)), 'colheita': list(range(1,13))},
+    'banana':  {'plantio': [], 'crescimento': list(range(1,13)), 'colheita': list(range(1,13))},
+    'sorgo':   {'plantio': [1,2,3], 'crescimento': [3,4,5], 'colheita': [5,6,7]},
+    'trigo':   {'plantio': [4,5,6], 'crescimento': [6,7,8], 'colheita': [9,10,11]},
+    'arroz':   {'plantio': [10,11], 'crescimento': [12,1], 'colheita': [2,3,4]},
+    'pepino':  {'plantio': [1,7], 'crescimento': [2,3,8,9], 'colheita': [4,5,10,11]},
+    'morango': {'plantio': [4,5,6], 'crescimento': [7,8,9], 'colheita': [9,10,11,12]},
+    'castanha':{'plantio': [], 'crescimento': list(range(1,13)), 'colheita': [9,10,11,12]},
+    'laranja': {'plantio': [], 'crescimento': list(range(1,13)), 'colheita': [6,7,8,9,10,11]},
+    'abacaxi': {'plantio': [9,10,11], 'crescimento': [12,1,2,3,4,5,6], 'colheita': [7,8,9,10]},
+}
+
+# Produção nacional base — IBGE 2023 (referência para estimativa de volume regional)
+IBGE_PROD_BASE = {
+    'soja':    {'total_mt': 162,  'area_mha': 43.5, 'preco_ref': 120},   # R$/sc 60kg → R$/t~2000
+    'milho':   {'total_mt': 88,   'area_mha': 17.2, 'preco_ref': 68},
+    'algodao': {'total_mt': 1.8,  'area_mha': 1.65, 'preco_ref': 3800},  # R$/@ arroba
+    'cafe':    {'total_mt': 3.4,  'area_mha': 2.2,  'preco_ref': 1200},  # R$/sc 60kg
+    'cana':    {'total_mt': 710,  'area_mha': 8.4,  'preco_ref': 90},    # R$/t
+    'tomate':  {'total_mt': 3.8,  'area_mha': 0.055,'preco_ref': 4.50},  # R$/kg
+    'manga':   {'total_mt': 1.2,  'area_mha': 0.065,'preco_ref': 4.20},
+    'uva':     {'total_mt': 1.4,  'area_mha': 0.08, 'preco_ref': 9.00},
+    'melao':   {'total_mt': 0.52, 'area_mha': 0.019,'preco_ref': 3.50},
+    'batata':  {'total_mt': 3.8,  'area_mha': 0.12, 'preco_ref': 3.80},
+    'cebola':  {'total_mt': 1.4,  'area_mha': 0.056,'preco_ref': 4.20},
+    'maca':    {'total_mt': 0.82, 'area_mha': 0.035,'preco_ref': 6.50},
+    'pimentao':{'total_mt': 0.38, 'area_mha': 0.013,'preco_ref': 6.50},
+    'banana':  {'total_mt': 7.1,  'area_mha': 0.46, 'preco_ref': 2.80},
+    'trigo':   {'total_mt': 11,   'area_mha': 3.4,  'preco_ref': 1380},  # R$/t
+    'arroz':   {'total_mt': 10.4, 'area_mha': 1.68, 'preco_ref': 2200},
+    'sorgo':   {'total_mt': 2.8,  'area_mha': 0.92, 'preco_ref': 780},
+    'morango': {'total_mt': 0.11, 'area_mha': 0.004,'preco_ref': 12.00},
+    'laranja': {'total_mt': 15.5, 'area_mha': 0.62, 'preco_ref': 42.50}, # R$/cx
+    'alface':  {'total_mt': 0.32, 'area_mha': 0.014,'preco_ref': 4.80},
+}
+
+# Mapeamento produto→CEASA para cruzamento de preços
+CULTURA_CEASA_MAP = {
+    'tomate':   'TOMATE',
+    'batata':   'BATATA',
+    'cebola':   'CEBOLA',
+    'manga':    'MANGA',
+    'uva':      'UVA',
+    'melao':    'MELAO',
+    'banana':   'BANANA',
+    'pimentao': 'PIMENTAO',
+    'alface':   'ALFACE',
+    'cenoura':  'CENOURA',
+    'pepino':   'PEPINO',
+    'morango':  'MORANGO',
+    'maca':     'MACA',
+}
+
+_sat_analysis_cache = {'data': None, 'ts': 0, 'runs': 0}
+
+def _fetch_ndvi_region(lat, lon):
+    """Busca LAI/NDVI via Open-Meteo para uma região (proxy de satélite)."""
+    try:
+        url = (f'https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}'
+               f'&daily=leaf_area_index_low_vegetation,leaf_area_index_high_vegetation,'
+               f'et0_fao_evapotranspiration,precipitation_sum,soil_moisture_0_to_7cm'
+               f'&forecast_days=3&past_days=30&timezone=America%2FSao_Paulo')
+        req = urllib.request.Request(url, headers={'User-Agent': 'NiasOS/6.0'})
+        with urllib.request.urlopen(req, timeout=12) as r:
+            d = json.loads(r.read())
+        daily = d.get('daily', {})
+        lai_low  = [v or 0 for v in daily.get('leaf_area_index_low_vegetation',  [])]
+        lai_high = [v or 0 for v in daily.get('leaf_area_index_high_vegetation', [])]
+        precip   = [v or 0 for v in daily.get('precipitation_sum', [])]
+        et0      = [v or 0 for v in daily.get('et0_fao_evapotranspiration', [])]
+        soil     = [v or 0 for v in daily.get('soil_moisture_0_to_7cm', [])]
+        dates    = daily.get('time', [])
+
+        # LAI → NDVI proxy (correlação empírica satelital)
+        ndvi_series = [min(0.95, round(1 - math.exp(-0.45 * (lo + hi)), 3))
+                       for lo, hi in zip(lai_low, lai_high)]
+
+        n = len(ndvi_series)
+        ndvi_now  = ndvi_series[-1] if n else 0.3
+        ndvi_7d   = sum(ndvi_series[-7:]) / min(7, n) if n else 0.3
+        ndvi_30d  = sum(ndvi_series) / n if n else 0.3
+        delta_30d = round(ndvi_series[-1] - ndvi_series[0], 3) if n > 7 else 0
+        trend     = 'subindo' if delta_30d > 0.05 else 'caindo' if delta_30d < -0.05 else 'estavel'
+        precip_30d = round(sum(precip), 1)
+        soil_now   = round(soil[-1], 3) if soil else 0.25
+        et0_avg    = round(sum(et0) / max(1, len(et0)), 2)
+
+        return {
+            'ndvi':       ndvi_now,
+            'ndvi_7d':    round(ndvi_7d, 3),
+            'ndvi_30d':   round(ndvi_30d, 3),
+            'ndvi_trend': trend,
+            'ndvi_delta': delta_30d,
+            'ndvi_series': ndvi_series[-14:],
+            'dates': dates[-14:],
+            'precip_30d':  precip_30d,
+            'soil_moisture': soil_now,
+            'et0_avg':     et0_avg,
+        }
+    except Exception as e:
+        return {'ndvi': 0.35, 'ndvi_7d': 0.35, 'ndvi_30d': 0.35,
+                'ndvi_trend': 'estavel', 'ndvi_delta': 0,
+                'ndvi_series': [], 'precip_30d': 0, 'soil_moisture': 0.25,
+                'et0_avg': 3.5, 'error': str(e)}
+
+
+def _detect_stage(cultura, month, ndvi, ndvi_trend, ndvi_delta):
+    """Determina estágio fenológico via calendário + NDVI."""
+    cal = CROP_CALENDAR_BR.get(cultura, {})
+    plantio    = cal.get('plantio', [])
+    crescimento = cal.get('crescimento', [])
+    colheita   = cal.get('colheita', [])
+
+    if ndvi < 0.15:
+        return 'pousio'
+    if month in colheita and ndvi < 0.35:
+        return 'pos_colheita'
+    if month in colheita and ndvi_trend in ('caindo',) and ndvi < 0.55:
+        return 'colheita'
+    if month in colheita and ndvi > 0.55:
+        return 'pre_colheita'
+    if month in crescimento and ndvi > 0.6:
+        return 'pico_biomassa'
+    if month in crescimento and ndvi > 0.4:
+        return 'crescimento'
+    if month in plantio and ndvi_trend == 'subindo':
+        return 'emergencia'
+    if month in plantio and ndvi < 0.3:
+        return 'plantio'
+    if ndvi > 0.5:
+        return 'vegetacao_ativa'
+    return 'descanso'
+
+
+def _estimate_volume_mt(cultura, region, ndvi, ndvi_30d, stage):
+    """Estima volume de produção (Mt) com base em NDVI vs histórico."""
+    base = IBGE_PROD_BASE.get(cultura)
+    if not base:
+        return 0, 0
+    area_region = region.get('area_ha', 100_000)
+    area_total  = base['area_mha'] * 1_000_000
+    frac        = min(0.6, area_region / area_total)
+
+    # Desvio do NDVI em relação ao esperado (0.55 médio Brasil)
+    ndvi_hist = 0.52
+    ndvi_dev  = (ndvi_30d - ndvi_hist) / max(0.1, ndvi_hist)
+    modifier  = max(0.4, min(1.6, 1 + ndvi_dev * 0.75))
+
+    stage_mods = {
+        'pico_biomassa': 1.0, 'pre_colheita': 0.95, 'colheita': 0.85,
+        'crescimento': 0.6, 'emergencia': 0.3, 'plantio': 0.15,
+        'vegetacao_ativa': 0.7, 'descanso': 0.1, 'pousio': 0,
+        'pos_colheita': 0.05,
+    }
+    sm = stage_mods.get(stage, 0.5)
+    prod_mt = base['total_mt'] * frac * modifier * sm
+    # Valor unitário de referência (varia por cultura)
+    preco_ref = base.get('preco_ref', 5.0)
+    # Converter para valor em R$ Mi
+    if cultura in ('soja', 'milho', 'algodao', 'cana', 'trigo', 'arroz', 'sorgo'):
+        valor_mi = prod_mt * 1_000_000 / (60 if cultura in ('soja','milho','cafe') else 1) * (preco_ref / (60 if cultura in ('soja','milho','cafe') else 1)) / 1_000_000
+        if cultura == 'soja':
+            valor_mi = prod_mt * preco_ref * 1_000_000 / 60 / 1_000_000  # sc
+    else:
+        # HVF: preco_ref = R$/kg
+        valor_mi = prod_mt * 1_000_000 * 1_000 * preco_ref / 1_000_000
+
+    return round(prod_mt, 4), round(max(0, valor_mi), 2)
+
+
+def _fetch_satellite_analysis():
+    """Engine principal: analisa todas as regiões agrícolas 3×/dia."""
+    now = time.time()
+    cache_ttl = 8 * 3600  # 8 horas = 3×/dia
+    if _sat_analysis_cache.get('data') and now - _sat_analysis_cache.get('ts', 0) < cache_ttl:
+        return _sat_analysis_cache['data']
+
+    month = datetime.now().month
+    ts_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+
+    # Busca CEASA para cruzamento de preços
+    try:
+        ceasa_all = _fetch_ceasa_all()
+        ceasa_prods = ceasa_all.get('produtos', {})
+    except Exception:
+        ceasa_prods = {}
+
+    regioes_result = {}
+
+    for reg_key, reg in AGRI_REGIONS.items():
+        ndvi_data = _fetch_ndvi_region(reg['lat'], reg['lon'])
+        ndvi = ndvi_data['ndvi']
+        ndvi_30d = ndvi_data['ndvi_30d']
+        ndvi_trend = ndvi_data['ndvi_trend']
+        ndvi_delta = ndvi_data.get('ndvi_delta', 0)
+
+        culturas_analise = []
+        for cultura in reg['culturas_principais']:
+            stage = _detect_stage(cultura, month, ndvi, ndvi_trend, ndvi_delta)
+            if stage in ('pousio', 'pos_colheita', 'descanso'):
+                relevancia = 'baixa'
+            elif stage in ('plantio', 'emergencia'):
+                relevancia = 'media'
+            else:
+                relevancia = 'alta'
+
+            vol_mt, valor_mi = _estimate_volume_mt(cultura, reg, ndvi, ndvi_30d, stage)
+
+            # Cruzamento CEASA: busca preço atual
+            ceasa_key = CULTURA_CEASA_MAP.get(cultura)
+            ceasa_preco_kg = None
+            ceasa_fontes = []
+            if ceasa_key:
+                for pnome, pdata in ceasa_prods.items():
+                    if ceasa_key.upper() in pnome.upper():
+                        ceasa_preco_kg = pdata.get('preco_kg_medio')
+                        fontes = pdata.get('fontes', {})
+                        for uf, fd in fontes.items():
+                            if fd.get('preco_kg'):
+                                ceasa_fontes.append({'uf': uf, 'preco_kg': fd['preco_kg'], 'data': fd.get('data','')})
+                        break
+
+            # Margem estimada: (preço CEASA - custo médio) × volume
+            custo_prod = IBGE_PROD_BASE.get(cultura, {}).get('preco_ref', 0) * 0.6
+            margem_pct = None
+            if ceasa_preco_kg and ceasa_preco_kg > 0:
+                preco_base = IBGE_PROD_BASE.get(cultura, {}).get('preco_ref', ceasa_preco_kg)
+                margem_pct = round((ceasa_preco_kg - preco_base * 0.6) / ceasa_preco_kg * 100, 1)
+
+            culturas_analise.append({
+                'cultura': cultura,
+                'estagio': stage,
+                'relevancia': relevancia,
+                'ndvi': ndvi,
+                'ndvi_30d': ndvi_30d,
+                'ndvi_trend': ndvi_trend,
+                'volume_mt': vol_mt,
+                'valor_mi_reais': valor_mi,
+                'ceasa_preco_kg': ceasa_preco_kg,
+                'ceasa_fontes': ceasa_fontes[:5],
+                'margem_estimada_pct': margem_pct,
+                'solo_umidade': ndvi_data.get('soil_moisture', 0),
+                'precip_30d': ndvi_data.get('precip_30d', 0),
+            })
+
+        # Cultura dominante = maior volume em estágio relevante
+        ativa = [c for c in culturas_analise if c['relevancia'] != 'baixa']
+        dominante = max(ativa, key=lambda x: x['volume_mt']) if ativa else (culturas_analise[0] if culturas_analise else None)
+
+        regioes_result[reg_key] = {
+            'nome': reg['nome'],
+            'estados': reg['estados'],
+            'lat': reg['lat'],
+            'lon': reg['lon'],
+            'area_ha': reg['area_ha'],
+            'bounds': reg.get('bounds'),
+            'cor': reg.get('cor', '#30d158'),
+            'ndvi': ndvi,
+            'ndvi_trend': ndvi_trend,
+            'ndvi_series': ndvi_data.get('ndvi_series', []),
+            'ndvi_dates': ndvi_data.get('dates', []),
+            'precip_30d': ndvi_data.get('precip_30d', 0),
+            'solo_umidade': ndvi_data.get('soil_moisture', 0),
+            'culturas': culturas_analise,
+            'cultura_dominante': dominante['cultura'] if dominante else None,
+            'estagio_dominante': dominante['estagio'] if dominante else None,
+            'volume_total_mt': round(sum(c['volume_mt'] for c in culturas_analise), 3),
+            'valor_total_mi': round(sum(c['valor_mi_reais'] for c in culturas_analise), 2),
+        }
+
+    result = {
+        'regioes': regioes_result,
+        'meta': {
+            'updated': ts_str,
+            'total_regioes': len(regioes_result),
+            'proxima_analise': (datetime.now() + timedelta(hours=8)).strftime('%H:%M'),
+            'run_count': _sat_analysis_cache.get('runs', 0) + 1,
+        }
+    }
+    _sat_analysis_cache['data'] = result
+    _sat_analysis_cache['ts'] = now
+    _sat_analysis_cache['runs'] = _sat_analysis_cache.get('runs', 0) + 1
+    return result
+
+
+def _serve_satellite_analysis(self):
+    """Endpoint /api/satellite/analysis"""
+    try:
+        data = _fetch_satellite_analysis()
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
+    except Exception as e:
+        self.send_response(500)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+ProxyHandler._serve_satellite_analysis = _serve_satellite_analysis
+
+
+# Background: atualiza análise satelital 3×/dia (00h, 08h, 16h)
+def _sat_scheduler():
+    import sched
+    sc = sched.scheduler(time.time, time.sleep)
+
+    def _run():
+        try:
+            print('[SAT] Iniciando análise satelital...')
+            _fetch_satellite_analysis()
+            print(f'[SAT] ✓ Análise concluída — {datetime.now().strftime("%H:%M")}')
+        except Exception as e:
+            print(f'[SAT] Erro: {e}')
+        _schedule_next(sc)
+
+    def _schedule_next(sc):
+        now_h = datetime.now().hour
+        targets = [0, 8, 16]
+        next_h = next((h for h in sorted(targets) if h > now_h), targets[0] + 24)
+        delta_s = ((next_h - datetime.now().hour) * 3600) - datetime.now().minute * 60 - datetime.now().second
+        if delta_s <= 0: delta_s += 86400
+        sc.enter(delta_s, 1, _run)
+        print(f'[SAT] Próxima análise em {delta_s//3600}h{(delta_s%3600)//60}min')
+        sc.run()
+
+    time.sleep(10)
+    _run()
+
+threading.Thread(target=_sat_scheduler, daemon=True).start()
+print('[SAT] Motor de análise satelital iniciado (3×/dia)')
 
 http.server.HTTPServer(('', PORT), ProxyHandler).serve_forever()

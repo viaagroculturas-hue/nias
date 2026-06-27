@@ -1876,6 +1876,12 @@ tr:hover td{background:rgba(10,132,255,.04);}
 
         <div class="map-ctrl-section">Ativas</div>
 
+        <div class="layer-toggle" onclick="document.getElementById('l-sat-ia').click()">
+          <input type="checkbox" id="l-sat-ia" checked onchange="toggleLayer('sat-ia',this)">
+          <span class="layer-sw" onclick="event.stopPropagation();document.getElementById('l-sat-ia').click()"></span>
+          <span class="layer-lbl" style="color:#30d158;">🛰 Satélite IA <span id="sat-ia-status" style="font-size:7px;color:rgba(48,209,88,.6);letter-spacing:.3px;">carregando…</span></span>
+        </div>
+
         <div class="layer-toggle" onclick="document.getElementById('l7').click()">
           <input type="checkbox" id="l7" checked onchange="toggleLayer('portos',this)">
           <span class="layer-sw" onclick="event.stopPropagation();document.getElementById('l7').click()"></span>
@@ -5327,6 +5333,9 @@ function initMap() {
     });
 
   setTimeout(() => leafletMap && leafletMap.invalidateSize(), 120);
+
+  // Carrega layer satelital após mapa pronto
+  setTimeout(loadSatelliteLayer, 3000);
 }
 
 // Painel lateral de detalhes do polo SA (clique no marcador)
@@ -5381,6 +5390,233 @@ function toggleLayer(name, cb) {
   if (cb.checked) mapLayerObjs[name].addTo(leafletMap);
   else leafletMap.removeLayer(mapLayerObjs[name]);
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// SATELLITE IA LAYER — NDVI × Calendário Agrícola × CEASA
+// ═══════════════════════════════════════════════════════════════════
+
+const SAT_STAGE_LABELS = {
+  'plantio':          { label: 'Plantio',         cor: '#ff9f0a', emoji: '🌱' },
+  'emergencia':       { label: 'Emergência',       cor: '#ffd60a', emoji: '🌿' },
+  'crescimento':      { label: 'Crescimento',      cor: '#30d158', emoji: '📈' },
+  'pico_biomassa':    { label: 'Pico Biomassa',    cor: '#34c759', emoji: '🌾' },
+  'pre_colheita':     { label: 'Pré-Colheita',     cor: '#64d2ff', emoji: '⏳' },
+  'colheita':         { label: 'Colheita',         cor: '#0a84ff', emoji: '🚜' },
+  'pos_colheita':     { label: 'Pós-Colheita',     cor: '#8e8e93', emoji: '📦' },
+  'vegetacao_ativa':  { label: 'Vegetação Ativa',  cor: '#30d158', emoji: '🌳' },
+  'pousio':           { label: 'Pousio',           cor: '#636366', emoji: '🏜' },
+  'descanso':         { label: 'Descanso',         cor: '#48484a', emoji: '💤' },
+};
+
+function _ndviToColor(ndvi) {
+  if (ndvi > 0.7) return '#30d158';
+  if (ndvi > 0.55) return '#ffd60a';
+  if (ndvi > 0.4) return '#ff9f0a';
+  if (ndvi > 0.25) return '#ff6b35';
+  return '#8e8e93';
+}
+
+function _satMarkerIcon(reg, dominante) {
+  const stg = SAT_STAGE_LABELS[dominante?.estagio_dominante] || { cor: '#8e8e93', emoji: '📍' };
+  const ndviColor = _ndviToColor(reg.ndvi || 0.3);
+  const ndviPct = Math.round((reg.ndvi || 0.3) * 100);
+  return L.divIcon({
+    className: '',
+    iconSize: [54, 54],
+    iconAnchor: [27, 27],
+    html: `<div style="
+      width:54px;height:54px;border-radius:50%;
+      background:radial-gradient(circle at 40% 40%, ${stg.cor}33, ${stg.cor}11);
+      border:2px solid ${stg.cor};
+      box-shadow:0 0 16px ${stg.cor}55, 0 2px 8px rgba(0,0,0,.5);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      cursor:pointer;transition:transform .15s;
+      animation:sat-pulse 3s ease-in-out infinite;
+    ">
+      <span style="font-size:18px;line-height:1;">${stg.emoji}</span>
+      <span style="font-size:8px;font-weight:700;color:${ndviColor};font-family:monospace;letter-spacing:-0.5px;">${ndviPct}%</span>
+    </div>`
+  });
+}
+
+function _satPopupHTML(rk, reg) {
+  const cults = (reg.culturas || []).filter(c => c.estagio !== 'pousio').slice(0, 5);
+  const ndviBar = Math.round((reg.ndvi || 0) * 100);
+  const ndviColor = _ndviToColor(reg.ndvi || 0);
+  const trendArrow = reg.ndvi_trend === 'subindo' ? '▲' : reg.ndvi_trend === 'caindo' ? '▼' : '—';
+  const trendColor = reg.ndvi_trend === 'subindo' ? '#30d158' : reg.ndvi_trend === 'caindo' ? '#ff453a' : '#8e8e93';
+
+  const cultsHTML = cults.map(c => {
+    const stg = SAT_STAGE_LABELS[c.estagio] || { label: c.estagio, cor: '#8e8e93', emoji: '📍' };
+    const margem = c.margem_estimada_pct != null ? `<span style="color:${c.margem_estimada_pct > 0 ? '#30d158' : '#ff453a'}">${c.margem_estimada_pct > 0 ? '+' : ''}${c.margem_estimada_pct}%</span>` : '<span style="color:#636366">—</span>';
+    const precoKg = c.ceasa_preco_kg ? `<b style="color:#30d158">R$ ${c.ceasa_preco_kg.toFixed(2)}/kg</b>` : '<span style="color:#636366">s/cotação</span>';
+    const volStr = c.volume_mt > 0 ? (c.volume_mt < 0.001 ? `${(c.volume_mt*1000).toFixed(1)}kt` : `${c.volume_mt.toFixed(3)} Mt`) : '—';
+    const valorStr = c.valor_mi_reais > 0 ? `R$ ${c.valor_mi_reais.toFixed(1)}Mi` : '—';
+
+    const ceasaFontesHTML = (c.ceasa_fontes || []).slice(0, 3).map(f =>
+      `<span style="color:#636366;">${f.uf}: <b style="color:var(--accent2)">R$ ${f.preco_kg?.toFixed(2) || '?'}/kg</b></span>`
+    ).join(' · ');
+
+    return `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="font-size:13px;">${stg.emoji}</span>
+        <span style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.3px;">${c.cultura}</span>
+        <span style="font-size:9px;padding:1px 6px;border-radius:8px;background:${stg.cor}22;border:1px solid ${stg.cor}55;color:${stg.cor};font-weight:600;">${stg.label}</span>
+        <span style="margin-left:auto;font-size:9px;color:${trendColor};">${trendArrow} NDVI</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:9px;color:#8e8e93;">
+        <div>Vol: <b style="color:#fff;">${volStr}</b></div>
+        <div>Valor: <b style="color:#ffd60a;">${valorStr}</b></div>
+        <div>Margem: ${margem}</div>
+      </div>
+      ${c.ceasa_preco_kg ? `<div style="font-size:9px;margin-top:4px;">CEASA: ${precoKg} ${ceasaFontesHTML ? `· ${ceasaFontesHTML}` : ''}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  const ndviSparkHTML = (reg.ndvi_series || []).slice(-14).map((v, i, arr) => {
+    const h = Math.round(v * 100);
+    const isLast = i === arr.length - 1;
+    return `<div style="flex:1;display:flex;align-items:flex-end;height:24px;">
+      <div style="width:100%;height:${h}%;background:${isLast ? ndviColor : ndviColor+'66'};border-radius:1px 1px 0 0;min-height:2px;"></div>
+    </div>`;
+  }).join('');
+
+  return `<div style="
+    min-width:320px;max-width:380px;
+    background:#1c1c1e;border:1px solid rgba(255,255,255,0.12);
+    border-radius:14px;padding:0;overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+    box-shadow:0 20px 60px rgba(0,0,0,0.7);
+  ">
+    <!-- Header -->
+    <div style="padding:14px 16px 10px;background:linear-gradient(135deg,${reg.cor || '#30d158'}18,transparent);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${reg.cor || '#30d158'};box-shadow:0 0 8px ${reg.cor || '#30d158'};animation:pulse-dot 2s ease-in-out infinite;flex-shrink:0;"></div>
+        <span style="font-size:13px;font-weight:700;color:#fff;letter-spacing:.3px;">${reg.nome}</span>
+        <span style="font-size:9px;color:#8e8e93;margin-left:auto;">${reg.estados}</span>
+      </div>
+      <!-- NDVI bar -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:9px;color:#8e8e93;width:32px;">NDVI</span>
+        <div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${ndviBar}%;background:${ndviColor};border-radius:2px;transition:width 1s ease;"></div>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:${ndviColor};font-family:monospace;width:32px;text-align:right;">${(reg.ndvi||0).toFixed(2)}</span>
+        <span style="font-size:9px;color:${trendColor};">${trendArrow}</span>
+      </div>
+      <!-- NDVI sparkline -->
+      ${ndviSparkHTML ? `<div style="display:flex;gap:1px;margin-top:8px;align-items:flex-end;height:24px;padding:0 2px;">${ndviSparkHTML}</div>` : ''}
+      <!-- Area + precip -->
+      <div style="display:flex;gap:12px;margin-top:8px;font-size:9px;color:#8e8e93;">
+        <div>Área: <b style="color:#fff;">${(reg.area_ha/1e6).toFixed(1)} Mha</b></div>
+        <div>Chuva 30d: <b style="color:#64d2ff;">${reg.precip_30d || 0}mm</b></div>
+        <div>Solo: <b style="color:#ff9f0a;">${((reg.solo_umidade||0)*100).toFixed(0)}%</b></div>
+        <div style="margin-left:auto;">Vol total: <b style="color:#ffd60a;">${reg.volume_total_mt?.toFixed(2) || '—'} Mt</b></div>
+      </div>
+    </div>
+    <!-- Culturas -->
+    <div style="padding:0 16px 12px;">
+      <div style="font-size:9px;color:#636366;letter-spacing:1px;margin-bottom:2px;padding-top:8px;">CULTURAS ATIVAS — VALORES CEASA</div>
+      ${cultsHTML || '<div style="color:#636366;font-size:10px;padding:8px 0;">Sem culturas em estágio ativo neste período</div>'}
+    </div>
+    <!-- Footer -->
+    <div style="padding:8px 16px;background:rgba(255,255,255,0.03);border-top:1px solid rgba(255,255,255,0.06);font-size:8px;color:#48484a;">
+      🛰 NDVI via Open-Meteo LAI · Calendário IBGE/MAPA · Preços CEASA-GO/MG/RN
+    </div>
+  </div>`;
+}
+
+let _satLayerLoaded = false;
+
+async function loadSatelliteLayer() {
+  if (!leafletMap) return;
+  try {
+    const resp = await fetch('/api/satellite/analysis');
+    if (!resp.ok) throw new Error('API offline');
+    const data = await resp.json();
+    const regioes = data.regioes || {};
+
+    // Remove layer anterior
+    if (mapLayerObjs['sat-ia']) leafletMap.removeLayer(mapLayerObjs['sat-ia']);
+    mapLayerObjs['sat-ia'] = L.layerGroup();
+
+    let totalRegioes = 0, totalVolume = 0;
+
+    for (const [rk, reg] of Object.entries(regioes)) {
+      if (!reg.lat || !reg.lon) continue;
+      totalRegioes++;
+      totalVolume += reg.volume_total_mt || 0;
+
+      // Círculo de fundo (área agrícola)
+      const ndviColor = _ndviToColor(reg.ndvi || 0.3);
+      const radius = Math.max(40000, Math.min(160000, Math.sqrt(reg.area_ha || 100000) * 120));
+      const circle = L.circle([reg.lat, reg.lon], {
+        radius,
+        color: ndviColor,
+        fillColor: ndviColor,
+        fillOpacity: 0.06,
+        weight: 1.5,
+        opacity: 0.35,
+        dashArray: '4,4',
+      });
+
+      // Marcador central com ícone
+      const dominante = (reg.culturas || []).find(c => c.cultura === reg.cultura_dominante);
+      const marker = L.marker([reg.lat, reg.lon], { icon: _satMarkerIcon(reg, dominante) });
+
+      // Popup Apple design
+      const popup = L.popup({
+        maxWidth: 400, minWidth: 320,
+        className: 'sat-popup-leaflet',
+        closeButton: true,
+        autoPan: true,
+      }).setContent(_satPopupHTML(rk, reg));
+
+      marker.bindPopup(popup);
+      circle.bindPopup(popup);
+
+      mapLayerObjs['sat-ia'].addLayer(circle);
+      mapLayerObjs['sat-ia'].addLayer(marker);
+    }
+
+    // Verifica se o toggle está ativo
+    const cb = document.getElementById('l-sat-ia');
+    if (cb && cb.checked) mapLayerObjs['sat-ia'].addTo(leafletMap);
+
+    // Atualiza status
+    const satStatus = document.getElementById('sat-ia-status');
+    if (satStatus) satStatus.textContent = `${totalRegioes} regiões · ${totalVolume.toFixed(1)} Mt`;
+
+    _satLayerLoaded = true;
+    console.log(`[SAT-IA] ${totalRegioes} regiões carregadas, ${totalVolume.toFixed(2)} Mt estimado`);
+
+    // Reagenda: 3×/dia = a cada 8h
+    setTimeout(loadSatelliteLayer, 8 * 60 * 60 * 1000);
+  } catch(e) {
+    console.warn('[SAT-IA] Erro ao carregar layer:', e.message);
+    const satStatus = document.getElementById('sat-ia-status');
+    if (satStatus) { satStatus.style.color = 'rgba(255,69,58,.7)'; satStatus.textContent = 'erro'; }
+    setTimeout(loadSatelliteLayer, 5 * 60 * 1000); // retry em 5min
+  }
+}
+
+// CSS extra para popup Leaflet sem borda padrão
+(function(){
+  const s = document.createElement('style');
+  s.textContent = `
+    .sat-popup-leaflet .leaflet-popup-content-wrapper {
+      background:transparent !important;border:none !important;
+      box-shadow:none !important;padding:0 !important;border-radius:14px !important;
+    }
+    .sat-popup-leaflet .leaflet-popup-content { margin:0 !important; }
+    .sat-popup-leaflet .leaflet-popup-tip { background:#1c1c1e !important; }
+    @keyframes sat-pulse {
+      0%,100%{box-shadow:0 0 12px currentColor,0 2px 8px rgba(0,0,0,.5);}
+      50%{box-shadow:0 0 24px currentColor,0 4px 16px rgba(0,0,0,.6);}
+    }
+  `;
+  document.head.appendChild(s);
+})();
 
 // ═══════════════════════════════════════════════════════════════════
 // MAPA DE POLOS SUL-AMERICANOS — Modal com imagem de referência
