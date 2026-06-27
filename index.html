@@ -354,9 +354,23 @@ input::placeholder, textarea::placeholder { color:var(--text3) !important; }
 /* ── Map tile (suaviza OpenStreetMap no light) ── */
 #map, #map-municipal { filter:saturate(0.78) brightness(1.04) !important; }
 
-/* ── Sat popup ── */
+/* ── Sat popup — mantém dark internamente ── */
 .sat-popup-leaflet .leaflet-popup-content-wrapper { background:transparent !important; box-shadow:none !important; border:none !important; padding:0 !important; }
 .sat-popup-leaflet .leaflet-popup-tip-container { display:none !important; }
+/* Reverte overrides globais dentro do popup (popup usa dark by design) */
+.sat-popup-leaflet [style*="background:#1c1c1e"]   { background:#1c1c1e !important; }
+.sat-popup-leaflet [style*="background:#2c2c2e"]   { background:#2c2c2e !important; }
+.sat-popup-leaflet [style*="background:rgba(28,28,30"] { background:rgba(28,28,30,0.95) !important; }
+.sat-popup-leaflet [style*="background:rgba(44,44,46"] { background:rgba(44,44,46,0.9) !important; }
+.sat-popup-leaflet [style*="background:rgba(255,255,255,0.06)"] { background:rgba(255,255,255,0.06) !important; }
+.sat-popup-leaflet [style*="color:#fff"]            { color:#fff !important; }
+.sat-popup-leaflet [style*="color:#ffffff"]         { color:#ffffff !important; }
+.sat-popup-leaflet [style*="color:rgba(235,235,245"] { color:rgba(235,235,245,0.6) !important; }
+.sat-popup-leaflet [style*="color:#8e8e93"]         { color:#8e8e93 !important; }
+.sat-popup-leaflet [style*="color:#636366"]         { color:#636366 !important; }
+.sat-popup-leaflet [style*="color:#ffd60a"]         { color:#ffd60a !important; }
+.sat-popup-leaflet [style*="border:1px solid rgba(255,255,255"] { border-color:rgba(255,255,255,0.1) !important; }
+.sat-popup-leaflet [style*="border-bottom:1px solid rgba(255,255,255"] { border-bottom-color:rgba(255,255,255,0.06) !important; }
 
 /* ── War room alerts ── */
 .wr-alert-n1 { background:var(--fill-red) !important; border-left-color:var(--danger) !important; }
