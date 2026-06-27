@@ -10,13 +10,27 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
-  --bg:#000000;--bg2:#1c1c1e;--bg3:#2c2c2e;--border:rgba(84,84,88,0.5);
-  --accent:#0a84ff;--accent2:#30d158;--accent3:#ff9f0a;
-  --warn:#ffd60a;--danger:#ff453a;--text:#ffffff;--text2:rgba(235,235,245,0.6);
+  /* ── Apple Light HIG ── */
+  --bg:#f2f2f7;--bg2:#ffffff;--bg3:#e5e5ea;--border:rgba(60,60,67,0.18);
+  --accent:#007aff;--accent2:#34c759;--accent3:#ff9500;
+  --warn:#ff9500;--danger:#ff3b30;--text:#1c1c1e;--text2:rgba(60,60,67,0.55);
   --font:-apple-system,BlinkMacSystemFont,'Inter','SF Pro Text',system-ui,sans-serif;
   --font-mono:'SF Mono','Menlo','Courier New',monospace;
   --radius:12px;--radius-sm:8px;
+  --flv-green:#34c759;--flv-carbon:#ffffff;--flv-ice:#f2f2f7;--flv-amber:#ff9500;--flv-red:#ff3b30;
+  /* shadow tokens */
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.1),0 2px 6px rgba(0,0,0,0.06);
+  --shadow-lg:0 10px 30px rgba(0,0,0,0.12),0 4px 12px rgba(0,0,0,0.07);
+}
+
+/* ── DARK THEME (modo escuro explícito) ── */
+[data-theme='dark'] {
+  --bg:#000000;--bg2:#1c1c1e;--bg3:#2c2c2e;--border:rgba(84,84,88,0.5);
+  --accent:#0a84ff;--accent2:#30d158;--accent3:#ff9f0a;
+  --warn:#ffd60a;--danger:#ff453a;--text:#ffffff;--text2:rgba(235,235,245,0.6);
   --flv-green:#30d158;--flv-carbon:#1c1c1e;--flv-ice:#f2f2f7;--flv-amber:#ff9f0a;--flv-red:#ff453a;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.4);--shadow-md:0 4px 12px rgba(0,0,0,0.5);--shadow-lg:0 10px 30px rgba(0,0,0,0.6);
 }
 .flv-panel{background:var(--flv-carbon);}
 .flv-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;}
@@ -68,21 +82,187 @@
 .wr-alert-n2{border-left:3px solid #F59E0B !important;background:rgba(245,158,11,.06) !important;}
 .wr-alert-n3{border-left:3px solid #3B82F6 !important;background:rgba(59,130,246,.05) !important;}
 
-/* ── LIGHT MODE ── */
-[data-theme='light'] {
-  --bg:#f2f2f7;--bg2:#ffffff;--bg3:#e5e5ea;--border:rgba(60,60,67,0.29);
-  --accent:#007aff;--accent2:#34c759;--accent3:#ff9500;
-  --warn:#ffcc00;--danger:#ff3b30;--text:#000000;--text2:rgba(60,60,67,0.6);
+/* ══════════════════════════════════════════════════════════
+   APPLE LIGHT — overrides de cores hardcoded (default :root)
+   ══════════════════════════════════════════════════════════ */
+
+/* Base */
+body { background:var(--bg) !important; color:var(--text) !important; }
+
+/* Topbar & Ticker */
+#topbar {
+  background:rgba(242,242,247,0.92) !important;
+  border-bottom-color:rgba(60,60,67,0.15) !important;
+  backdrop-filter:blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(180%) !important;
 }
-[data-theme='light'] body { background:var(--bg); }
-[data-theme='light'] #map,
-[data-theme='light'] #map-municipal { filter:brightness(1.15) saturate(1.1); }
-[data-theme='light'] .panel-header { background:#d0dded; }
-[data-theme='light'] #topbar { background:#dde8f0; }
-[data-theme='light'] #price-ticker { background:#c8d8e8; }
-[data-theme='light'] .nav-sidebar { background:#cad8e8;border-right-color:#b0c4d8; }
-[data-theme='light'] .route-card { background:#e4ecf4;border-color:#b0c4d8; }
-[data-theme='light'] #arb-strip { background:#ecf2f8; }
+#price-ticker {
+  background:rgba(255,255,255,0.7) !important;
+  border-bottom-color:rgba(60,60,67,0.12) !important;
+  color:var(--text) !important;
+}
+.ticker-item { color:var(--text2) !important; }
+.ticker-val { color:var(--text) !important; }
+#ticker-alert-pill { background:rgba(255,59,48,0.08) !important; }
+
+/* Sidebar */
+.nav-sidebar, #sidebar {
+  background:rgba(242,242,247,0.96) !important;
+  border-right-color:rgba(60,60,67,0.12) !important;
+}
+.nav-btn { color:var(--text2) !important; }
+.nav-btn.active, .nav-btn:hover { background:rgba(0,122,255,0.1) !important; color:var(--accent) !important; }
+
+/* Panel geral */
+.panel, #panel-map, #panel-logistica, #panel-bio,
+#panel-brain, #panel-agro, #panel-fretes,
+[id^="panel-"] {
+  background:var(--bg) !important;
+}
+.panel-header {
+  background:rgba(242,242,247,0.95) !important;
+  border-bottom-color:rgba(60,60,67,0.15) !important;
+  backdrop-filter:blur(16px) !important;
+}
+.panel-title { color:var(--text) !important; }
+.panel-badge { background:rgba(0,122,255,0.1) !important; border-color:rgba(0,122,255,0.25) !important; color:var(--accent) !important; }
+
+/* Cards genéricos hardcoded escuros → brancos */
+[style*="background:#1c1c1e"],
+[style*="background: #1c1c1e"] {
+  background:#ffffff !important;
+  border-color:rgba(60,60,67,0.15) !important;
+}
+[style*="background:#2c2c2e"],
+[style*="background: #2c2c2e"] {
+  background:#f2f2f7 !important;
+}
+[style*="background:rgba(28,28,30"],
+[style*="background: rgba(28,28,30"] {
+  background:rgba(255,255,255,0.92) !important;
+}
+[style*="background:rgba(44,44,46"] {
+  background:rgba(242,242,247,0.9) !important;
+}
+
+/* Horti cards */
+.horti-card {
+  background:#ffffff !important;
+  border-color:rgba(60,60,67,0.12) !important;
+  box-shadow:var(--shadow-sm) !important;
+}
+.horti-card:hover {
+  box-shadow:var(--shadow-md) !important;
+  border-color:rgba(60,60,67,0.2) !important;
+}
+.horti-name { color:var(--text) !important; }
+.horti-region { color:var(--text2) !important; }
+.horti-price { color:var(--accent) !important; }
+.horti-price.loading-val { color:var(--text2) !important; }
+.horti-section, #horti-section { background:var(--bg) !important; }
+.horti-header { background:rgba(0,122,255,0.04) !important; border-bottom-color:var(--border) !important; }
+.horti-grid { background:var(--bg) !important; }
+.horti-spark { opacity:.15 !important; }
+
+/* Route cards (logística) */
+.route-card {
+  background:#ffffff !important;
+  border-color:rgba(60,60,67,0.12) !important;
+  box-shadow:var(--shadow-sm) !important;
+}
+.route-card:hover { background:#f8f8fc !important; }
+.route-name { color:var(--text) !important; }
+.route-card.danger { border-color:rgba(255,59,48,0.25) !important; }
+.route-card.warn { border-color:rgba(255,149,0,0.2) !important; }
+.route-card.ok { border-color:rgba(52,199,89,0.2) !important; }
+
+/* Map controls */
+.map-controls, .map-sat-bar {
+  background:rgba(255,255,255,0.92) !important;
+  border-color:rgba(60,60,67,0.15) !important;
+  box-shadow:var(--shadow-md) !important;
+}
+.map-ctrl-title, .sat-title { color:var(--text2) !important; }
+.map-ctrl-section { color:var(--text2) !important; border-color:var(--border) !important; }
+.layer-lbl { color:var(--text) !important; }
+.layer-toggle { border-color:var(--border) !important; }
+
+/* Overview bottom, alerts */
+.ov-alerts, .ov-alerts-title, .ov-alerts-list {
+  background:var(--bg2) !important;
+  color:var(--text) !important;
+  border-color:var(--border) !important;
+}
+
+/* Modais e overlays */
+.modal-bg, [id*="modal"] {
+  background:rgba(0,0,0,0.35) !important;
+}
+[id*="modal"] > div, .modal-content {
+  background:#ffffff !important;
+  border-color:rgba(60,60,67,0.18) !important;
+}
+
+/* Brix panel */
+.brix-panel { background:rgba(255,149,0,0.05) !important; border-color:rgba(255,149,0,0.2) !important; }
+
+/* Segmented control horti */
+.log-lyr-btn { color:var(--text2) !important; }
+.log-lyr-btn.active { background:rgba(0,0,0,0.08) !important; color:var(--text) !important; }
+
+/* KPI cards inline */
+.log-section-hdr { border-bottom-color:rgba(60,60,67,0.15) !important; color:var(--text) !important; }
+
+/* Badge LIVE */
+.badge-live { background:rgba(52,199,89,0.12) !important; color:var(--accent2) !important; border-color:rgba(52,199,89,0.25) !important; }
+
+/* Inputs, textareas */
+input, textarea, select {
+  background:var(--bg3) !important;
+  color:var(--text) !important;
+  border-color:var(--border) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar-track { background:var(--bg3) !important; }
+::-webkit-scrollbar-thumb { background:rgba(60,60,67,0.25) !important; }
+
+/* Decision banner / failsafe → já ocultos */
+
+/* Texto genérico que ficou branco hardcoded */
+[style*="color:#ffffff"]:not(.logo):not([class*="badge"]):not(button) { color:var(--text) !important; }
+[style*="color:rgba(235,235,245"] { color:var(--text2) !important; }
+[style*="color:rgba(255,255,255"] { color:var(--text2) !important; }
+
+/* Borders rgba escuras */
+[style*="border:1px solid rgba(255,255,255,0.07)"],
+[style*="border:1px solid rgba(255,255,255,0.08)"],
+[style*="border:1px solid rgba(255,255,255,0.1)"] {
+  border-color:rgba(60,60,67,0.14) !important;
+}
+
+/* Map tile (OpenStreetMap já é claro) */
+#map, #map-municipal { filter:saturate(0.85) brightness(1.02) !important; }
+
+/* Sat-popup light */
+.sat-popup-leaflet .leaflet-popup-content-wrapper { background:transparent !important; }
+
+/* Overview section dividers */
+.overview-bottom { background:var(--bg) !important; border-top-color:var(--border) !important; }
+
+/* FLV panel */
+.flv-panel { background:var(--bg2) !important; }
+.flv-card { background:var(--bg3) !important; border-color:var(--border) !important; }
+.flv-kpi-card { background:var(--bg3) !important; }
+
+/* Arbitrage strip */
+#arb-strip { background:rgba(0,122,255,0.04) !important; border-color:rgba(0,122,255,0.1) !important; }
+
+/* Phenol/NDVI bars */
+.phenol-bar { background:var(--bg3) !important; }
+.brix-bar { background:var(--bg3) !important; }
+
+/* ── DARK/CYBER mantidos com data-theme explícito ── */
 
 /* ── CYBER AI MODE ── */
 [data-theme='cyber'] {
