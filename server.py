@@ -1,5 +1,6 @@
 import http.server, urllib.request, urllib.parse, json, os, re, time, base64, threading
 from datetime import datetime, timedelta
+from nias_health import checker as _health_checker, handle_health as _handle_health
 
 # ═══════════════════════════════════════════════════════════════════
 # AUTENTICAÇÃO — X-API-Key header obrigatório para endpoints sensíveis
@@ -758,7 +759,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/api/health':
-            self._serve_health()
+            _handle_health(self)
             return
         if self.path.startswith('/api/nias/'):
             self._serve_nias_api()
@@ -3265,4 +3266,5 @@ def _sat_scheduler():
 threading.Thread(target=_sat_scheduler, daemon=True).start()
 print('[SAT] Motor de análise satelital iniciado (3×/dia)')
 
+_health_checker.start()
 http.server.HTTPServer(('', PORT), ProxyHandler).serve_forever()
