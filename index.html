@@ -169,19 +169,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 @keyframes flash{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* DECISION BANNER */
-#decision-banner{padding:0 20px;height:32px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(84,84,88,0.3);flex-shrink:0;transition:background .4s;}
-#decision-banner.estado-ok{background:rgba(48,209,88,.04);}
-#decision-banner.estado-warn{background:rgba(255,214,10,.05);}
-#decision-banner.estado-crit{background:rgba(255,69,58,.06);}
-#db-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-#db-label{font-size:10px;font-weight:600;letter-spacing:0.8px;color:var(--text2);flex-shrink:0;}
-#db-msg{font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#db-action{font-size:10px;color:var(--accent);cursor:pointer;flex-shrink:0;padding:3px 10px;border:1px solid rgba(10,132,255,.3);border-radius:20px;transition:all .2s;white-space:nowrap;}
-#db-action:hover{background:rgba(10,132,255,.1);}
+/* decision-banner integrado ao ticker — sem barra separada */
+#decision-banner{display:none;}
+/* Indicador de alerta compacto no ticker */
+#ticker-alert-pill{display:flex;align-items:center;gap:5px;margin-left:auto;padding:0 14px;flex-shrink:0;cursor:pointer;}
+#ticker-alert-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);flex-shrink:0;}
+#ticker-alert-label{font-size:9px;font-weight:600;letter-spacing:.5px;color:var(--accent2);}
+#ticker-alert-pill:hover #ticker-alert-label{text-decoration:underline;}
 
 /* PRICE TICKER — static strip */
-#price-ticker{height:28px;background:rgba(28,28,30,0.95);border-bottom:1px solid rgba(84,84,88,0.3);display:flex;align-items:center;padding:0 20px;overflow:hidden;flex-shrink:0;gap:0;}
-.ticker-inner{display:flex;gap:0;white-space:nowrap;width:100%;}
+#price-ticker{height:28px;background:rgba(28,28,30,0.95);border-bottom:1px solid rgba(84,84,88,0.3);display:flex;align-items:center;padding:0 0 0 0;overflow:hidden;flex-shrink:0;gap:0;}
+.ticker-inner{display:flex;gap:0;white-space:nowrap;width:100%;align-items:center;}
 .tick-item{font-size:11px;display:flex;gap:6px;padding:0 16px;border-right:1px solid rgba(84,84,88,0.3);align-items:center;}
 .tick-item:last-child{border-right:none;}
 .tick-name{color:rgba(235,235,245,0.4);font-size:10px;letter-spacing:0;font-weight:400;}
@@ -394,19 +392,40 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 
 /* Layer panel — right */
 .map-controls{
-  top:52px;right:12px;
+  top:8px;right:8px;
   padding:14px;
   display:flex;flex-direction:column;gap:0;
   min-width:198px;
   position:absolute;z-index:1100;
-  background:rgba(28,28,30,0.78);
+  background:rgba(28,28,30,0.88);
   backdrop-filter:blur(22px) saturate(160%);
   -webkit-backdrop-filter:blur(22px) saturate(160%);
   border:1px solid rgba(255,255,255,0.07);
   border-radius:14px;
   box-shadow:0 8px 32px rgba(0,0,0,0.55),0 1px 0 rgba(255,255,255,0.06) inset;
   animation:mapFadeIn .3s ease;
+  transition:all .22s ease;
+  overflow:hidden;
 }
+/* Camadas colapsado — apenas título visível */
+.map-controls.collapsed{
+  min-width:0;padding:7px 12px;cursor:pointer;
+}
+.map-controls.collapsed > *:not(.map-ctrl-title){display:none;}
+.map-controls.collapsed .map-ctrl-title{
+  margin:0;padding:0;border:none;
+  font-size:10px;letter-spacing:.8px;
+  color:rgba(235,235,245,0.65);
+  display:flex;align-items:center;gap:6px;
+  white-space:nowrap;
+}
+.map-ctrl-collapse-btn{
+  margin-left:auto;width:16px;height:16px;border-radius:4px;
+  background:rgba(255,255,255,0.08);border:none;cursor:pointer;
+  color:rgba(235,235,245,0.5);font-size:9px;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;flex-shrink:0;
+}
+.map-ctrl-collapse-btn:hover{background:rgba(255,255,255,0.15);color:var(--text);}
 .map-ctrl-title{
   font-size:9px;font-weight:700;letter-spacing:2.5px;
   color:rgba(255,255,255,0.28);
@@ -456,16 +475,35 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 
 /* Satellite HUD — left */
 .map-sat-bar{
-  top:52px;left:12px;
-  padding:14px 16px;min-width:210px;
+  top:8px;left:8px;
+  padding:7px 12px;min-width:0;
   position:absolute;z-index:1100;
-  background:rgba(28,28,30,0.78);
+  background:rgba(28,28,30,0.88);
   backdrop-filter:blur(22px) saturate(160%);
   -webkit-backdrop-filter:blur(22px) saturate(160%);
   border:1px solid rgba(255,255,255,0.07);
   border-radius:14px;
   box-shadow:0 8px 32px rgba(0,0,0,0.55),0 1px 0 rgba(255,255,255,0.06) inset;
   animation:mapFadeIn .3s ease;
+  transition:all .22s ease;
+  overflow:hidden;
+  cursor:pointer;
+}
+/* Expandido */
+.map-sat-bar.expanded{
+  padding:14px 16px;min-width:210px;cursor:default;
+}
+.map-sat-bar.expanded .sat-item{display:block;}
+/* Colapsado — apenas dot + título */
+.map-sat-bar:not(.expanded) .sat-item{display:none;}
+.map-sat-bar:not(.expanded) .sat-title{
+  margin:0;padding:0;border:none;font-size:10px;
+  letter-spacing:.8px;color:rgba(235,235,245,0.65);
+  white-space:nowrap;
+}
+.map-sat-bar.expanded .sat-title{
+  margin-bottom:12px;padding-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
 }
 .sat-title{
   font-size:9px;font-weight:700;letter-spacing:2.5px;
@@ -742,9 +780,8 @@ tr:hover td{background:rgba(10,132,255,.04);}
 .speed-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
 .speed-fill{height:100%;border-radius:2px;transition:width 1.2s ease;}
 
-/* ── FAIL-SAFE STATUS BAR — collapsed by default, expand on hover ── */
-#failsafe-bar{height:18px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;font-size:8.5px;overflow:hidden;transition:height .25s,background .25s;cursor:default;}
-#failsafe-bar:hover{height:22px;background:rgba(10,132,255,.04);}
+/* ── FAIL-SAFE STATUS BAR — oculto; info crítica migrou para o ticker ── */
+#failsafe-bar{display:none;}
 .fs-item{display:flex;align-items:center;gap:4px;color:var(--text2);font-family:var(--font-mono);}
 .fs-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
 .fs-active{color:var(--accent2);}
@@ -1191,21 +1228,26 @@ tr:hover td{background:rgba(10,132,255,.04);}
     <span class="tick-item"><span class="tick-name">BOI GORDO · CEPEA</span><span class="tick-val" id="tp-boi">R$/@ —</span></span>
     <span class="tick-item"><span class="tick-name">CAFÉ · CEPEA</span><span class="tick-val" id="tp-cafe">R$/sc —</span></span>
     <span class="tick-item"><span class="tick-name">USD/BRL · BCB</span><span class="tick-val" id="tp-usd">R$ —</span></span>
-    <span class="tick-item" style="border-right:none;"><span class="tick-name">TOMATE · CEASA-GO</span><span class="tick-val" id="tp-tomate">R$/cx —</span></span>
+    <span class="tick-item"><span class="tick-name">TOMATE · CEASA-GO</span><span class="tick-val" id="tp-tomate">R$/cx —</span></span>
+    <!-- Status compacto — substitui decision-banner e failsafe-bar -->
+    <span id="ticker-alert-pill" onclick="showPanel('warroom')" title="Ver War Room">
+      <span id="ticker-alert-dot"></span>
+      <span id="ticker-alert-label">SISTEMA ESTÁVEL</span>
+    </span>
+    <span style="margin-left:8px;color:rgba(235,235,245,0.2);font-size:9px;font-family:var(--font-mono);white-space:nowrap;padding-right:4px;">NIA$ · <span id="fs-date"></span></span>
   </div>
 </div>
 
-<!-- DECISION BANNER — a linha Jobs: "o que devo fazer agora?" -->
-<div id="decision-banner" class="estado-ok">
-  <span id="db-dot" style="background:var(--accent2);"></span>
-  <span id="db-label" style="color:var(--accent2);">SISTEMA ESTÁVEL</span>
-  <span style="color:rgba(255,255,255,0.12);font-size:10px;">|</span>
-  <span id="db-msg" style="color:var(--text2);">Carregando situação atual…</span>
-  <span id="db-action" onclick="showPanel('warroom')" style="display:none;">Ver War Room →</span>
+<!-- DECISION BANNER — mantido no DOM para compatibilidade JS, mas oculto via CSS -->
+<div id="decision-banner" class="estado-ok" style="display:none;">
+  <span id="db-dot"></span>
+  <span id="db-label"></span>
+  <span id="db-msg"></span>
+  <span id="db-action" onclick="showPanel('warroom')"></span>
 </div>
 
-<!-- FAIL-SAFE STATUS BAR -->
-<div id="failsafe-bar">
+<!-- FAIL-SAFE STATUS BAR — oculto; itens críticos foram para o ticker -->
+<div id="failsafe-bar" style="display:none!important;">
   <span class="fs-item fs-active"><span class="fs-dot" style="background:var(--accent2)"></span>Fenologia</span>
   <span class="fs-item" id="fs-sar"><span class="fs-dot" style="background:var(--accent2)"></span>SAR: <span id="fs-sar-val" style="color:rgba(235,235,245,0.6);margin-left:2px;">Standby</span></span>
   <span class="fs-item"><span class="fs-dot" style="background:var(--accent2)"></span>Nuvens: <span id="fs-cloud" style="color:rgba(235,235,245,0.6);margin-left:2px;">18%</span></span>
@@ -1655,9 +1697,9 @@ tr:hover td{background:rgba(10,132,255,.04);}
       <!-- MAP -->
       <div id="map" style="position:absolute;inset:42px 0 0 0;"></div>
 
-      <!-- SATELLITE HUD — left -->
-      <div class="map-sat-bar">
-        <div class="sat-title"><span class="sat-live-dot"></span>Status Orbital</div>
+      <!-- SATELLITE HUD — left (colapsado por padrão) -->
+      <div class="map-sat-bar" id="map-sat-bar" onclick="_toggleSatBar(event)">
+        <div class="sat-title"><span class="sat-live-dot"></span>Orbital</div>
         <div class="sat-item">
           <div class="sat-row">
             <span class="sat-name">Sentinel-2A</span>
@@ -1681,9 +1723,9 @@ tr:hover td{background:rgba(10,132,255,.04);}
         </div>
       </div>
 
-      <!-- LAYER PANEL — right -->
-      <div class="map-controls">
-        <div class="map-ctrl-title">Camadas</div>
+      <!-- LAYER PANEL — right (colapsado por padrão) -->
+      <div class="map-controls collapsed" id="map-controls">
+        <div class="map-ctrl-title" onclick="_toggleMapControls()">⊞ Camadas<button class="map-ctrl-collapse-btn" onclick="event.stopPropagation();_toggleMapControls()" id="map-ctrl-btn">▼</button></div>
 
         <div class="map-ctrl-section">Ativas</div>
 
@@ -7280,6 +7322,75 @@ function injectFeedEvent(cls, msg) {
 
 setInterval(updateFailSafe, 6000);
 updateFailSafe();
+
+// ═══════════════════════════════════════════════════════════════════
+// MAP PANEL TOGGLES — STATUS ORBITAL e CAMADAS colapsáveis
+// ═══════════════════════════════════════════════════════════════════
+function _toggleSatBar(e) {
+  const bar = document.getElementById('map-sat-bar');
+  if (!bar) return;
+  if (bar.classList.contains('expanded')) {
+    // Fechar ao clicar fora do conteúdo ou no título
+    const title = bar.querySelector('.sat-title');
+    if (e && title && title.contains(e.target)) { bar.classList.remove('expanded'); return; }
+    if (!e) { bar.classList.remove('expanded'); return; }
+  } else {
+    bar.classList.add('expanded');
+  }
+}
+// Clicar fora fecha o painel orbital
+document.addEventListener('click', function(e) {
+  const bar = document.getElementById('map-sat-bar');
+  if (bar && bar.classList.contains('expanded') && !bar.contains(e.target)) {
+    bar.classList.remove('expanded');
+  }
+});
+
+function _toggleMapControls() {
+  const mc = document.getElementById('map-controls');
+  const btn = document.getElementById('map-ctrl-btn');
+  if (!mc) return;
+  const collapsed = mc.classList.toggle('collapsed');
+  if (btn) btn.textContent = collapsed ? '▼' : '▲';
+}
+// Clicar fora fecha Camadas
+document.addEventListener('click', function(e) {
+  const mc = document.getElementById('map-controls');
+  if (mc && !mc.classList.contains('collapsed') && !mc.contains(e.target)) {
+    mc.classList.add('collapsed');
+    const btn = document.getElementById('map-ctrl-btn');
+    if (btn) btn.textContent = '▼';
+  }
+});
+
+// ── Sincronizar pill de alerta no ticker com o estado do decision-banner ──
+(function _patchDecisionBanner() {
+  const orig = Object.getOwnPropertyDescriptor(Element.prototype, 'className');
+  // Observar mudanças no decision-banner e espelhar no ticker pill
+  const banner = document.getElementById('decision-banner');
+  if (!banner) return;
+  const pill   = document.getElementById('ticker-alert-pill');
+  const pdot   = document.getElementById('ticker-alert-dot');
+  const plabel = document.getElementById('ticker-alert-label');
+  if (!pill) return;
+
+  function _syncPill() {
+    const dbDot   = document.getElementById('db-dot');
+    const dbLabel = document.getElementById('db-label');
+    const dbMsg   = document.getElementById('db-msg');
+    if (!dbDot) return;
+    const color = dbDot.style.background || 'var(--accent2)';
+    const label = dbLabel ? dbLabel.textContent : '';
+    if (pdot)   { pdot.style.background = color; pdot.style.boxShadow = `0 0 5px ${color}`; }
+    if (plabel) { plabel.textContent = label; plabel.style.color = color; }
+    // Mostrar pill apenas se não for estado OK (para não poluir quando sistema estável)
+    if (pill) pill.style.display = banner.className === 'estado-ok' ? 'none' : 'flex';
+  }
+
+  // Observar mudanças de classe no banner e conteúdo nos spans filhos
+  new MutationObserver(_syncPill).observe(banner, { attributes:true, attributeFilter:['class'], subtree:true, characterData:true, childList:true });
+  setTimeout(_syncPill, 2000);
+})();
 
 // ═══════════════════════════════════════════════════════════════════
 // MUNICIPAL ENGINE — Choropleth + Rm + Anomaly Radar
