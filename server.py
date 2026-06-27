@@ -335,6 +335,85 @@ def _fetch_ceasa_go():
     _ceasa_go_cache['ts'] = time.time()
     return result
 
+# ── CEASA-MG Minas Gerais — HTML diário ─────────────────────────────
+_ceasa_mg_cache = {}
+
+def _fetch_ceasa_mg():
+    if _ceasa_mg_cache.get('data') and time.time() - _ceasa_mg_cache.get('ts', 0) < 3600:
+        return _ceasa_mg_cache['data']
+    if not _BS:
+        return {'error': 'beautifulsoup4 não instalado', 'produtos': {}}
+
+    url = 'https://minas1.ceasa.mg.gov.br/ceasainternet/cst_precosmaiscomumMG/cst_precosmaiscomumMG.php'
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            raw = resp.read().decode('latin-1', errors='ignore')
+    except Exception as e:
+        print(f'[CEASA-MG] Erro ao buscar página: {e}')
+        return {'error': str(e), 'produtos': {}}
+
+    soup = _BS(raw, 'html.parser')
+    table = soup.find('table')
+    if not table:
+        return {'error': 'Tabela não encontrada na página', 'produtos': {}}
+
+    rows = table.find_all('tr')
+    if not rows:
+        return {'error': 'Tabela vazia', 'produtos': {}}
+
+    # Cabeçalho: Produtos, Embalagens, cidade1, cidade2, ...
+    header = [th.get_text(strip=True) for th in rows[0].find_all(['th', 'td'])]
+    cidades = header[2:] if len(header) > 2 else []
+
+    def _p(s):
+        s = str(s).strip().replace(',', '.').replace('—', '').replace('-', '').replace(' ', '')
+        try: return float(s) if s else None
+        except: return None
+
+    produtos = {}
+    for row in rows[1:]:
+        cells = [td.get_text(strip=True) for td in row.find_all('td')]
+        if len(cells) < 3: continue
+        nome = cells[0].strip().upper()
+        emb = cells[1].strip()
+        if not nome: continue
+        precos_cidades = {}
+        vals = []
+        for i, cidade in enumerate(cidades):
+            v = _p(cells[2 + i]) if 2 + i < len(cells) else None
+            if v and v > 0:
+                precos_cidades[cidade] = v
+                vals.append(v)
+        if not vals: continue
+        avg = round(sum(vals) / len(vals), 2)
+        produtos[nome] = {
+            'nome': nome,
+            'embalagem': emb,
+            'preco_medio': avg,
+            'preco_min': round(min(vals), 2),
+            'preco_max': round(max(vals), 2),
+            'por_cidade': precos_cidades,
+            'source': 'CEASA-MG',
+            'date': time.strftime('%d/%m/%Y'),
+        }
+
+    result = {
+        'produtos': produtos,
+        'cidades': cidades,
+        'meta': {
+            'source': 'CEASA Minas Gerais',
+            'url': url,
+            'total': len(produtos),
+            'updated': time.strftime('%Y-%m-%d %H:%M'),
+            'date': time.strftime('%d/%m/%Y'),
+        }
+    }
+    _ceasa_mg_cache['data'] = result
+    _ceasa_mg_cache['ts'] = time.time()
+    return result
+
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=DIR, **kw)
@@ -443,6 +522,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
         if self.path.startswith('/api/ceasa/go'):
             self._serve_ceasa_go_api()
+            return
+        if self.path.startswith('/api/ceasa/mg'):
+            self._serve_ceasa_mg_api()
             return
         if self.path.startswith('/api/dashboard/summary'):
             self._serve_dashboard_summary_api()
@@ -686,6 +768,38 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             b = busca.upper()
             data = dict(data)
             data['produtos'] = {k: v for k, v in data['produtos'].items() if b in k}
+
+        self.send_response(200)
+        self._cors()
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode())
+
+    def _serve_ceasa_mg_api(self):
+        """CEASA-MG Minas Gerais — preços mais comuns, múltiplas cidades"""
+        from urllib.parse import urlparse, parse_qs
+        params = parse_qs(urlparse(self.path).query)
+        busca = params.get('q', [None])[0]
+        cidade = params.get('cidade', [None])[0]
+
+        data = _fetch_ceasa_mg()
+
+        if busca and 'produtos' in data:
+            b = busca.upper()
+            data = dict(data)
+            data['produtos'] = {k: v for k, v in data['produtos'].items() if b in k}
+
+        if cidade and 'produtos' in data:
+            c = cidade.strip()
+            filtered = {}
+            for k, v in data['produtos'].items():
+                preco = v.get('por_cidade', {}).get(c)
+                if preco:
+                    entry = dict(v)
+                    entry['preco_cidade'] = preco
+                    filtered[k] = entry
+            data = dict(data)
+            data['produtos'] = filtered
 
         self.send_response(200)
         self._cors()

@@ -12296,31 +12296,43 @@ async function niasLoadRealData() {
     ceasaGoData = gr;
   } catch(e) {}
 
-  _updateHortiPrices(prices, conab, ceagespData, ceasaGoData);
+  // CEASA-MG Minas Gerais — HTML diário, múltiplas cidades
+  let ceasaMgData = {};
+  try {
+    const mr = await fetch('/api/ceasa/mg').then(r => r.ok ? r.json() : {}).catch(() => ({}));
+    ceasaMgData = mr;
+  } catch(e) {}
+
+  _updateHortiPrices(prices, conab, ceagespData, ceasaGoData, ceasaMgData);
 
   // ── Schedule refresh every 15 minutes ───────────────────────────
   setTimeout(niasLoadRealData, 900000);
 }
 
 // Atualiza cards de hortifruti na Visao Geral com dados reais
-function _updateHortiPrices(cepeaPrices, conabData, ceagespData, ceasaGoData) {
+function _updateHortiPrices(cepeaPrices, conabData, ceagespData, ceasaGoData, ceasaMgData) {
   const flvRef = typeof FLVModule !== 'undefined' ? FLVModule._REF : {};
   const ceagespProds = ceagespData && ceagespData.products ? ceagespData.products : {};
   const ceagespDate = ceagespData && ceagespData.meta ? ceagespData.meta.date : '';
   const goProds = (ceasaGoData && ceasaGoData.produtos) ? ceasaGoData.produtos : {};
   const goDate = (ceasaGoData && ceasaGoData.meta) ? ceasaGoData.meta.date : '';
+  const mgProds = (ceasaMgData && ceasaMgData.produtos) ? ceasaMgData.produtos : {};
+  const mgDate = (ceasaMgData && ceasaMgData.meta) ? ceasaMgData.meta.date : '';
 
   const hortiMap = {
-    // ceasa_go: termo de busca no nome do produto CEASA-GO (uppercase)
-    'tomate-mesa': { slug:'tomate', unit:'kg', conab:'TOMATE', cepea:'tomate', ceasa_go:'TOMATE LONGA VIDA', elPrice:'hp-tomate-mesa', elDelta:'hd-tomate-mesa', elSrc:'hsrc-tomate-mesa', elStatus:'hst-tomate-mesa' },
-    'tomate-ind':  { slug:'tomate', unit:'t',  conab:'EXTRATO DE TOMATE', cepea:null, ceasa_go:'TOMATE', elPrice:'hp-tomate-ind', elDelta:'hd-tomate-ind', elSrc:'hsrc-tomate-ind', elStatus:'hst-tomate-ind' },
-    'pimentao':    { slug:'pimentao', unit:'kg', conab:'PIMENTAO', cepea:null, ceasa_go:'PIMENTAO', elPrice:'hp-pimentao', elDelta:'hd-pimentao', elSrc:'hsrc-pimentao', elStatus:'hst-pimentao' },
-    'alface':      { slug:'folhosas', unit:'kg', conab:'ALFACE', cepea:null, ceasa_go:'ALFACE', elPrice:'hp-alface', elDelta:'hd-alface', elSrc:'hsrc-alface', elStatus:'hst-alface' },
-    'laranja':     { slug:'laranja', unit:'cx', conab:'LARANJA', cepea:'laranja', ceasa_go:'LARANJA', elPrice:'hp-laranja', elDelta:'hd-laranja', elSrc:'hsrc-laranja', elStatus:'hst-laranja' },
-    'batata':      { slug:'batata', unit:'sc', conab:'BATATA INGLESA', cepea:'batata', ceasa_go:'BATATA COMUM', elPrice:'hp-batata', elDelta:'hd-batata', elSrc:'hsrc-batata', elStatus:'hst-batata' },
-    'cebola':      { slug:'cebola', unit:'kg', conab:'CEBOLA', cepea:null, ceasa_go:'CEBOLA NACIONAL', elPrice:'hp-cebola', elDelta:'hd-cebola', elSrc:'hsrc-cebola', elStatus:'hst-cebola' },
-    'manga':       { slug:'manga', unit:'kg', conab:'MANGA', cepea:null, ceasa_go:'MANGA', elPrice:'hp-manga', elDelta:'hd-manga', elSrc:'hsrc-manga', elStatus:'hst-manga' },
-    'uva':         { slug:'uva', unit:'kg', conab:'UVA', cepea:null, ceasa_go:'UVA', elPrice:'hp-uva', elDelta:'hd-uva', elSrc:'hsrc-uva', elStatus:'hst-uva' },
+    // ceasa_go: termo CEASA-GO (PDF Goiás) | ceasa_mg: chave exata CEASA-MG (HTML)
+    'tomate-mesa': { slug:'tomate', unit:'kg', conab:'TOMATE', cepea:'tomate', ceasa_go:'TOMATE LONGA VIDA', ceasa_mg:'TOMATE', elPrice:'hp-tomate-mesa', elDelta:'hd-tomate-mesa', elSrc:'hsrc-tomate-mesa', elStatus:'hst-tomate-mesa' },
+    'tomate-ind':  { slug:'tomate', unit:'t',  conab:'EXTRATO DE TOMATE', cepea:null, ceasa_go:'TOMATE', ceasa_mg:'TOMATE', elPrice:'hp-tomate-ind', elDelta:'hd-tomate-ind', elSrc:'hsrc-tomate-ind', elStatus:'hst-tomate-ind' },
+    'pimentao':    { slug:'pimentao', unit:'kg', conab:'PIMENTAO', cepea:null, ceasa_go:'PIMENTAO', ceasa_mg:'PIMENTAO', elPrice:'hp-pimentao', elDelta:'hd-pimentao', elSrc:'hsrc-pimentao', elStatus:'hst-pimentao' },
+    'alface':      { slug:'folhosas', unit:'kg', conab:'ALFACE', cepea:null, ceasa_go:'ALFACE', ceasa_mg:'ALFACE', elPrice:'hp-alface', elDelta:'hd-alface', elSrc:'hsrc-alface', elStatus:'hst-alface' },
+    'laranja':     { slug:'laranja', unit:'cx', conab:'LARANJA', cepea:'laranja', ceasa_go:'LARANJA', ceasa_mg:'LARANJA', elPrice:'hp-laranja', elDelta:'hd-laranja', elSrc:'hsrc-laranja', elStatus:'hst-laranja' },
+    'batata':      { slug:'batata', unit:'sc', conab:'BATATA INGLESA', cepea:'batata', ceasa_go:'BATATA COMUM', ceasa_mg:'BATATA', elPrice:'hp-batata', elDelta:'hd-batata', elSrc:'hsrc-batata', elStatus:'hst-batata' },
+    'cebola':      { slug:'cebola', unit:'kg', conab:'CEBOLA', cepea:null, ceasa_go:'CEBOLA NACIONAL', ceasa_mg:'CEBOLA', elPrice:'hp-cebola', elDelta:'hd-cebola', elSrc:'hsrc-cebola', elStatus:'hst-cebola' },
+    'manga':       { slug:'manga', unit:'kg', conab:'MANGA', cepea:null, ceasa_go:'MANGA', ceasa_mg:'MANGA', elPrice:'hp-manga', elDelta:'hd-manga', elSrc:'hsrc-manga', elStatus:'hst-manga' },
+    'uva':         { slug:'uva', unit:'kg', conab:'UVA', cepea:null, ceasa_go:'UVA', ceasa_mg:'UVA', elPrice:'hp-uva', elDelta:'hd-uva', elSrc:'hsrc-uva', elStatus:'hst-uva' },
+    'banana':      { slug:'banana', unit:'kg', conab:'BANANA', cepea:null, ceasa_go:null, ceasa_mg:'BANANA-NANICA', elPrice:'hp-banana', elDelta:'hd-banana', elSrc:'hsrc-banana', elStatus:'hst-banana' },
+    'cenoura':     { slug:'cenoura', unit:'kg', conab:'CENOURA', cepea:null, ceasa_go:null, ceasa_mg:'CENOURA', elPrice:'hp-cenoura', elDelta:'hd-cenoura', elSrc:'hsrc-cenoura', elStatus:'hst-cenoura' },
+    'morango':     { slug:'morango', unit:'kg', conab:'MORANGO', cepea:null, ceasa_go:null, ceasa_mg:'MORANGO', elPrice:'hp-morango', elDelta:'hd-morango', elSrc:'hsrc-morango', elStatus:'hst-morango' },
   };
 
   // Helper: encontra produto CEASA-GO por termo (partial match no nome)
@@ -12348,12 +12360,19 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData, ceasaGoData) {
     if (cfg.ceasa_go) {
       const gp = _findGoProduct(cfg.ceasa_go);
       if (gp && gp.comum) {
-        // Converte preço da embalagem para R$/kg quando possível
         const kgEmb = gp.kg_embalagem;
         const priceRaw = gp.comum;
         price = (kgEmb && kgEmb > 0) ? Math.round((priceRaw / kgEmb) * 100) / 100 : priceRaw;
         const emb = gp.embalagem ? ` · ${gp.embalagem}` : '';
         source = `CEASA-GO · ${goDate}${emb}`;
+      }
+    }
+    // 0b. CEASA-MG Minas Gerais — HTML diário, múltiplas cidades (fallback GO)
+    if (!price && cfg.ceasa_mg) {
+      const mp = mgProds[cfg.ceasa_mg];
+      if (mp && mp.preco_medio) {
+        price = mp.preco_medio;
+        source = `CEASA-MG · ${mgDate} · ${mp.embalagem || 'KG'}`;
       }
     }
     // 1. CEAGESP LIVE
@@ -12387,7 +12406,7 @@ function _updateHortiPrices(cepeaPrices, conabData, ceagespData, ceasaGoData) {
     }
     if (srcEl) {
       srcEl.textContent = `Fonte: ${source}`;
-      srcEl.style.color = source.includes('CEASA-GO') ? 'var(--accent2)' : source.includes('CEPEA') ? 'var(--accent2)' : source.includes('CONAB') ? 'var(--accent)' : 'var(--text2)';
+      srcEl.style.color = (source.includes('CEASA-GO') || source.includes('CEASA-MG')) ? 'var(--accent2)' : source.includes('CEPEA') ? 'var(--accent2)' : source.includes('CONAB') ? 'var(--accent)' : 'var(--text2)';
     }
 
     // Fetch prediction for trend
