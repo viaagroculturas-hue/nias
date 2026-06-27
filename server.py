@@ -865,7 +865,14 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path.startswith('/api/autonomous'):
             self._serve_autonomous_api()
             return
-        if self.path.startswith('/api/predictx/live') or self.path.startswith('/api/predictx/events'):
+        if self.path.startswith('/api/predictx/'):
+            canonical = self.path.replace('/api/predictx/', '/api/predictix/', 1)
+            self.send_response(301)
+            self._cors()
+            self.send_header('Location', canonical)
+            self.end_headers()
+            return
+        if self.path.startswith('/api/predictix/live') or self.path.startswith('/api/predictix/events'):
             if not _auth_ok(self): _serve_auth_error(self); return
             self._serve_predictx_live_api()
             return

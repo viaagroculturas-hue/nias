@@ -13637,7 +13637,7 @@ window.PredictXLive = {
   async load(force=false){
     const st=document.getElementById('pxx-live-status'); if(st) st.textContent='● consultando fontes';
     try{
-      const res=await fetch('/api/predictx/live'+(force?'?force=1':''), {cache:'no-store'});
+      const res=await fetch('/api/predictix/live'+(force?'?force=1':''), {cache:'no-store'});
       const data=await res.json();
       this.data=data; this.render(data);
       if(st){st.textContent='● online'; st.style.color='#50C878';}
