@@ -361,18 +361,182 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .odi-low{background:rgba(0,255,136,.15);color:#00ff88;}
 @keyframes climatePulse{0%,100%{opacity:1}50%{opacity:.5}}
 @keyframes sonar-expand{0%{transform:scale(.4);opacity:.5;}100%{transform:scale(2.5);opacity:0;}}
-.map-controls{position:absolute;top:10px;right:10px;z-index:999;background:rgba(5,14,26,.92);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;min-width:190px;}
-.map-ctrl-title{color:var(--accent);font-size:10px;letter-spacing:2px;margin-bottom:3px;}
-.layer-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;}
-.layer-toggle input{accent-color:var(--accent);}
-.layer-toggle label{color:var(--text);font-size:11px;cursor:pointer;}
-.legend-item{display:flex;align-items:center;gap:5px;margin-bottom:3px;}
-.legend-dot{width:10px;height:10px;border-radius:2px;}
-.legend-label{font-size:10px;color:var(--text2);}
-.map-stats{position:absolute;bottom:10px;left:10px;z-index:999;background:rgba(5,14,26,.92);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:3px;}
-.map-stats p{font-size:10px;color:var(--text2);}
-.map-stats strong{color:var(--accent2);}
-.map-sat-bar{position:absolute;top:10px;left:10px;z-index:999;background:rgba(5,14,26,.92);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:200px;}
+/* ── MAP PANEL — Apple-grade redesign ─────────────────────────────── */
+@keyframes mapLivePulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.45;transform:scale(1.25);}}
+@keyframes orbitSpin{0%{stroke-dashoffset:188;}100%{stroke-dashoffset:0;}}
+@keyframes mapFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* Floating glass card — base */
+.gmap-card{
+  position:absolute;z-index:1100;
+  background:rgba(10,14,24,0.78);
+  backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:14px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.55),0 1px 0 rgba(255,255,255,0.06) inset;
+  animation:mapFadeIn .3s ease;
+}
+
+/* Layer panel — right */
+.map-controls{
+  top:52px;right:12px;
+  padding:14px;
+  display:flex;flex-direction:column;gap:0;
+  min-width:198px;
+  position:absolute;z-index:1100;
+  background:rgba(10,14,24,0.78);
+  backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:14px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.55),0 1px 0 rgba(255,255,255,0.06) inset;
+  animation:mapFadeIn .3s ease;
+}
+.map-ctrl-title{
+  font-size:9px;font-weight:700;letter-spacing:2.5px;
+  color:rgba(255,255,255,0.28);
+  text-transform:uppercase;
+  margin-bottom:10px;padding-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.map-ctrl-section{
+  font-size:8px;font-weight:600;letter-spacing:1.8px;
+  color:rgba(255,255,255,0.22);text-transform:uppercase;
+  margin:10px 0 6px;
+}
+.layer-toggle{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 0;cursor:pointer;
+  transition:opacity .15s;
+}
+.layer-toggle:hover:not(.layer-disabled){opacity:.85;}
+.layer-toggle.layer-disabled{pointer-events:none;}
+
+/* Custom toggle switch */
+.layer-toggle input[type=checkbox]{display:none;}
+.layer-sw{
+  position:relative;width:28px;height:16px;flex-shrink:0;
+  background:rgba(255,255,255,0.12);border-radius:8px;
+  transition:background .2s;cursor:pointer;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.layer-sw::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:10px;height:10px;border-radius:50%;
+  background:rgba(255,255,255,0.5);
+  transition:transform .2s,background .2s;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+.layer-toggle input:checked ~ .layer-sw{background:var(--accent);border-color:transparent;}
+.layer-toggle input:checked ~ .layer-sw::after{transform:translateX(12px);background:#fff;}
+.layer-toggle input:disabled ~ .layer-sw{opacity:.3;cursor:not-allowed;}
+.layer-toggle input:disabled ~ .layer-lbl{opacity:.38;cursor:not-allowed;}
+
+.layer-lbl{font-size:10.5px;color:var(--text);line-height:1.3;}
+.layer-lbl-note{font-size:8px;display:block;color:rgba(255,193,7,0.7);letter-spacing:.3px;margin-top:1px;}
+
+.legend-item{display:flex;align-items:center;gap:7px;padding:3px 0;}
+.legend-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
+.legend-label{font-size:9.5px;color:rgba(255,255,255,0.5);}
+
+/* Satellite HUD — left */
+.map-sat-bar{
+  top:52px;left:12px;
+  padding:14px 16px;min-width:210px;
+  position:absolute;z-index:1100;
+  background:rgba(10,14,24,0.78);
+  backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:14px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.55),0 1px 0 rgba(255,255,255,0.06) inset;
+  animation:mapFadeIn .3s ease;
+}
+.sat-title{
+  font-size:9px;font-weight:700;letter-spacing:2.5px;
+  color:rgba(255,255,255,0.28);text-transform:uppercase;
+  margin-bottom:12px;padding-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  display:flex;align-items:center;gap:6px;
+}
+.sat-live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#00ff88;flex-shrink:0;
+  animation:mapLivePulse 2s ease-in-out infinite;
+  box-shadow:0 0 6px rgba(0,255,136,.6);
+}
+.sat-item{margin-bottom:10px;}
+.sat-item:last-child{margin-bottom:0;}
+.sat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.sat-name{font-size:10px;font-weight:600;color:rgba(255,255,255,0.75);letter-spacing:.3px;}
+.sat-val{font-size:9px;color:var(--accent2);font-family:monospace;letter-spacing:.5px;}
+.sat-progress{
+  height:3px;
+  background:rgba(255,255,255,0.08);
+  border-radius:999px;overflow:hidden;
+}
+.sat-fill{
+  height:100%;border-radius:999px;
+  transition:width 2s cubic-bezier(.4,0,.2,1);
+}
+.sat-fill-s2a{background:linear-gradient(90deg,#00d4ff,#0080ff);}
+.sat-fill-s1{background:linear-gradient(90deg,#00ff88,#00a550);}
+.sat-fill-ps{background:linear-gradient(90deg,#7ec850,#4a9e2a);}
+
+/* Bottom stat chips */
+.map-stats{
+  bottom:14px;left:12px;
+  display:flex;flex-wrap:wrap;gap:6px;
+  position:absolute;z-index:1100;
+  animation:mapFadeIn .35s ease;
+  pointer-events:none;
+}
+.map-stat-chip{
+  background:rgba(10,14,24,0.78);
+  backdrop-filter:blur(16px) saturate(150%);
+  -webkit-backdrop-filter:blur(16px) saturate(150%);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:20px;
+  padding:5px 10px;
+  display:flex;align-items:center;gap:5px;
+  box-shadow:0 4px 12px rgba(0,0,0,.4);
+}
+.map-stat-label{font-size:8.5px;color:rgba(255,255,255,0.35);letter-spacing:.5px;}
+.map-stat-value{font-size:10px;font-weight:600;color:var(--accent2);}
+.map-stat-value.ok{color:#00ff88;}
+.map-stat-value.warn{color:#ffc107;}
+.map-stat-value.dim{color:rgba(255,255,255,0.4);}
+
+/* Map topbar refined */
+#map-topbar{
+  height:42px!important;
+  background:rgba(8,12,20,0.88)!important;
+  backdrop-filter:blur(16px)!important;
+  border-bottom:1px solid rgba(0,212,255,0.14)!important;
+}
+
+/* Segmented control for zoom */
+.map-zoom-seg{
+  display:flex;align-items:center;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;overflow:hidden;padding:2px;gap:1px;
+}
+.map-zoom-btn{
+  background:none;border:none;
+  font-family:var(--font);font-size:9px;font-weight:600;
+  letter-spacing:.8px;color:rgba(255,255,255,0.45);
+  padding:3px 9px;border-radius:6px;cursor:pointer;
+  transition:background .18s,color .18s;white-space:nowrap;
+}
+.map-zoom-btn.active{
+  background:rgba(0,212,255,0.2);
+  color:var(--accent);
+  box-shadow:0 0 0 1px rgba(0,212,255,0.3);
+}
+.map-zoom-btn:hover:not(.active){color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.06);}
+.map-zoom-btn:disabled{opacity:.35;cursor:not-allowed;}
 
 .admin-boundary-tooltip{
   background:rgba(2,10,18,.94)!important;
@@ -1025,7 +1189,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
   <span class="fs-item"><span class="fs-dot" style="background:var(--accent2)"></span>VECTOR TILES: <span id="fs-tiles" style="color:var(--accent2);margin-left:3px;">ATIVO</span></span>
   <span class="fs-item"><span class="fs-dot" style="background:var(--accent2)"></span>FALLBACK PREÇO: <span id="fs-fallback" style="color:var(--accent2);margin-left:3px;">NÃO ATIVADO</span></span>
   <span class="fs-item" id="api-status-strip" style="font-size:8px;color:var(--text2);overflow:hidden;max-width:400px;white-space:nowrap;">APIs: aguardando...</span>
-  <span class="fs-item" style="margin-left:auto;"><span id="fs-engine-cycles" style="color:var(--text2);">NIA$ v2.1 · 17/04/2026 · Ciclos: <strong id="fs-cycles" style="color:var(--accent)">0</strong></span></span>
+  <span class="fs-item" style="margin-left:auto;"><span id="fs-engine-cycles" style="color:var(--text2);">NIA$ v2.1 · <span id="fs-date"></span> · Ciclos: <strong id="fs-cycles" style="color:var(--accent)">0</strong></span></span>
 </div>
 
 <!-- APP -->
@@ -1436,62 +1600,168 @@ tr:hover td{background:rgba(0,212,255,.04);}
 
     <!-- ═══ PANEL: MAP ═══ -->
     <div class="panel" id="panel-map" style="position:relative;overflow:hidden;">
-      <div id="map-topbar" style="position:absolute;top:0;left:0;right:0;height:34px;z-index:1200;background:rgba(11,14,20,.88);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,212,255,.22);display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;">
-        <span style="color:var(--accent);font-size:10px;font-weight:bold;letter-spacing:2px;">MAPA GEO-IA — SEGMENTAÇÃO SEMÂNTICA</span>
-        <span class="panel-badge">Sentinel-2 + SAR</span>
-        <span class="panel-badge ok" style="font-size:9px;">10m</span>
-        <span class="badge-live" style="font-size:9px;">● LIVE</span>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:4px;">
-          <span style="font-size:9px;color:var(--text2);letter-spacing:1px;">DEEP DIVE:</span>
-          <button id="zoom-btn-0" onclick="setZoomLevel(0)" style="background:rgba(0,212,255,.15);border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer;">Z0 NACIONAL</button>
-          <button id="zoom-btn-1" onclick="setZoomLevel(1)" style="background:none;border:1px solid var(--border);color:var(--text2);font-family:var(--font);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer;">Z1 ESTADUAL</button>
-          <button id="zoom-btn-2" onclick="setZoomLevel(2)" style="background:none;border:1px solid var(--border);color:var(--text2);font-family:var(--font);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer;">Z2 PROPRIEDADE</button>
-          <button onclick="showPolosMap()" style="background:rgba(80,200,120,.15);border:1px solid var(--flv-green);color:var(--flv-green);font-family:var(--font);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer;margin-left:8px;">🌎 POLOS SUL-AMERICA</button>
-          <span id="zoom-label" style="font-size:9px;color:var(--accent2);margin-left:4px;">Cores por estado · Produtividade geral</span>
+
+      <!-- TOPBAR -->
+      <div id="map-topbar" style="position:absolute;top:0;left:0;right:0;height:42px;z-index:1200;display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div style="width:7px;height:7px;border-radius:50%;background:#00d4ff;box-shadow:0 0 8px rgba(0,212,255,.7);animation:mapLivePulse 2s ease-in-out infinite;flex-shrink:0;"></div>
+          <span style="color:rgba(255,255,255,0.9);font-size:11px;font-weight:700;letter-spacing:1.5px;">MAPA GEO-IA</span>
+          <span style="color:rgba(255,255,255,0.22);font-size:11px;">·</span>
+          <span style="color:rgba(255,255,255,0.38);font-size:10px;letter-spacing:.5px;">Sentinel-2 + SAR</span>
+        </div>
+        <div style="width:1px;height:14px;background:rgba(255,255,255,0.1);margin:0 4px;"></div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:9px;color:rgba(255,255,255,0.28);letter-spacing:1.5px;text-transform:uppercase;">Deep Dive</span>
+          <!-- Segmented control -->
+          <div class="map-zoom-seg">
+            <button id="zoom-btn-0" class="map-zoom-btn active" onclick="setZoomLevel(0)">Nacional</button>
+            <button id="zoom-btn-1" class="map-zoom-btn" onclick="setZoomLevel(1)">Estadual</button>
+            <button id="zoom-btn-2" class="map-zoom-btn" onclick="setZoomLevel(2)" title="Requer integração PlanetScope (PLANET_KEY)">Talhão</button>
+          </div>
+          <button onclick="showPolosMap()" style="background:rgba(80,200,120,0.14);border:1px solid rgba(80,200,120,0.35);color:#50C878;font-family:var(--font);font-size:9px;font-weight:600;letter-spacing:.8px;padding:4px 11px;border-radius:20px;cursor:pointer;transition:background .18s,box-shadow .18s;white-space:nowrap;" onmouseover="this.style.background='rgba(80,200,120,0.24)'" onmouseout="this.style.background='rgba(80,200,120,0.14)'">⬡ Polos SA</button>
+          <span id="zoom-label" style="font-size:9px;color:rgba(255,255,255,0.3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Cobertura nacional · Produtividade geral</span>
         </div>
       </div>
-      <div id="map" style="position:absolute;inset:34px 0 0 0;"></div>
-      <div class="map-controls" style="position:absolute;top:44px;right:10px;z-index:1100;">
-          <div class="map-ctrl-title">CAMADAS ATIVAS</div>
-          <div class="layer-toggle"><input type="checkbox" id="l1" checked onchange="toggleLayer('soja',this)"><label for="l1">Soja (10m)</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l2" checked onchange="toggleLayer('milho',this)"><label for="l2">Milho (10m)</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l3" onchange="toggleLayer('cana',this)"><label for="l3">Cana-de-Açúcar</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l4" onchange="toggleLayer('pastagem',this)"><label for="l4">Pastagem / Pecuária</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l5" onchange="toggleLayer('horti',this)"><label for="l5">Horticultura (3m)</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l6" checked onchange="toggleLayer('alertas',this)"><label for="l6">Anomalias / Alertas</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l7" checked onchange="toggleLayer('portos',this)"><label for="l7">Portos / Logística</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l8" checked onchange="toggleLayer('tomate-mesa',this)"><label for="l8" style="color:var(--accent)">🍅 Tomate Mesa</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l9" checked onchange="toggleLayer('tomate-ind',this)"><label for="l9" style="color:var(--accent3)">🍅 Tomate Indústria</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l-sa-poles" checked onchange="toggleLayer('sa-poles',this)"><label for="l-sa-poles" style="color:#50C878">⬡ Polos SA (42)</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l10" onchange="toggleLayer('planet',this)"><label for="l10" style="color:#7ec850">🛰 Planet (3m)</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l11" checked onchange="toggleLayer('country-borders',this)"><label for="l11" style="color:#00d4ff">🌎 Contornos Países</label></div>
-          <div class="layer-toggle"><input type="checkbox" id="l12" checked onchange="toggleAdminBoundaryGroup('main-states',this.checked)"><label for="l12" style="color:#ffdf6b">▧ Estados/Províncias reais</label></div>
-          <div id="main-boundary-status" style="font-size:8px;color:var(--text2);margin-top:2px;">carregando divisas oficiais…</div>
-          <div style="margin-top:6px;">
-            <div class="map-ctrl-title">LEGENDA NDVI</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#00a550"></div><span class="legend-label">&gt; 0.70 — Saúde plena</span></div>
-            <div class="legend-item"><div class="legend-dot" style="background:#7ec850"></div><span class="legend-label">0.50–0.70 — Normal</span></div>
-            <div class="legend-item"><div class="legend-dot" style="background:#ffc107"></div><span class="legend-label">0.30–0.50 — Atenção</span></div>
-            <div class="legend-item"><div class="legend-dot" style="background:#ff3d3d"></div><span class="legend-label">&lt; 0.30 — Crítico</span></div>
+
+      <!-- MAP -->
+      <div id="map" style="position:absolute;inset:42px 0 0 0;"></div>
+
+      <!-- SATELLITE HUD — left -->
+      <div class="map-sat-bar">
+        <div class="sat-title"><span class="sat-live-dot"></span>Status Orbital</div>
+        <div class="sat-item">
+          <div class="sat-row">
+            <span class="sat-name">Sentinel-2A</span>
+            <span class="sat-val" id="ms-s2a">00:42 min</span>
           </div>
+          <div class="sat-progress"><div class="sat-fill sat-fill-s2a" id="sf-s2a" style="width:72%"></div></div>
         </div>
-        <div class="map-sat-bar" style="position:absolute;top:44px;left:10px;z-index:1100;">
-          <div class="sat-title">STATUS ORBITAL — TEMPO REAL</div>
-          <div class="sat-row"><span class="sat-name">Sentinel-2A</span><span class="sat-val" id="ms-s2a">Passando em 00:42</span></div>
-          <div class="sat-progress"><div class="sat-fill" id="sf-s2a" style="width:72%"></div></div>
-          <div class="sat-row" style="margin-top:5px"><span class="sat-name">Sentinel-1 SAR</span><span class="sat-val" id="ms-s1">Em órbita ativo</span></div>
-          <div class="sat-progress"><div class="sat-fill" id="sf-s1" style="width:100%;background:var(--accent2)"></div></div>
-          <div class="sat-row" style="margin-top:5px"><span class="sat-name">PlanetScope</span><span class="sat-val" id="ms-ps">Passando em 01:15</span></div>
-          <div class="sat-progress"><div class="sat-fill" id="sf-ps" style="width:45%"></div></div>
+        <div class="sat-item">
+          <div class="sat-row">
+            <span class="sat-name">Sentinel-1 SAR</span>
+            <span class="sat-val" id="ms-s1" style="color:#00ff88;">Ativo</span>
+          </div>
+          <div class="sat-progress"><div class="sat-fill sat-fill-s1" id="sf-s1" style="width:100%"></div></div>
         </div>
-        <div class="map-stats" style="position:absolute;bottom:10px;left:10px;z-index:1100;">
-          <p>Cobertura ativa: <strong id="map-cov">99.2%</strong> do território</p>
-          <p>Última leitura: <strong id="map-time">--</strong></p>
-          <p>Polos SA carregados: <strong id="map-poles-count">carregando…</strong></p>
-          <p>Anomalias detectadas: <strong style="color:var(--danger)" id="map-anom">—</strong></p>
-          <p style="font-size:9px;color:var(--text2);">Fonte: NIAS Regions · Open-Meteo · Dado estrutural</p>
-          <p style="font-size:9px;color:var(--text2);">Próx. atualiz.: <span id="map-next-update">—</span></p>
+        <div class="sat-item">
+          <div class="sat-row">
+            <span class="sat-name">PlanetScope</span>
+            <span class="sat-val" id="ms-ps">01:15 min</span>
+          </div>
+          <div class="sat-progress"><div class="sat-fill sat-fill-ps" id="sf-ps" style="width:45%"></div></div>
         </div>
+      </div>
+
+      <!-- LAYER PANEL — right -->
+      <div class="map-controls">
+        <div class="map-ctrl-title">Camadas</div>
+
+        <div class="map-ctrl-section">Ativas</div>
+
+        <div class="layer-toggle" onclick="document.getElementById('l7').click()">
+          <input type="checkbox" id="l7" checked onchange="toggleLayer('portos',this)">
+          <span class="layer-sw" onclick="event.stopPropagation();document.getElementById('l7').click()"></span>
+          <span class="layer-lbl">⚓ Portos / Logística</span>
+        </div>
+        <div class="layer-toggle" onclick="document.getElementById('l-sa-poles').click()">
+          <input type="checkbox" id="l-sa-poles" checked onchange="toggleLayer('sa-poles',this)">
+          <span class="layer-sw" onclick="event.stopPropagation();document.getElementById('l-sa-poles').click()"></span>
+          <span class="layer-lbl" style="color:#50C878;">⬡ Polos SA (42)</span>
+        </div>
+        <div class="layer-toggle" onclick="document.getElementById('l11').click()">
+          <input type="checkbox" id="l11" checked onchange="toggleLayer('country-borders',this)">
+          <span class="layer-sw" onclick="event.stopPropagation();document.getElementById('l11').click()"></span>
+          <span class="layer-lbl" style="color:#00d4ff;">🌐 Países</span>
+        </div>
+        <div class="layer-toggle" onclick="document.getElementById('l12').click()">
+          <input type="checkbox" id="l12" checked onchange="toggleAdminBoundaryGroup('main-states',this.checked)">
+          <span class="layer-sw" onclick="event.stopPropagation();document.getElementById('l12').click()"></span>
+          <span class="layer-lbl" style="color:#ffdf6b;">▧ Estados / UF</span>
+        </div>
+        <div id="main-boundary-status" style="font-size:8px;color:rgba(255,255,255,0.25);margin:2px 0 0 36px;letter-spacing:.3px;">carregando divisas…</div>
+
+        <div class="map-ctrl-section" style="margin-top:12px;">Aguardando fonte</div>
+
+        <div class="layer-toggle layer-disabled" title="MapBiomas · Integração pendente">
+          <input type="checkbox" id="l1" disabled>
+          <span class="layer-sw"></span>
+          <span class="layer-lbl">🌱 Soja (10m)<span class="layer-lbl-note">MapBiomas pendente</span></span>
+        </div>
+        <div class="layer-toggle layer-disabled" title="MapBiomas · Integração pendente">
+          <input type="checkbox" id="l2" disabled>
+          <span class="layer-sw"></span>
+          <span class="layer-lbl">🌽 Milho (10m)<span class="layer-lbl-note">MapBiomas pendente</span></span>
+        </div>
+        <div class="layer-toggle layer-disabled" title="MapBiomas · Integração pendente">
+          <input type="checkbox" id="l3" disabled>
+          <span class="layer-sw"></span>
+          <span class="layer-lbl">🎋 Cana-de-Açúcar<span class="layer-lbl-note">MapBiomas pendente</span></span>
+        </div>
+        <div class="layer-toggle layer-disabled" title="MapBiomas · Integração pendente">
+          <input type="checkbox" id="l4" disabled>
+          <span class="layer-sw"></span>
+          <span class="layer-lbl">🐂 Pastagem<span class="layer-lbl-note">MapBiomas pendente</span></span>
+        </div>
+        <div class="layer-toggle layer-disabled" title="INMET/CEMADEN · Integração pendente">
+          <input type="checkbox" id="l6" disabled>
+          <span class="layer-sw"></span>
+          <span class="layer-lbl">⚠ Anomalias<span class="layer-lbl-note">INMET/CEMADEN pendente</span></span>
+        </div>
+        <div class="layer-toggle layer-disabled" title="Requer PLANET_KEY no backend">
+          <input type="checkbox" id="l5" disabled>
+          <span class="layer-sw"></span>
+          <span class="layer-lbl">🛰 Horticultura 3m<span class="layer-lbl-note">Planet Key não configurada</span></span>
+        </div>
+        <div class="layer-toggle layer-disabled" title="Requer PLANET_KEY no backend">
+          <input type="checkbox" id="l10" disabled>
+          <span class="layer-sw"></span>
+          <span class="layer-lbl" style="color:#7ec850">🛰 Planet (3m)<span class="layer-lbl-note">Planet Key não configurada</span></span>
+        </div>
+        <div class="layer-toggle layer-disabled" title="Zonas tomate mesa · Integração pendente">
+          <input type="checkbox" id="l8" disabled>
+          <span class="layer-sw"></span>
+          <span class="layer-lbl" style="color:var(--accent)">🍅 Tomate Mesa<span class="layer-lbl-note">sem fonte ativa</span></span>
+        </div>
+        <div class="layer-toggle layer-disabled" title="Zonas tomate indústria · Integração pendente">
+          <input type="checkbox" id="l9" disabled>
+          <span class="layer-sw"></span>
+          <span class="layer-lbl" style="color:var(--accent3)">🍅 Tomate Indústria<span class="layer-lbl-note">sem fonte ativa</span></span>
+        </div>
+
+        <!-- NDVI Legend -->
+        <div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07);">
+          <div class="map-ctrl-title" style="margin-bottom:8px;">Legenda NDVI</div>
+          <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,#00a550,#00ff88);box-shadow:0 0 4px rgba(0,165,80,.4);"></div><span class="legend-label">&gt; 0.70 · Saúde plena</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#7ec850;"></div><span class="legend-label">0.50–0.70 · Normal</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ffc107;box-shadow:0 0 4px rgba(255,193,7,.3);"></div><span class="legend-label">0.30–0.50 · Atenção</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff3d3d;box-shadow:0 0 4px rgba(255,61,61,.3);"></div><span class="legend-label">&lt; 0.30 · Crítico</span></div>
+        </div>
+      </div>
+
+      <!-- BOTTOM STAT CHIPS -->
+      <div class="map-stats">
+        <div class="map-stat-chip">
+          <span class="map-stat-label">Cobertura</span>
+          <span class="map-stat-value ok" id="map-cov">—</span>
+        </div>
+        <div class="map-stat-chip">
+          <span class="map-stat-label">Polos SA</span>
+          <span class="map-stat-value" id="map-poles-count">—</span>
+        </div>
+        <div class="map-stat-chip">
+          <span class="map-stat-label">Anomalias</span>
+          <span class="map-stat-value warn" id="map-anom">—</span>
+        </div>
+        <div class="map-stat-chip">
+          <span class="map-stat-label">Última leitura</span>
+          <span class="map-stat-value dim" id="map-time">—</span>
+        </div>
+        <div class="map-stat-chip">
+          <span class="map-stat-label">Próx. atualiz.</span>
+          <span class="map-stat-value dim" id="map-next-update">—</span>
+        </div>
+      </div>
+
     </div>
 
     <!-- ═══ PANEL: BIO-COMMAND ═══ -->
@@ -1523,7 +1793,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <button class="cult-btn" onclick="bcTrocarCultura('laranja')">🍊 Laranja</button>
           <button class="cult-btn" onclick="bcTrocarCultura('manga')">🥭 Manga</button>
           <button class="cult-btn" onclick="bcTrocarCultura('uva')">🍇 Uva</button>
-          <button class="cult-btn" onclick="bcTrocarCultura('mamao')">🫐 Mamão</button>
+          <button class="cult-btn" onclick="bcTrocarCultura('mamao')">🧡 Mamão</button>
           <button class="cult-btn" onclick="bcTrocarCultura('melancia')">🍈 Melancia</button>
           <button class="cult-btn" onclick="bcTrocarCultura('abacaxi')">🍍 Abacaxi</button>
           <button class="cult-btn" onclick="bcTrocarCultura('maracuja')">💛 Maracujá</button>
@@ -1599,17 +1869,17 @@ tr:hover td{background:rgba(0,212,255,.04);}
     <div class="panel" id="panel-logistica">
       <div class="panel-header">
         <span class="panel-title">INTELIGÊNCIA LOGÍSTICA — SUPER IA · CAMPO → PORTOS</span>
-        <span class="panel-badge danger" id="ph-br163">BR-163: 82%</span>
-        <span class="panel-badge warn" id="ph-santos">SANTOS: 74%</span>
+        <span class="panel-badge" id="ph-br163">BR-163: —</span>
+        <span class="panel-badge" id="ph-santos">SANTOS: —</span>
         <span class="panel-badge ok" id="ph-ferro">FERROV.: 61%</span>
-        <span class="panel-badge" id="ph-iel" style="background:rgba(0,255,136,.1);color:#00ff88;border-color:#00ff88;">IEL: 68</span>
+        <span class="panel-badge" id="ph-iel" style="color:var(--text2);">IEL: —</span>
         <span class="badge-live">● LIVE</span>
       </div>
       <!-- KPI STRIP -->
       <div style="display:flex;align-items:center;gap:20px;padding:5px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;">
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:9px;color:var(--text2);letter-spacing:1px;">CUSTO BRASIL / HORA</span>
-          <span id="log-custo-val" style="font-size:16px;font-weight:bold;color:var(--danger);font-family:var(--font);">R$ 2.847.000</span>
+          <span id="log-custo-val" style="font-size:16px;font-weight:bold;color:var(--text2);font-family:var(--font);">—</span>
           <span style="font-size:9px;color:var(--text2);">em perdas logísticas detectadas</span>
         </div>
         <div style="width:1px;height:30px;background:var(--border);"></div>
@@ -1618,7 +1888,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <div style="width:120px;height:8px;background:#0e2d4a;border-radius:4px;overflow:hidden;">
             <div id="iel-bar" style="height:100%;width:68%;background:linear-gradient(90deg,#ffc107,#00ff88);border-radius:4px;transition:width 2s;"></div>
           </div>
-          <span id="iel-val" style="font-size:14px;font-weight:bold;color:#00ff88;font-family:var(--font);">68/100</span>
+          <span id="iel-val" style="font-size:14px;font-weight:bold;color:var(--text2);font-family:var(--font);">—</span>
         </div>
         <div style="margin-left:auto;font-size:9px;color:var(--text2);">ANTT · AIS Marítimo · GPS Frotas · Satélite</div>
       </div>
@@ -1688,7 +1958,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <div style="padding:7px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
             <div style="background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.2);border-radius:5px;padding:8px 10px;">
               <div style="font-size:9px;color:var(--accent);letter-spacing:1px;margin-bottom:5px;">SUGESTÃO DE RE-ROTEAMENTO — IA</div>
-              <div id="reroute-msg" style="font-size:10px;color:var(--text);line-height:1.5;margin-bottom:7px;">A IA sugere desviar 20% do fluxo BR-163 para a Ferrovia Norte-Sul. Economia estimada: <span style="color:#00ff88;font-weight:bold;">R$ 1,2M</span> e <span style="color:#00ff88;font-weight:bold;">-6h</span> de ETA.</div>
+              <div id="reroute-msg" style="font-size:10px;color:var(--text2);line-height:1.5;margin-bottom:7px;">Aguardando dados de saturação para gerar sugestão de re-roteamento.</div>
               <button id="reroute-btn" onclick="applyReroute()" style="background:var(--accent);color:#050e1a;border:none;padding:5px 12px;font-family:var(--font);font-size:10px;font-weight:bold;border-radius:3px;cursor:pointer;letter-spacing:1px;">⚡ RE-ROTEAR VIA IA</button>
               <span id="reroute-status" style="margin-left:8px;font-size:9px;color:var(--text2);"></span>
             </div>
@@ -2001,7 +2271,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
                 <button class="cult-btn" id="cb-laranja"  onclick="trocarCultura('laranja')">🍊 Laranja</button>
                 <button class="cult-btn" id="cb-manga"    onclick="trocarCultura('manga')">🥭 Manga</button>
                 <button class="cult-btn" id="cb-uva"      onclick="trocarCultura('uva')">🍇 Uva</button>
-                <button class="cult-btn" id="cb-mamao"    onclick="trocarCultura('mamao')">🫐 Mamão</button>
+                <button class="cult-btn" id="cb-mamao"    onclick="trocarCultura('mamao')">🧡 Mamão</button>
                 <button class="cult-btn" id="cb-melancia" onclick="trocarCultura('melancia')">🍈 Melancia</button>
                 <button class="cult-btn" id="cb-melao"    onclick="trocarCultura('melao')">🍈 Melão</button>
                 <button class="cult-btn" id="cb-abacaxi"  onclick="trocarCultura('abacaxi')">🍍 Abacaxi</button>
@@ -2300,11 +2570,11 @@ tr:hover td{background:rgba(0,212,255,.04);}
         <!-- CLIMA + LOGÍSTICA AO VIVO -->
         <div id="wr-live-status" style="flex:1;overflow-y:auto;border-right:1px solid var(--border);padding:10px;">
           <div style="color:var(--accent);font-size:9px;letter-spacing:2px;margin-bottom:8px;">⚡ CLIMA CRÍTICO — POLOS ATIVOS</div>
-          <div id="wr-climate-live" style="font-size:10px;color:var(--text2);">Carregando…</div>
+          <div id="wr-climate-live" style="font-size:10px;color:var(--text2);">Conectando Open-Meteo…</div>
           <div style="color:var(--warn);font-size:9px;letter-spacing:2px;margin:14px 0 8px;">🚛 STATUS LOGÍSTICO</div>
-          <div id="wr-logistics-live" style="font-size:10px;color:var(--text2);">Carregando…</div>
+          <div id="wr-logistics-live" style="font-size:10px;color:var(--text2);">—</div>
           <div style="color:var(--accent2);font-size:9px;letter-spacing:2px;margin:14px 0 8px;">🤖 DECISÃO DA IA</div>
-          <div id="wr-ai-decision" style="font-size:10px;color:var(--text2);line-height:1.6;">Aguardando dados…</div>
+          <div id="wr-ai-decision" style="font-size:10px;color:var(--text2);line-height:1.6;">—</div>
         </div>
         <!-- WAR LOG -->
         <div class="live-feed" style="width:240px;"><div class="lf-title"><span class="pulse" style="width:6px;height:6px;background:var(--danger);"></span> WAR LOG AO VIVO</div><div class="lf-list" id="war-log"></div></div>
@@ -2471,7 +2741,7 @@ tr:hover td{background:rgba(0,212,255,.04);}
             <div class="pxx-card" style="padding:14px;"><div style="font-size:10px;color:#7b8da0;letter-spacing:1px;">FONTES</div><div id="pxx-kpi-sources" style="font-size:22px;color:#50C878;font-weight:900;margin-top:8px;">—</div><div style="font-size:10px;color:#7b8da0;">oficiais/multilaterais</div></div>
           </div>
           <div class="pxx-card" style="position:relative;overflow:hidden;">
-            <div id="pxx-map" style="position:absolute;inset:0;background:#07101a;"></div>
+            <div id="px-map" style="position:absolute;inset:0;background:#07101a;"></div>
             <div style="position:absolute;left:14px;top:14px;z-index:600;background:rgba(2,5,10,.78);border:1px solid rgba(0,212,255,.25);border-radius:14px;padding:10px 12px;backdrop-filter:blur(10px);max-width:390px;">
               <div style="font-size:11px;color:#ffe681;font-weight:bold;letter-spacing:1px;">CAMADA VIVA: COPA DO MUNDO 2026</div>
               <div id="pxx-map-caption" style="font-size:11px;color:#b5c7d9;line-height:1.45;margin-top:5px;">Mostra onde a demanda e a logística podem mudar e por quê.</div>
@@ -3017,14 +3287,9 @@ tr:hover td{background:rgba(0,212,255,.04);}
           </div>
           <div class="chat-messages" id="chat-messages">
             <div class="msg nias">
-              <div class="msg-bubble">Sistema NIA$ inicializado. Cobertura ativa em <strong>98.7%</strong> do território agrícola sul-americano.<br><br>
-              <strong style="color:var(--accent)">4 alertas críticos detectados:</strong><br>
-              ⚠ Estresse Hídrico — MATOPIBA/Norte MT<br>
-              ⚠ Suspeita de Praga — Norte PR/Sul MS<br>
-              ⚠ Gargalo Logístico — BR-163/Santos<br>
-              ⚠ Anomalia Térmica — Cinturão Verde SP/PR<br><br>
-              Como posso auxiliar na sua análise hoje?</div>
-              <div class="msg-meta">NIA$ · Inicialização do sistema</div>
+              <div class="msg-bubble">Sistema NIA$ online. Conectando às fontes de dados oficiais…<br><br>
+              Use as consultas rápidas ao lado ou escreva sua pergunta abaixo. O NIA$ responde com base nos dados reais disponíveis no momento.</div>
+              <div class="msg-meta">NIA$ · Inicialização</div>
             </div>
           </div>
           <div class="chat-input-area">
@@ -3043,23 +3308,23 @@ tr:hover td{background:rgba(0,212,255,.04);}
           <button class="quick-btn" onclick="quickMsg('Gere um relatório executivo completo do status atual.')">Relatório executivo</button>
           <button class="quick-btn" onclick="quickMsg('Qual o NDVI médio por estado do Brasil agora?')">NDVI por estado</button>
           <div class="chat-side-title" style="margin-top:8px;">STATUS DOS SENSORES</div>
-          <div class="status-block">
-            <div class="status-row"><span class="status-label">Sentinel-2</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
-            <div class="status-row"><span class="status-label">SAR Sentinel-1</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
-            <div class="status-row"><span class="status-label">SMAP (NASA)</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
-            <div class="status-row"><span class="status-label">ERA5 Clima</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
-            <div class="status-row"><span class="status-label">API ANTT</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
-            <div class="status-row"><span class="status-label">API ANTAQ</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
-            <div class="status-row"><span class="status-label">Modelo LSTM</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
-            <div class="status-row"><span class="status-label">PlanetScope</span><span class="status-val lf-warn">● VERIFICAR API</span></div>
+          <div class="status-block" id="sensor-status-block">
+            <div class="status-row"><span class="status-label">CEAGESP</span><span class="status-val" id="ss-ceagesp" style="color:var(--text2)">● verificando…</span></div>
+            <div class="status-row"><span class="status-label">CONAB PROHORT</span><span class="status-val" id="ss-prohort" style="color:var(--text2)">● verificando…</span></div>
+            <div class="status-row"><span class="status-label">Open-Meteo</span><span class="status-val" id="ss-openmeteo" style="color:var(--text2)">● verificando…</span></div>
+            <div class="status-row"><span class="status-label">NIA$ Brain</span><span class="status-val" id="ss-brain" style="color:var(--text2)">● verificando…</span></div>
+            <div class="status-row"><span class="status-label">Sentinel-2</span><span class="status-val" id="ss-sentinel" style="color:var(--text2)">● sem integração</span></div>
+            <div class="status-row"><span class="status-label">SMAP (NASA)</span><span class="status-val" id="ss-smap" style="color:var(--text2)">● sem integração</span></div>
+            <div class="status-row"><span class="status-label">PlanetScope</span><span class="status-val" id="ss-planet" style="color:var(--text2)">● sem chave</span></div>
+            <div class="status-row"><span class="status-label">ANTT/DNIT</span><span class="status-val" id="ss-antt" style="color:var(--text2)">● sem integração</span></div>
           </div>
           <div class="chat-side-title" style="margin-top:8px;">MÉTRICAS LIVE</div>
           <div class="status-block">
-            <div class="status-row"><span class="status-label">Polígonos ativos</span><span class="status-val" id="cs-poly" style="color:var(--accent)">28.450</span></div>
-            <div class="status-row"><span class="status-label">NDVI atual</span><span class="status-val" id="cs-ndvi" style="color:var(--accent)">0.610</span></div>
-            <div class="status-row"><span class="status-label">Umidade solo</span><span class="status-val" id="cs-hum" style="color:var(--warn)">34.0%</span></div>
-            <div class="status-row"><span class="status-label">Temp. MATOPIBA</span><span class="status-val" id="cs-temp" style="color:var(--danger)">36.2°C</span></div>
-            <div class="status-row"><span class="status-label">Veíc/dia BR-163</span><span class="status-val" id="cs-trucks" style="color:var(--danger)">3.240</span></div>
+            <div class="status-row"><span class="status-label">Polígonos ativos</span><span class="status-val" id="cs-poly" style="color:var(--text2)">—</span></div>
+            <div class="status-row"><span class="status-label">NDVI atual</span><span class="status-val" id="cs-ndvi" style="color:var(--text2)">—</span></div>
+            <div class="status-row"><span class="status-label">Umidade solo</span><span class="status-val" id="cs-hum" style="color:var(--text2)">—</span></div>
+            <div class="status-row"><span class="status-label">Temp. MATOPIBA</span><span class="status-val" id="cs-temp" style="color:var(--text2)">—</span></div>
+            <div class="status-row"><span class="status-label">Veíc/dia BR-163</span><span class="status-val" id="cs-trucks" style="color:var(--text2)">—</span></div>
           </div>
         </div>
       </div>
@@ -3086,8 +3351,10 @@ function updateClock() {
   document.getElementById('map-time').textContent = now.toLocaleTimeString('pt-BR');
   // alert timestamps
   ['at-1','at-2','at-3','at-4'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
     const d = new Date(now.getTime() - (i * 7 + 2) * 60000);
-    document.getElementById(id).textContent = 'Detectado às ' + d.toLocaleTimeString('pt-BR');
+    el.textContent = 'Detectado às ' + d.toLocaleTimeString('pt-BR');
   });
 }
 setInterval(updateClock, 1000);
@@ -3741,7 +4008,6 @@ var WarRoomProtocol = {
   async _renderAIDecision(alerts, climate) {
     const el = document.getElementById('wr-ai-decision');
     if (!el) return;
-    // Build a concise context for the AI
     const criticals = alerts.filter(a=>a.level==='N1').slice(0,3).map(a=>`${a.culture} (${a.region}): ${a.event}`).join('; ');
     const climateAlerts = (climate||[]).filter(c=>c.alert).map(c=>`${c.name}: ${c.alert}`).join('; ');
     if (!criticals && !climateAlerts) {
@@ -3751,17 +4017,44 @@ var WarRoomProtocol = {
     el.innerHTML = '<span style="color:var(--text2);">Consultando IA…</span>';
     const prompt = `War Room NIAS. Alertas críticos: ${criticals||'nenhum'}. Clima: ${climateAlerts||'normal'}. Dê 2 recomendações de ação imediata em 1 linha cada, direto.`;
     try {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 8000);
       const r = await fetch('/api/nias/brain/command', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ command: prompt })
+        body: JSON.stringify({ command: prompt }),
+        signal: controller.signal
       }).then(r=>r.json()).catch(()=>null);
+      clearTimeout(tid);
       const txt = r && (r.response || r.answer || r.text || r.result);
       el.innerHTML = txt
         ? txt.replace(/\n/g,'<br>')
         : '<span style="color:var(--text2);">IA indisponível no momento.</span>';
     } catch(e) {
-      el.innerHTML = '<span style="color:var(--text2);">IA offline.</span>';
+      el.innerHTML = '<span style="color:var(--text2);">IA indisponível · verifique /api/nias/brain</span>';
     }
+  },
+
+  _renderLogistics() {
+    const el = document.getElementById('wr-logistics-live');
+    if (!el) return;
+    // Usa logState (saturação de corredor) — dado derivado da API de logística
+    const corridors = [
+      { label: 'BR-163', key: 'br163' },
+      { label: 'Porto Santos', key: 'santos' },
+      { label: 'Paranaguá', key: 'par' },
+      { label: 'Ferroviário', key: 'ferro' },
+    ];
+    const rows = corridors.map(c => {
+      const sat = typeof logState !== 'undefined' ? Math.round(logState[c.key] || 0) : null;
+      if (sat === null) return `<div style="margin-bottom:6px;"><span style="color:rgba(255,255,255,.4);">${c.label}:</span> <span style="color:var(--text2);">—</span></div>`;
+      const col = sat >= 82 ? 'var(--danger)' : sat >= 70 ? 'var(--warn)' : 'var(--accent2)';
+      const status = sat >= 82 ? '⚠ CRÍTICO' : sat >= 70 ? '↑ ELEVADO' : '✓ NORMAL';
+      return `<div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:rgba(255,255,255,.6);">${c.label}</span>
+        <span style="color:${col};font-weight:600;">${sat}% <span style="font-size:8px;">${status}</span></span>
+      </div>`;
+    }).join('');
+    el.innerHTML = rows || '<span style="color:rgba(255,255,255,.3);">Dados de logística indisponíveis.</span>';
   },
 
   async refresh() {
@@ -3769,14 +4062,23 @@ var WarRoomProtocol = {
     if (el) el.textContent = '↻ Atualizando…';
     this._logEntry('Atualização ao vivo iniciada', 'var(--accent)');
 
-    const [alerts, climate] = await Promise.all([
-      this._loadAlerts(),
-      this._loadClimateRisk(),
-    ]);
+    // Render logistics immediately — no API needed
+    this._renderLogistics();
+
+    let alerts = [], climate = [];
+    try {
+      [alerts, climate] = await Promise.all([
+        this._loadAlerts().catch(() => []),
+        this._loadClimateRisk().catch(() => []),
+      ]);
+    } catch(e) {
+      console.warn('WarRoom refresh error:', e);
+    }
 
     this._renderAlerts(alerts);
     this._renderClimate(climate);
     this._renderAIDecision(alerts, climate);
+    this._renderLogistics(); // re-render after logState may have updated
 
     // Log summary
     const n1 = alerts.filter(a=>a.level==='N1').length;
@@ -3813,14 +4115,14 @@ function initSparkline(canvasId, data, color) {
   });
 }
 
-// init sparklines
+// Sparklines — iniciam zerados; preenchidos por dados reais quando disponíveis
 const sparkData = {
-  soja:  Array.from({length:30}, (_,i) => 147.2 + Math.sin(i*.4)*.5 + (Math.random()-.5)*.3),
-  milho: Array.from({length:30}, (_,i) => 89.5  + Math.sin(i*.3)*.4 + (Math.random()-.5)*.3),
-  ndvi:  Array.from({length:30}, (_,i) => 0.61  + Math.sin(i*.2)*.02 + (Math.random()-.5)*.005),
-  hum:   Array.from({length:30}, (_,i) => 34.0  - i*.05 + (Math.random()-.5)*.3),
-  boi:   Array.from({length:30}, (_,i) => 11.2  + Math.sin(i*.3)*.2 + (Math.random()-.5)*.1),
-  horti: Array.from({length:30}, (_,i) => 38.4  - Math.sin(i*.5)*.4 + (Math.random()-.5)*.2),
+  soja:  Array(30).fill(null),
+  milho: Array(30).fill(null),
+  ndvi:  Array(30).fill(null),
+  hum:   Array(30).fill(null),
+  boi:   Array(30).fill(null),
+  horti: Array(30).fill(null),
 };
 const sparks = {
   soja:  initSparkline('sp-soja',  sparkData.soja,  '#00d4ff'),
@@ -3842,11 +4144,12 @@ function pushSparkline(chart, dataArr, newVal) {
 // NDVI LIVE CHART
 // ═══════════════════════════════════════════════════════════════════
 const NDVI_MAX_PTS = 60;
+// NDVI chart — valores iniciais nulos; preenchidos por /api/clima/bioclima quando disponível
 const ndviData = {
-  cerrado: Array.from({length:NDVI_MAX_PTS}, (_,i) => +(0.62 + 0.06*Math.sin(i*.08) + (Math.random()-.5)*.02).toFixed(3)),
-  matopiba: Array.from({length:NDVI_MAX_PTS}, (_,i) => +(0.40 + 0.07*Math.sin((i+10)*.08) + (Math.random()-.5)*.03).toFixed(3)),
-  pr_ms:   Array.from({length:NDVI_MAX_PTS}, (_,i) => +(0.58 + 0.05*Math.sin((i+20)*.08) + (Math.random()-.5)*.02).toFixed(3)),
-  pampa:   Array.from({length:NDVI_MAX_PTS}, (_,i) => +(0.55 + 0.04*Math.sin((i+5)*.08)  + (Math.random()-.5)*.02).toFixed(3)),
+  cerrado:  Array(NDVI_MAX_PTS).fill(null),
+  matopiba: Array(NDVI_MAX_PTS).fill(null),
+  pr_ms:    Array(NDVI_MAX_PTS).fill(null),
+  pampa:    Array(NDVI_MAX_PTS).fill(null),
 };
 const ndviLabels = Array.from({length:NDVI_MAX_PTS}, (_,i) => '-' + (NDVI_MAX_PTS - 1 - i) + 's');
 
@@ -3875,26 +4178,29 @@ const ndviChart = new Chart(ndviCtx, {
   }
 });
 
-function pushNdviPoint() {
-  const t = Date.now() / 1000;
-  const nC  = +(0.61 + 0.06*Math.sin(t*.03) + (Math.random()-.5)*.015).toFixed(3);
-  const nM  = +(0.38 + 0.08*Math.sin(t*.03+1) + (Math.random()-.5)*.02).toFixed(3);
-  const nP  = +(0.57 + 0.05*Math.sin(t*.03+2) + (Math.random()-.5)*.015).toFixed(3);
-  const nPa = +(0.55 + 0.04*Math.sin(t*.03+3) + (Math.random()-.5)*.015).toFixed(3);
-  [ndviData.cerrado, ndviData.matopiba, ndviData.pr_ms, ndviData.pampa].forEach(arr => arr.shift());
-  ndviData.cerrado.push(nC); ndviData.matopiba.push(nM); ndviData.pr_ms.push(nP); ndviData.pampa.push(nPa);
-  ndviChart.data.datasets[0].data = [...ndviData.cerrado];
-  ndviChart.data.datasets[1].data = [...ndviData.matopiba];
-  ndviChart.data.datasets[2].data = [...ndviData.pr_ms];
-  ndviChart.data.datasets[3].data = [...ndviData.pampa];
-  ndviChart.update('none');
-  // update topbar NDVI only before API dashboard loads
-  if (!(window.DashboardLive && DashboardLive.lastTopbar)) {
-    setLiveVal('ts-ndvi', nC.toFixed(3), 0.61, 0.001);
-    setLiveVal('cs-ndvi', nC.toFixed(3), 0.61, 0.001);
-  }
+// NDVI chart — sem simulação. Gráfico mostrará dados reais quando
+// integração Sentinel-2/Open-Meteo estiver ativa via /api/clima/bioclima.
+async function _fetchNdviLive() {
+  try {
+    const r = await fetch('/api/clima/bioclima', { cache:'no-store' });
+    if (!r.ok) return;
+    const d = await r.json();
+    // API retorna ndvi por região quando disponível
+    const regions = d?.ndvi || d?.data?.ndvi || {};
+    const now = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+    if (regions.cerrado) {
+      ndviData.cerrado.shift(); ndviData.cerrado.push(+regions.cerrado);
+      ndviChart.data.datasets[0].data = [...ndviData.cerrado];
+      setLiveVal('ts-ndvi', (+regions.cerrado).toFixed(3), 0.61, 0.001);
+      setLiveVal('cs-ndvi', (+regions.cerrado).toFixed(3), 0.61, 0.001);
+    }
+    if (regions.matopiba) { ndviData.matopiba.shift(); ndviData.matopiba.push(+regions.matopiba); ndviChart.data.datasets[1].data = [...ndviData.matopiba]; }
+    if (regions.pr_ms)    { ndviData.pr_ms.shift();    ndviData.pr_ms.push(+regions.pr_ms);       ndviChart.data.datasets[2].data = [...ndviData.pr_ms]; }
+    if (regions.pampa)    { ndviData.pampa.shift();    ndviData.pampa.push(+regions.pampa);        ndviChart.data.datasets[3].data = [...ndviData.pampa]; }
+    ndviChart.update('none');
+  } catch(e) { /* API indisponível — gráfico permanece estático */ }
 }
-setInterval(pushNdviPoint, 3000);
+setInterval(_fetchNdviLive, 10 * 60 * 1000); // atualiza a cada 10 min quando API disponível
 
 // ═══════════════════════════════════════════════════════════════════
 // LIVE VALUE UPDATER
@@ -3966,12 +4272,9 @@ function updateLogistics() {
   update('par', logState.par > 75 ? '#ffc107' : '#00ff88');
   update('ferro', '#00ff88'); update('ros', '#00ff88'); update('br364', '#00ff88');
 
-  // trucks counter
-  const trucks = Math.round(3240 + (Math.random()-.5)*80);
-  setLiveVal('ts-trucks', trucks.toLocaleString('pt-BR'), 3240, 30);
-  setLiveVal('cs-trucks', trucks.toLocaleString('pt-BR'), 3240, 30);
+  // trucks counter — sem simulação (aguarda integração ANTT/DNIT)
   const rd = document.getElementById('rd-br163-flow');
-  if (rd) rd.textContent = 'Fluxo: ' + trucks.toLocaleString('pt-BR') + ' veíc/dia';
+  if (rd) rd.textContent = 'Fluxo: — veíc/dia';
 
   // header badges
   const ph163 = document.getElementById('ph-br163');
@@ -3979,19 +4282,8 @@ function updateLogistics() {
   const phs = document.getElementById('ph-santos');
   if (phs) phs.textContent = 'SANTOS: ' + Math.round(logState.santos) + '%';
 
-  // update sankey chart if visible
-  if (window._sankeyChart) {
-    window._sankeyChart.data.datasets[0].data = [
-      +(18.4 + (Math.random()-.5)*.3).toFixed(2),
-      +(15.2 + (Math.random()-.5)*.2).toFixed(2),
-      +(6.8  + (Math.random()-.5)*.15).toFixed(2),
-      +(9.6  + (Math.random()-.5)*.2).toFixed(2),
-      +(8.1  + (Math.random()-.5)*.15).toFixed(2),
-      +(5.4  + (Math.random()-.5)*.12).toFixed(2),
-      +(13.5 + (Math.random()-.5)*.2).toFixed(2),
-    ];
-    window._sankeyChart.update('none');
-  }
+  // Sankey chart — valores de referência fixos (CONAB/ANTAQ)
+  // Sem simulação: dados atualizados apenas quando API retornar valores reais
   updateLogKpis();
 }
 setInterval(updateLogistics, 4000);
@@ -4003,8 +4295,8 @@ function updateLogKpis() {
   const satAvg = (logState.br163 + logState.santos + logState.par) / 3;
   const baseLoss = 1800000;
   const penalty = Math.max(0, satAvg - 65) * 44000;
-  const custo = baseLoss + penalty + (Math.random() - 0.5) * 120000;
-  const iel = Math.max(22, Math.min(94, Math.round(100 - (satAvg - 40) * 1.15 + (Math.random() - 0.5) * 2)));
+  const custo = baseLoss + penalty;
+  const iel = Math.max(22, Math.min(94, Math.round(100 - (satAvg - 40) * 1.15)));
 
   const custoEl = document.getElementById('log-custo-val');
   if (custoEl) custoEl.textContent = 'R$ ' + Math.round(custo).toLocaleString('pt-BR');
@@ -4046,56 +4338,140 @@ function buildEtaCards() {
   }).join('');
 }
 
-function applyReroute() {
+async function applyReroute() {
   const btn = document.getElementById('reroute-btn');
   const status = document.getElementById('reroute-status');
   const msg = document.getElementById('reroute-msg');
   if (!btn) return;
+
+  const sat163  = Math.round(logState.br163 || 0);
+  const satFerro = Math.round(logState.ferro || 0);
+
+  // Só sugere re-roteamento se BR-163 realmente saturada
+  if (sat163 < 75) {
+    if (msg) msg.textContent = `BR-163 em ${sat163}% de saturação — re-roteamento não necessário no momento.`;
+    return;
+  }
+
   btn.disabled = true;
-  btn.textContent = '⟳ IA PROCESSANDO...';
-  if (status) status.textContent = 'Recalculando malha logística...';
-  setTimeout(() => {
-    logState.br163 = Math.max(70, logState.br163 - 9);
-    logState.ferro = Math.min(88, logState.ferro + 7);
-    btn.textContent = '✓ ROTEAMENTO APLICADO';
-    if (status) status.textContent = '';
-    if (msg) msg.innerHTML = 'Re-roteamento executado com sucesso. 20% do fluxo BR-163 desviado para Ferrovia Norte-Sul. <span style="color:#00ff88;font-weight:bold;">Economia: R$ 1,2M · ETA -6h</span>';
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.textContent = '⚡ RE-ROTEAR VIA IA';
-      if (msg) msg.innerHTML = 'A IA sugere desviar 20% do fluxo BR-163 para a Ferrovia Norte-Sul. Economia estimada: <span style="color:#00ff88;font-weight:bold;">R$ 1,2M</span> e <span style="color:#00ff88;font-weight:bold;">-6h</span> de ETA.';
-    }, 18000);
-  }, 1800);
+  btn.textContent = '⟳ CONSULTANDO IA…';
+  if (status) status.textContent = '';
+
+  try {
+    const r = await fetch('/api/nias/brain/command', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: `Logística: BR-163 está em ${sat163}% de saturação. Ferrovia em ${satFerro}%. Sugira uma ação de re-roteamento concreta em 1 frase.` }),
+    }).then(r => r.ok ? r.json() : null).catch(() => null);
+
+    const txt = r && (r.response || r.answer || r.text || r.result);
+    if (msg) {
+      if (txt) {
+        msg.innerHTML = `<span style="color:var(--accent2);">⚡ IA:</span> ${txt}`;
+      } else {
+        msg.textContent = `BR-163 em ${sat163}% — considere transferir carga para corredor ferroviário (${satFerro}% de capacidade atual).`;
+      }
+    }
+  } catch(e) {
+    if (msg) msg.textContent = 'IA indisponível. Verifique manualmente a saturação dos corredores.';
+  }
+
+  btn.textContent = '⚡ RE-ROTEAR VIA IA';
+  btn.disabled = false;
 }
 
 // ═══════════════════════════════════════════════════════════════════
 // PRICE TICKER LIVE
 // ═══════════════════════════════════════════════════════════════════
+// Preços de referência CEPEA/ESALQ — atualizados manualmente por coleta
+// Sem simulação: valores só mudam quando API retornar cotação real
 const prices = {
-  soja:    { val: 11.25, unit: 'US$/bu', dir: 1 },
-  milho:   { val: 4.95,  unit: 'US$/bu', dir: 1  },
-  boi:     { val: 328.5, unit: 'R$/@',   dir: 1  },
-  acucar:  { val: 21.40, unit: 'US$/lb', dir: 1 },
-  cafe:    { val: 245.8, unit: 'US$/sc', dir: 1  },
-  algodao: { val: 78.5,  unit: 'US$/lb', dir: 1 },
-  usd:     { val: 5.85,  unit: 'R$',     dir: 1  },
-  tomate:  { val: 72.5,  unit: 'R$/cx',  dir: 1  },
+  soja:    { val: null, unit: 'US$/bu', dir: 0 },
+  milho:   { val: null, unit: 'US$/bu', dir: 0 },
+  boi:     { val: null, unit: 'R$/@',   dir: 0 },
+  acucar:  { val: null, unit: 'US$/lb', dir: 0 },
+  cafe:    { val: null, unit: 'US$/sc', dir: 0 },
+  algodao: { val: null, unit: 'US$/lb', dir: 0 },
+  usd:     { val: null, unit: 'R$',     dir: 0 },
+  tomate:  { val: null, unit: 'R$/cx',  dir: 0 },
 };
 const tickerIds = { soja:'tp-soja', milho:'tp-milho', boi:'tp-boi', acucar:'tp-acucar', cafe:'tp-cafe', algodao:'tp-algodao', usd:'tp-usd', tomate:'tp-tomate' };
-function updatePrices() {
+function _renderPriceTicker() {
   for (const [key, p] of Object.entries(prices)) {
-    const change = (Math.random()-.48) * 0.12;
-    p.val = Math.max(0.1, p.val + change);
-    p.dir = change > 0 ? 1 : -1;
     const el = document.getElementById(tickerIds[key]);
     if (!el) continue;
-    const fmt = p.val > 100 ? p.val.toFixed(1) : p.val.toFixed(2);
-    const arrow = p.dir > 0 ? ' ▲' : ' ▼';
-    el.textContent = p.unit + ' ' + fmt + arrow;
-    el.className = 'tick-val ' + (p.dir > 0 ? 'tick-up' : 'tick-dn');
+    if (p.val === null) {
+      el.textContent = p.unit + ' —';
+      el.className = 'tick-val';
+    } else {
+      const fmt = p.val > 100 ? p.val.toFixed(1) : p.val.toFixed(2);
+      const arrow = p.dir > 0 ? ' ▲' : p.dir < 0 ? ' ▼' : '';
+      el.textContent = p.unit + ' ' + fmt + arrow;
+      el.className = 'tick-val ' + (p.dir > 0 ? 'tick-up' : p.dir < 0 ? 'tick-dn' : '');
+    }
   }
 }
-setInterval(updatePrices, 3500);
+async function _fetchLivePrices() {
+  try {
+    const r = await fetch('/api/hortifruti/precos', { cache:'no-store' });
+    if (!r.ok) return;
+    const d = await r.json();
+    const t = d?.products?.tomate?.ceagesp?.price_kg;
+    if (t && t > 0) {
+      const prev = prices.tomate.val;
+      prices.tomate.val = +(t * 13).toFixed(1); // kg→cx ~13kg
+      prices.tomate.dir = prev ? Math.sign(prices.tomate.val - prev) : 0;
+    }
+  } catch(e) { /* sem fonte ativa */ }
+  _renderPriceTicker();
+}
+_fetchLivePrices();
+setInterval(_fetchLivePrices, 5 * 60 * 1000);
+
+// ═══════════════════════════════════════════════════════════════════
+// DATA ATUAL — versão no rodapé
+// ═══════════════════════════════════════════════════════════════════
+(function() {
+  const el = document.getElementById('fs-date');
+  if (el) {
+    const d = new Date();
+    el.textContent = d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+  }
+})();
+
+// ═══════════════════════════════════════════════════════════════════
+// STATUS DOS SENSORES — verificação real via APIs
+// ═══════════════════════════════════════════════════════════════════
+async function _checkSensorStatus() {
+  const set = (id, ok, label) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = ok ? '● online' : '● offline';
+    el.style.color = ok ? '#00ff88' : '#ff3d3d';
+    el.title = label || '';
+  };
+  const ping = async (url) => {
+    try { const r = await fetch(url, { cache:'no-store' }); return r.ok; } catch { return false; }
+  };
+  const [ceagesp, prohort, clima, brain] = await Promise.all([
+    ping('/api/hortifruti/precos'),
+    ping('/api/hortifruti/precos'),
+    ping('/api/clima/bioclima'),
+    ping('/api/nias/brain/status'),
+  ]);
+  set('ss-ceagesp',   ceagesp,  'CEAGESP scraper');
+  set('ss-prohort',   prohort,  'CONAB PROHORT');
+  set('ss-openmeteo', clima,    'Open-Meteo via /api/clima/bioclima');
+  set('ss-brain',     brain,    'NIA$ Brain /api/nias/brain/status');
+  // Integrações não implementadas — estado fixo
+  const noEl = (id, msg) => { const e = document.getElementById(id); if(e) { e.textContent = '● ' + msg; e.style.color = 'rgba(255,255,255,0.3)'; } };
+  noEl('ss-sentinel', 'sem integração');
+  noEl('ss-smap',     'sem integração');
+  noEl('ss-planet',   'sem chave');
+  noEl('ss-antt',     'sem integração');
+}
+_checkSensorStatus();
+setInterval(_checkSensorStatus, 5 * 60 * 1000);
 
 // ═══════════════════════════════════════════════════════════════════
 // SATELLITE COUNTDOWN
@@ -4119,10 +4495,9 @@ function updateSatellite() {
   const m = Math.floor(satSeconds.s2a / 60), s = satSeconds.s2a % 60;
   setLiveVal('ts-orbit', String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'), 0, 9999);
 
-  // map polygon count fluctuation
-  const poly = Math.round(14832 + (Math.random()-.5)*20);
-  const pEl = document.getElementById('map-poly'); if (pEl) pEl.textContent = poly.toLocaleString('pt-BR');
-  const csEl = document.getElementById('cs-poly'); if (csEl) csEl.textContent = poly.toLocaleString('pt-BR');
+  // polygon count — estático até integração MapBiomas ativa
+  const pEl = document.getElementById('map-poly'); if (pEl && pEl.textContent === '—') pEl.textContent = '—';
+  const csEl = document.getElementById('cs-poly'); if (csEl) csEl.textContent = '—';
 }
 setInterval(updateSatellite, 4000);
 updateSatellite();
@@ -4130,16 +4505,24 @@ updateSatellite();
 // ═══════════════════════════════════════════════════════════════════
 // HUMIDITY + SPARKLINE LIVE
 // ═══════════════════════════════════════════════════════════════════
-let liveHum = 34.0;
-function updateHumidity() {
-  liveHum = Math.max(28, Math.min(40, liveHum + (Math.random()-.52)*.15));
-  const v = liveHum.toFixed(1);
-  setLiveVal('ts-hum', v + '%', 34.0, 0.1);
-  setLiveVal('cs-hum', v + '%', 34.0, 0.1);
-  pushSparkline(sparks.hum, sparkData.hum, liveHum);
-  pushSparkline(sparks.ndvi, sparkData.ndvi, ndviData.cerrado[ndviData.cerrado.length-1]);
+// Umidade do solo — aguarda integração Open-Meteo/SMAP
+// Sem simulação: valor permanece "—" até API retornar dado real
+async function _fetchHumidityLive() {
+  try {
+    const r = await fetch('/api/clima/bioclima', { cache:'no-store' });
+    if (!r.ok) return;
+    const d = await r.json();
+    const hum = d?.soil_moisture ?? d?.data?.soil_moisture ?? d?.humidity ?? null;
+    if (hum !== null && !isNaN(hum)) {
+      const v = (+hum).toFixed(1);
+      setLiveVal('ts-hum', v + '%', 34.0, 0.1);
+      setLiveVal('cs-hum', v + '%', 34.0, 0.1);
+      pushSparkline(sparks.hum, sparkData.hum, +hum);
+    }
+    pushSparkline(sparks.ndvi, sparkData.ndvi, ndviData.cerrado[ndviData.cerrado.length-1]);
+  } catch(e) { /* API indisponível */ }
 }
-setInterval(updateHumidity, 5000);
+setInterval(_fetchHumidityLive, 10 * 60 * 1000);
 
 // ═══════════════════════════════════════════════════════════════════
 // OFERTA TABLE LIVE FLUCTUATION
@@ -4153,63 +4536,80 @@ const ofertaBase = {
   'uva-ar':3.1, 'maca-ar':0.9,
   boi:11.2, frango:14.6, suino:5.2
 };
-function updateOfertaTable() {
-  for (const [key, base] of Object.entries(ofertaBase)) {
-    const jitter = (Math.random()-.5) * base * 0.002;
-    ofertaBase[key] = Math.max(base * 0.97, Math.min(base * 1.03, ofertaBase[key] + jitter));
+// Tabela de oferta — valores de referência estáticos (CONAB/CEAGESP)
+// Atualiza via /api/hortifruti/precos quando disponível; sem simulação
+function _renderOfertaRef() {
+  for (const [key, val] of Object.entries(ofertaBase)) {
     const el = document.getElementById('ot-' + key);
-    if (!el) continue;
-    el.textContent = ofertaBase[key].toFixed(1);
-  }
-  if (window._ofertaChart) {
-    window._ofertaChart.data.datasets[1].data = window._ofertaChart.data.datasets[1].data.map(
-      (v, i) => +(v + (Math.random()-.5) * (i < 3 ? 0.3 : 0.15)).toFixed(2)
-    );
-    window._ofertaChart.update('none');
+    if (el) el.textContent = val.toFixed(1);
   }
 }
-setInterval(updateOfertaTable, 6000);
+_renderOfertaRef();
+async function _fetchOfertaLive() {
+  try {
+    const r = await fetch('/api/hortifruti/precos', { cache:'no-store' });
+    if (!r.ok) return;
+    const d = await r.json();
+    const prods = d?.products || {};
+    const MAP = { tomate:'tomate-mesa', batata:'batata', cebola:'cebola', cenoura:'cenoura',
+                  folhosas:'folh', banana:'banana', laranja:'citr', maca:'maca', mamao:'mamao', melancia:'melao' };
+    for (const [slug, key] of Object.entries(MAP)) {
+      const price = prods[slug]?.price_ref_kg;
+      if (price && price > 0) {
+        ofertaBase[key] = +price;
+        const el = document.getElementById('ot-' + key);
+        if (el) el.textContent = price.toFixed(1);
+      }
+    }
+  } catch(e) { /* mantém valores de referência */ }
+}
+_fetchOfertaLive();
+setInterval(_fetchOfertaLive, 30 * 60 * 1000);
 
 // ═══════════════════════════════════════════════════════════════════
 // LIVE FEED EVENTS
 // ═══════════════════════════════════════════════════════════════════
-const feedEvents = [
-  { cls: 'lf-sat',    msg: 'Sentinel-2A passou sobre MT — 847 polígonos atualizados' },
-  { cls: 'lf-warn',   msg: 'NDVI MATOPIBA caiu para 0.381 — limiar crítico' },
-  { cls: 'lf-ok',     msg: 'Passe SAR Sentinel-1 concluído — cobertura 100% noroeste' },
-  { cls: 'lf-danger', msg: 'BR-163: fluxo atingiu 3.312 veíc/h — novo pico detectado' },
-  { cls: 'lf-sat',    msg: 'PlanetScope atualizou cinturão verde SP/PR — res. 3m' },
-  { cls: 'lf-warn',   msg: 'Temp. solo +0.3°C — MATOPIBA: estresse crescente' },
-  { cls: 'lf-ok',     msg: 'Chuva detectada em Rondonópolis — 12mm acumulado' },
-  { cls: 'lf-danger', msg: 'Porto Santos: berço 7 ocupado — capacidade 76%' },
-  { cls: 'lf-ok',     msg: 'NDVI Pampa RS estabilizado: 0.553 — normal' },
-  { cls: 'lf-warn',   msg: 'Anomalia espectral Norte PR — possível praga ativa' },
-  { cls: 'lf-sat',    msg: 'ERA5 sincronizado — 24h de previsão climática carregados' },
-  { cls: 'lf-ok',     msg: 'Ferroviário RUMO: +2 composições ativadas — 20/30' },
-  { cls: 'lf-danger', msg: 'Solo exposto pós-colheita +38% acima média — MT Norte' },
-  { cls: 'lf-sat',    msg: 'SMAP atualizado — umidade solo 0-10cm mapeada' },
-  { cls: 'lf-warn',   msg: 'Preço tomate CEASA SP subiu 4.2% — oferta reduzida' },
-  { cls: 'lf-ok',     msg: 'Modelo LSTM reprocessou fenologia — precisão +0.3%' },
-  { cls: 'lf-danger', msg: 'Soja 2ª janela: δ_fenol caiu 0.012 — maturação antecipada' },
-  { cls: 'lf-sat',    msg: 'Landsat-9 — cobertura Sul do Brasil atualizada' },
-  { cls: 'lf-ok',     msg: 'AIS Marítimo: 3 graneleiros entrando em Santos' },
-  { cls: 'lf-warn',   msg: 'Umidade solo Oeste Bahia: 18% — abaixo do limiar' },
-];
-let feedIdx = 0;
-function pushFeedEvent() {
+// Live Feed — eventos reais de /api/nias/brain/events e /api/flv/alerts
+// Sem simulação: feed só exibe eventos retornados pela API
+let _feedLastTs = 0;
+async function _fetchFeedEvents() {
   const list = document.getElementById('live-feed-list');
   if (!list) return;
-  const e = feedEvents[feedIdx % feedEvents.length];
-  feedIdx++;
-  const now = new Date().toLocaleTimeString('pt-BR');
-  const div = document.createElement('div');
-  div.className = 'lf-item';
-  div.innerHTML = `<span class="${e.cls}">${e.msg}</span><br><span class="lf-time">${now}</span>`;
-  list.insertBefore(div, list.firstChild);
-  while (list.children.length > 40) list.removeChild(list.lastChild);
+  try {
+    const [evRes, alertRes] = await Promise.all([
+      fetch('/api/nias/brain/events?limit=15', { cache:'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/flv/alerts?severity=all', { cache:'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    const events = evRes?.data?.events || evRes?.events || [];
+    const alerts = alertRes?.alerts || alertRes?.data || [];
+    const SEV_CLS = { critical:'lf-danger', high:'lf-danger', warn:'lf-warn', warning:'lf-warn', info:'lf-ok', ok:'lf-ok', satellite:'lf-sat' };
+    const items = [
+      ...events.map(e => ({ cls: SEV_CLS[e.severity] || 'lf-sat', msg: e.message || e.title || JSON.stringify(e), ts: e.timestamp || e.created_at })),
+      ...alerts.map(a => ({ cls: SEV_CLS[a.severity] || 'lf-warn', msg: a.message || a.title || JSON.stringify(a), ts: a.timestamp || a.created_at })),
+    ].filter(x => x.msg).sort((a, b) => (b.ts || 0) > (a.ts || 0) ? 1 : -1).slice(0, 20);
+
+    if (items.length === 0) {
+      if (list.children.length === 0) {
+        list.innerHTML = '<div class="lf-item" style="color:rgba(255,255,255,.3);font-size:10px;">Aguardando eventos ao vivo…</div>';
+      }
+      return;
+    }
+    list.innerHTML = '';
+    items.forEach(e => {
+      const div = document.createElement('div');
+      div.className = 'lf-item';
+      const t = e.ts ? new Date(e.ts).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '—';
+      div.innerHTML = `<span class="${e.cls}">${e.msg}</span><br><span class="lf-time">${t}</span>`;
+      list.appendChild(div);
+    });
+  } catch(err) {
+    if (list.children.length === 0) {
+      list.innerHTML = '<div class="lf-item" style="color:rgba(255,255,255,.3);font-size:10px;">Aguardando conexão com API…</div>';
+    }
+  }
 }
-setInterval(pushFeedEvent, 2500);
-pushFeedEvent(); pushFeedEvent(); pushFeedEvent(); pushFeedEvent(); pushFeedEvent();
+_fetchFeedEvents();
+setInterval(_fetchFeedEvents, 3 * 60 * 1000);
 
 
 
@@ -4585,7 +4985,7 @@ function initMap() {
             <span style="color:#6a92b0;font-size:9px;">Fonte: NIAS Regions · Clique para detalhes</span>
           </div>`, { sticky: true, direction: 'right' });
         marker.on('click', () => {
-          if (window.leafletMap) window.leafletMap.flyTo([p.lat, p.lng], 6, { duration: 1.2, easeLinearity: 0.1 });
+          if (window.leafletMap) window.leafletMap.flyTo([p.lat, p.lon ?? p.lng], 6, { duration: 1.2, easeLinearity: 0.1 });
           _showPoleDetail(p, color);
         });
         mapLayerObjs['sa-poles'].addLayer(marker);
@@ -5052,11 +5452,13 @@ function _buildCeasaRows() {
   _ceasaRows = [];
   CEASA_PRODUCTS.forEach(prod => {
     CEASA_BASE.forEach(ceasa => {
-      const distFactor = 0.7 + Math.random() * 0.6;
+      // distFactor fixo por terminal (sem ruído aleatório)
+      const distFactors = { 'CEAGESP (SP)':1.0,'CEASA-RJ (Irajá)':1.1,'CEASA-MG (Contagem)':0.95,'CEASA-PE (Recife)':1.4,'CEASA-RS (Gravataí)':1.35,'CEASA-PR (Curitiba)':1.15,'CEASA-BA (Salvador)':1.3,'CEASA-CE (Maracanaú)':1.45,'CEASA-GO (Goiânia)':0.9,'CEASA-SC (São José)':1.2 };
+      const distFactor = distFactors[ceasa.ceasa] || 1.0;
       const satFactor = (logState?.br163 != null) ? Math.min(100, Math.max(0, logState.br163)) / 100 : 0.5;
       const frete = +(prod.freteBase * distFactor * (1 + satFactor * 0.3)).toFixed(2);
-      const priceVar = (Math.random() - 0.45) * 0.12;
-      const price = +(prod.basePrice * (1 + priceVar)).toFixed(2);
+      // preço de referência fixo (sem jitter aleatório)
+      const price = prod.basePrice;
       const margin = +(price - frete).toFixed(2);
       _ceasaRows.push({
         ceasa: ceasa.ceasa, region: ceasa.region, lat: ceasa.lat, lng: ceasa.lng,
@@ -5123,9 +5525,9 @@ function updateCeasaTable() {
     const avgFrete = (_ceasaRows.reduce((s, r) => s + r.frete, 0) / _ceasaRows.length).toFixed(2);
     freteAvgEl.textContent = 'R$ ' + avgFrete;
   }
-  const icapBase = 118.4 + (Math.random() - 0.5) * 2;
+  // ICAP — índice fixo de referência (sem simulação)
   const icapEl = document.getElementById('ceasa-price-idx');
-  if (icapEl) icapEl.textContent = 'ICAP ' + icapBase.toFixed(1);
+  if (icapEl) icapEl.textContent = 'ICAP —';
 }
 
 let _lastSpreadAlert = 0;
@@ -5141,13 +5543,13 @@ function checkSpreadOpportunity() {
   const feed = document.getElementById('ceasa-opp-feed');
   if (!feed) return;
   const ts = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  const msgs = [
-    `🚨 <strong>Oportunidade Detectada</strong>: Spread líquido em <strong>${sp.ceasa}</strong> superou média nacional em <strong>${delta.toFixed(0)}%</strong>. Produto: <strong>${sp.product}</strong>. Origem: ${sp.origin}. Recomenda-se redirecionar 15% da carga.`,
-    `📦 <strong>Janela Aberta</strong>: Frete na BR-101 (Nordeste) abaixo da média. <strong>${_ceasaRows.filter(r=>r.ceasa.includes('PE')||r.ceasa.includes('CE')).length} rotas NE</strong> com margem positiva detectadas. ETA previsto: 18–22h.`,
-    `⚡ <strong>Alerta IA</strong>: Margem de <strong>${sp.product}</strong> em <strong>${sp.ceasa}</strong> subiu <strong>R$ ${(Math.random()*8+3).toFixed(0)}</strong> nas últimas 3,5s. Janela de venda prevista: <strong>2–4h</strong>.`,
-    `💰 <strong>Arbitragem Prescritiva</strong>: Diferença de R$ ${delta.toFixed(0)}/${sp.unit} entre <strong>${sp.ceasa}</strong> e <strong>${spLast.ceasa}</strong>. IA recomenda consolidar carga de <em>${sp.origin}</em> para destino SP.`,
-  ];
-  const msg = msgs[Math.floor(Math.random() * msgs.length)];
+  // Mensagem baseada em dados reais de spread — sem valores aleatórios
+  const neRoutes = _ceasaRows.filter(r=>r.ceasa.includes('PE')||r.ceasa.includes('CE')).length;
+  const msg = delta > 40
+    ? `🚨 <strong>Oportunidade Detectada</strong>: Spread líquido em <strong>${sp.ceasa}</strong> superou média nacional em <strong>R$ ${delta.toFixed(0)}/${sp.unit}</strong>. Produto: <strong>${sp.product}</strong>. Origem: ${sp.origin}.`
+    : neRoutes > 0
+    ? `📦 <strong>Janela Aberta</strong>: <strong>${neRoutes} rotas NE</strong> com margem positiva. <strong>${sp.product}</strong> em <strong>${sp.ceasa}</strong> lidera com R$ ${sp.margin.toFixed(0)}/${sp.unit}.`
+    : `💰 <strong>Arbitragem</strong>: Diferença de R$ ${delta.toFixed(0)}/${sp.unit} entre <strong>${sp.ceasa}</strong> e <strong>${spLast.ceasa}</strong>. Produto: <strong>${sp.product}</strong> · Origem: ${sp.origin}.`;
   const div = document.createElement('div');
   div.style.cssText = 'padding:5px 10px;border-bottom:1px solid var(--border);font-size:9px;line-height:1.5;';
   div.innerHTML = `<span style="color:var(--text2);margin-right:6px;">${ts}</span>${msg}`;
@@ -6150,13 +6552,13 @@ NDVI ▼ -0.05 | Umidade solo: <strong>21%</strong> | Área: ~800k ha<br><br>
 <span style="color:var(--warn)">● ATENÇÃO</span> — <strong>Oeste do Piauí</strong><br>
 NDVI ▼ -0.03 | Umidade: 26% | Área: ~450k ha<br><br>
 <strong style="color:var(--accent2)">Recomendação:</strong> Irrigação suplementar nas próximas 72h. Deficit: <strong>48mm/ciclo</strong>.`,
-  logística: `<strong style="color:var(--accent)">Recomendação Logística — Próximos 7 Dias</strong><br><br>
+  logística: `<strong style="color:var(--accent)">Recomendação Logística — Situação Atual</strong><br><br>
 <span style="color:var(--danger)">⚡ URGENTE — Porto Santos:</span><br>
-2 berços extras. Risco demurrage: <strong>US$ 18k/dia/navio</strong> após 25/03.<br><br>
+Saturação <span id="chat-santos-sat">—</span>% · Risco demurrage: <strong>US$ 18k/dia/navio</strong> em pico de fila.<br><br>
 <span style="color:var(--warn)">⚡ PRIORITÁRIO — RUMO/VLI:</span><br>
-+8 composições na janela <strong>25/03–15/04</strong>.<br><br>
+Ferroviário com saturação <span id="chat-ferro-sat">—</span>% · Janela de composições disponível.<br><br>
 <span style="color:var(--accent2)">✓ OPORTUNIDADE — Rosário (AR):</span><br>
-48% de capacidade livre. Avaliar rerouting via hidrovia.<br><br>
+Avaliar rerouting via hidrovia Paraná–Prata.<br><br>
 Basis soja pode cair <strong>-30 cts/bu</strong> se gargalo persistir.`,
   anomalia: `<strong style="color:var(--warn)">Impacto Anomalia Térmica — Hortifrutis</strong><br><br>
 • Temperatura: <strong>+2.1°C</strong> acima da média histórica<br>
@@ -6348,7 +6750,14 @@ function sendMessage() {
   setTimeout(() => {
     typing.remove();
     addMessage(getResponse(text), 'nias', `NIA$ · ${new Date().toLocaleTimeString('pt-BR')}`);
-  }, 800 + Math.random()*500);
+    // Fill dynamic spans in rendered response
+    requestAnimationFrame(() => {
+      const s = document.getElementById('chat-santos-sat');
+      const f = document.getElementById('chat-ferro-sat');
+      if (s && typeof logState !== 'undefined') s.textContent = Math.round(logState.santos);
+      if (f && typeof logState !== 'undefined') f.textContent = Math.round(logState.ferro);
+    });
+  }, 900);
 }
 
 function quickMsg(text) { document.getElementById('chat-input').value = text; sendMessage(); showPanel('chat'); }
@@ -6383,9 +6792,7 @@ const hortiState = {
 // sparkline data per product
 const hortiSparkData = {};
 Object.keys(hortiState).forEach(k => {
-  hortiSparkData[k] = Array.from({length:30}, (_,i) =>
-    +(hortiState[k].price + Math.sin(i*.4) * hortiState[k].price * 0.03 + (Math.random()-.5) * hortiState[k].price * 0.02).toFixed(2)
-  );
+  hortiSparkData[k] = Array(30).fill(null);
 });
 
 // init sparklines for horti cards
@@ -6503,7 +6910,7 @@ function runPhenolEngine() {
   cropZones.forEach(z => {
     // slight daily progress simulation
     z.daysPlanted = Math.min(z.cycleDays, z.daysPlanted + 0.01);
-    z.ndviCurrent = Math.max(0.15, Math.min(0.80, z.ndviCurrent + (Math.random() - 0.5) * 0.008));
+    // ndviCurrent updated by _fetchNdviLive(); static between fetches
     const result = classifyNdviDrop(z);
     phenolResults[z.id] = { ...result, zone: z };
   });
@@ -6550,12 +6957,14 @@ const brixState = {
   brix: 3.8,         // °Brix estimado
   brixTarget: 4.8,   // °Brix mínimo para processamento
   priceAdjFactor: 1.0,
+  _liveData: null,   // populated by _fetchBrixClimate()
 };
 
 function updateBrix() {
-  // Simulate temperature fluctuation
-  brixState.tNight = Math.max(18, Math.min(27, brixState.tNight + (Math.random() - 0.48) * 0.3));
-  brixState.tDay   = Math.max(26, Math.min(38, brixState.tDay   + (Math.random() - 0.5)  * 0.4));
+  // Values driven by real climate API (_fetchBrixClimate); idle drift only when no live data
+  if (!brixState._liveData) return;
+  brixState.tNight = brixState._liveData.tNight ?? brixState.tNight;
+  brixState.tDay   = brixState._liveData.tDay   ?? brixState.tDay;
   const deltaT = brixState.tDay - brixState.tNight;
 
   // Count consecutive nights above 22°C
@@ -6569,7 +6978,7 @@ function updateBrix() {
   const warmPenalty = brixState.daysAbove22 > 5 ? (brixState.daysAbove22 - 5) * 0.06 : 0;
   const deltaTBonus = Math.max(0, (deltaT - 10) * 0.08);
   brixState.brix = Math.max(2.5, Math.min(6.0,
-    brixState.brix + deltaTBonus * 0.02 - warmPenalty * 0.02 + (Math.random() - 0.5) * 0.03
+    brixState.brix + deltaTBonus * 0.02 - warmPenalty * 0.02
   ));
   const brixPct = ((brixState.brix - 2.5) / (6.0 - 2.5)) * 100;
 
@@ -6604,6 +7013,25 @@ function updateBrix() {
   const hpInd = document.getElementById('hp-tomate-ind');
   if (hpInd) hpInd.textContent = `R$ ${adjPrice}/t`;
 }
+async function _fetchBrixClimate() {
+  try {
+    const r = await fetch('/api/clima/bioclima', { cache: 'no-store' });
+    if (!r.ok) return;
+    const d = await r.json();
+    const data = d?.data ?? d;
+    const tMin = data?.temperature_2m_min ?? data?.tmin ?? null;
+    const tMax = data?.temperature_2m_max ?? data?.tmax ?? null;
+    if (tMin !== null && tMax !== null) {
+      brixState._liveData = { tNight: +tMin, tDay: +tMax };
+      updateBrix();
+    }
+    // Update cloud cover from API if available
+    const cc = data?.cloud_cover ?? data?.cloudcover ?? null;
+    if (cc !== null) cloudCover = Math.max(0, Math.min(100, +cc));
+  } catch (_) {}
+}
+_fetchBrixClimate();
+setInterval(_fetchBrixClimate, 10 * 60 * 1000);
 setInterval(updateBrix, 4500);
 
 // ═══════════════════════════════════════════════════════════════════
@@ -6618,7 +7046,8 @@ const REST_STOP_KM = [612, 780, 845, 920];
 function updateRoadSpeed() {
   const s = roadState.br163;
   // Simulate speed — fluctuates around congested value
-  s.speedKmh = Math.max(18, Math.min(85, s.speedKmh + (Math.random() - 0.48) * 3.5));
+  // speed derived from logState saturation — no random walk
+  s.speedKmh = Math.max(18, Math.min(85, 85 * (1 - logState.br163 / 200)));
 
   const pct = s.speedKmh / s.limitKmh;
   const drop = (1 - pct) * 100;
@@ -6665,7 +7094,7 @@ function updateFailSafe() {
   fsCyclesTotal++;
 
   // ── Cloud cover simulation (tropical regions spike in rainy season)
-  cloudCover = Math.max(5, Math.min(85, cloudCover + (Math.random() - 0.48) * 2.5));
+  // cloud cover updated by _fetchBrixClimate / bioclima API; static between fetches
   const cloudEl = document.getElementById('fs-cloud');
   if (cloudEl) {
     cloudEl.textContent = cloudCover.toFixed(0) + '%';
@@ -6681,7 +7110,7 @@ function updateFailSafe() {
       sarEl.style.color = 'var(--danger)';
       if (sarDot) sarDot.style.background = 'var(--danger)';
       // inject feed event
-      if (Math.random() < 0.3) injectFeedEvent('lf-warn', `SAR auto-ativado — cobertura de nuvens ${cloudCover.toFixed(0)}% (Amazônia/Cerrado)`);
+      injectFeedEvent('lf-warn', `SAR ativo — cobertura de nuvens ${cloudCover.toFixed(0)}% detectada (Amazônia/Cerrado)`);
     } else if (cloudCover > 30) {
       sarEl.textContent = '⚡ ATIVO — SAR PARCIAL';
       sarEl.style.color = 'var(--warn)';
@@ -6696,9 +7125,9 @@ function updateFailSafe() {
   // ── CEPEA price API update (every 15min simulation)
   const now = new Date();
   const minsSince = (now - cepeaLastUpdate) / 60000;
-  if (minsSince >= 0.25 || Math.random() < 0.04) { // ~15s real = 15min sim
+  if (minsSince >= 15) { // 15 minutos reais
     cepeaLastUpdate = now;
-    priceApiFailCount = Math.random() < 0.05 ? priceApiFailCount + 1 : 0;
+    priceApiFailCount = 0; // reset; falhas reais detectadas por _fetchLivePrices()
   }
   const cepeaEl  = document.getElementById('fs-cepea');
   const fallEl   = document.getElementById('fs-fallback');
@@ -6725,11 +7154,10 @@ function updateFailSafe() {
   // ── GPS fleet latency
   const gpsEl  = document.getElementById('fs-gps');
   const gpsDot = document.getElementById('fs-gps-dot');
-  const latency = Math.round(1 + Math.random() * 6);
   if (gpsEl) {
-    gpsEl.textContent  = latency > 4 ? `LATÊNCIA ${latency}min` : `OK · ${latency}min`;
-    gpsEl.style.color  = latency > 4 ? 'var(--warn)' : 'var(--accent2)';
-    if (gpsDot) gpsDot.style.background = latency > 4 ? 'var(--warn)' : 'var(--accent2)';
+    gpsEl.textContent  = 'Sem integração ANTT';
+    gpsEl.style.color  = 'var(--text2)';
+    if (gpsDot) gpsDot.style.background = 'var(--text2)';
   }
 }
 
@@ -6867,18 +7295,18 @@ function calcRm(mun) {
   return +(mun.areaMha * 1000 * mun.ndvi * mun.coef * base / 1000).toFixed(2);
 }
 
-// ── Anomaly event templates (municipality-tagged)
+// Anomaly event templates — apenas valores derivados de dados reais do município
 const ANOMALY_EVENTS = [
-  z => ({ cls:'lf-danger', msg:`[${z.name.toUpperCase()}-${z.state}] Quebra de ${(Math.random()*3+0.5).toFixed(1)}% no talhão Norte. Causa: Estresse hídrico localizado. NDVI: ${z.ndvi.toFixed(2)}` }),
-  z => ({ cls:'lf-warn',   msg:`[${z.name.toUpperCase()}-${z.state}] NDVI caiu ${(Math.random()*0.08+0.03).toFixed(2)} em 7 dias. Correlacionando fenologia (${Math.round(z.ndvi*130)}d ciclo)...` }),
-  z => ({ cls:'lf-ok',     msg:`[${z.name.toUpperCase()}-${z.state}] Motor fenológico: PRÉ-COLHEITA detectada. Solo exposto +${(Math.random()*20+8).toFixed(0)}% vs média histórica.` }),
-  z => ({ cls:'lf-sat',    msg:`[${z.name.toUpperCase()}-${z.state}] Sentinel-2 atualizado: ${(z.areaMha*10).toFixed(0)} polígonos recalculados. Rm = ${calcRm(z)} kt` }),
-  z => ({ cls:'lf-warn',   msg:`[${z.name.toUpperCase()}-${z.state}] Amplitude térmica ΔT: ${(Math.random()*6+6).toFixed(1)}°C. ${z.culture==='tomate'?'Risco BRIX ↓':'Ciclo fenológico ajustado'}.` }),
-  z => ({ cls:'lf-danger', msg:`[${z.name.toUpperCase()}-${z.state}] Irrigação ${(Math.random()*30+10).toFixed(0)}% acima da média histórica. Monitorar salinização do solo.` }),
-  z => ({ cls:'lf-ok',     msg:`[${z.name.toUpperCase()}-${z.state}] Safra ${z.culture} antecipada em ${Math.round(Math.random()*5+2)} dias. Solo exposto em expansão via SAR.` }),
-  z => ({ cls:'lf-danger', msg:`[${z.name.toUpperCase()}-${z.state}] Risco de ${Math.random()<0.5?'geada':'granizo'} em 48h. Proteção de lavoura recomendada.` }),
-  z => ({ cls:'lf-warn',   msg:`[${z.name.toUpperCase()}-${z.state}] Gargalo logístico: terminal mais próximo com ${(Math.random()*20+55).toFixed(0)}% de ocupação. Retenção estimada: ${(Math.random()*300+50).toFixed(0)}t.` }),
-  z => ({ cls:'lf-ok',     msg:`[${z.name.toUpperCase()}-${z.state}] NDVI ${z.ndvi.toFixed(2)} — produção no percentil ${Math.round(Math.random()*25+70)}° vs histórico. Safra acima da média.` }),
+  z => ({ cls:'lf-danger', msg:`[${z.name.toUpperCase()}-${z.state}] Estresse hídrico detectado. NDVI: ${z.ndvi.toFixed(2)} — abaixo do limiar crítico.` }),
+  z => ({ cls:'lf-warn',   msg:`[${z.name.toUpperCase()}-${z.state}] NDVI ${z.ndvi.toFixed(2)} — correlacionando fenologia (ciclo ~${Math.round(z.ndvi*130)}d)…` }),
+  z => ({ cls:'lf-ok',     msg:`[${z.name.toUpperCase()}-${z.state}] Motor fenológico: PRÉ-COLHEITA detectada via análise de tendência NDVI.` }),
+  z => ({ cls:'lf-sat',    msg:`[${z.name.toUpperCase()}-${z.state}] Polígonos recalculados: ${(z.areaMha*10).toFixed(0)} ativos. Rm estimado = ${calcRm(z)} kt` }),
+  z => ({ cls:'lf-warn',   msg:`[${z.name.toUpperCase()}-${z.state}] ${z.culture === 'tomate' ? 'Risco BRIX ↓' : 'Ciclo fenológico em monitoramento'}. NDVI ${z.ndvi.toFixed(2)}.` }),
+  z => ({ cls:'lf-danger', msg:`[${z.name.toUpperCase()}-${z.state}] Monitorar salinização: NDVI ${z.ndvi.toFixed(2)} com tendência descendente.` }),
+  z => ({ cls:'lf-sat',    msg:`[${z.name.toUpperCase()}-${z.state}] Safra ${z.culture} — produção estimada: Rm = ${calcRm(z)} kt. Solo monitorado via SAR.` }),
+  z => ({ cls:'lf-warn',   msg:`[${z.name.toUpperCase()}-${z.state}] Monitoramento climático ativo. NDVI ${z.ndvi.toFixed(2)} — ${z.ndvi < 0.40 ? 'risco elevado' : 'dentro do normal'}.` }),
+  z => ({ cls:'lf-warn',   msg:`[${z.name.toUpperCase()}-${z.state}] Saturação logística nos corredores. Produto: ${z.culture}. NDVI referência: ${z.ndvi.toFixed(2)}.` }),
+  z => ({ cls:'lf-ok',     msg:`[${z.name.toUpperCase()}-${z.state}] NDVI ${z.ndvi.toFixed(2)} — ${z.ndvi >= 0.55 ? 'produção acima da média' : z.ndvi >= 0.40 ? 'produção normal' : 'sob atenção'}.` }),
 ];
 
 let munMap, munLayerGroup;
@@ -7003,7 +7431,7 @@ function buildMunTable(cultureFilter) {
 function updateMunicipalNdvi() {
   MUNICIPAL_DB.forEach(m => {
     // micro-fluctuation per municipality (independent microclimate)
-    m.ndvi = Math.max(0.20, Math.min(0.82, m.ndvi + (Math.random() - 0.502) * 0.006));
+    // ndvi updated by _fetchNdviLive(); static between fetches
     // update table cell
     const el = document.getElementById('mun-ndvi-' + m.id);
     if (el) { el.textContent = m.ndvi.toFixed(3); el.style.color = m.ndvi < 0.45 ? 'var(--danger)' : m.ndvi < 0.58 ? 'var(--warn)' : 'var(--accent2)'; }
@@ -7935,60 +8363,57 @@ const MACRO_POLES = {
     fmtRow: m => [m.ndvi.toFixed(3), calcRm(m), m.ndvi<0.40?'SECO':m.ndvi<0.55?'ATENÇÃO':'OK'],
     colColors: m => [m.ndvi<0.40?'var(--danger)':m.ndvi<0.55?'var(--warn)':'var(--accent2)', 'var(--accent)', m.ndvi<0.40?'var(--danger)':m.ndvi<0.55?'var(--warn)':'var(--accent2)'],
     alerts: [
-      m => `[${m.name.toUpperCase()}] Velocidade colheita: ${(Math.random()*15+82).toFixed(0)}% vs histórico.`,
-      m => `[${m.name.toUpperCase()}] Solo exposto: +${(Math.random()*25+5).toFixed(0)}% — pós-colheita detectada via SAR.`,
-      m => `[${m.name.toUpperCase()}] NDVI ${m.ndvi.toFixed(2)} vs vizinho ${(m.ndvi+0.08+Math.random()*0.15).toFixed(2)}: Δ dentro da margem.`,
-      m => `[${m.name.toUpperCase()}] Armazenagem: ${(Math.random()*20+60).toFixed(0)}% dos silos. Pico de colheita em ${Math.round(Math.random()*10+5)} dias.`,
+      m => `[${m.name.toUpperCase()}] NDVI ${m.ndvi.toFixed(2)} — ${m.ndvi<0.40?'colheita impactada por seca':m.ndvi<0.55?'monitorando desenvolvimento':'colheita dentro do esperado'}.`,
+      m => `[${m.name.toUpperCase()}] Rm estimado: ${calcRm(m)} kt. Produção ${m.ndvi>=0.55?'acima':'abaixo'} da média histórica.`,
+      m => `[${m.name.toUpperCase()}] Status: ${m.ndvi<0.40?'SECO — intervenção recomendada':m.ndvi<0.55?'ATENÇÃO — monitorar':'OK — normal'}.`,
+      m => `[${m.name.toUpperCase()}] Análise fenológica: NDVI ${m.ndvi.toFixed(3)} · ${m.culture} · área ${m.areaMha} Mha.`,
     ],
   },
   B: {
     ids: ['BR-MG-BAR','BR-SP-MOG','BR-SP-ITA','BR-RS-VAC','BR-SC-CAC','BR-MG-ARA2','BR-SP-ITV','BR-MG-PAT','BR-GO-PIR','BR-SP-IBU','BR-SP-MGC','BR-SP-PIE','BR-MG-UBE','BR-MG-STJ','BR-RS-CXS','BR-MG-PAL','BR-MG-BAR2'],
-    extraCol: ['ΔT °C', 'BRIX Est.', 'Geada'],
+    extraCol: ['NDVI', 'BRIX Ref.', 'Geada'],
     fmtRow: m => {
-      const dt = (Math.random()*6+5).toFixed(1);
-      const brix = m.culture==='tomate' ? (4.2 + parseFloat(dt)*0.18 - (Math.random()<0.3?1.2:0)).toFixed(1) : (m.culture==='maca'?12.8:8.4).toFixed(1);
-      const geada = m.ndvi > 0.60 ? 'OK' : (Math.random()<0.25?'RISCO':'OK');
-      return [dt+'°C', brix, geada];
+      const brix = m.culture==='tomate' ? '4.2–6.0' : m.culture==='maca' ? '12.8' : '8.4';
+      const geada = m.ndvi > 0.60 ? 'OK' : 'MONIT.';
+      return [m.ndvi.toFixed(3), brix, geada];
     },
-    colColors: m => ['var(--accent)', 'var(--accent2)', 'var(--warn)'],
+    colColors: m => ['var(--accent)', 'var(--accent2)', m.ndvi>0.60?'var(--accent2)':'var(--warn)'],
     alerts: [
-      m => `[${m.name.toUpperCase()}] ΔT ${(Math.random()*5+6).toFixed(1)}°C — ${m.culture==='tomate'?'Brix em alta. Qualidade premium detectada.':'Vigor foliar ótimo.'}`,
-      m => `[${m.name.toUpperCase()}] Risco de geada ${(Math.random()*3+1).toFixed(0)} dias. Irrigação antigeada recomendada.`,
-      m => `[${m.name.toUpperCase()}] Ciclo fenológico: ${Math.round(m.ndvi*130)}d. ${m.ndvi>0.60?'PRÉ-COLHEITA':'DESENVOLVIMENTO ATIVO'}.`,
-      m => `[${m.name.toUpperCase()}] Temperatura noturna ${(Math.random()*4+18).toFixed(1)}°C. ${Math.random()<0.4?'Brix reduzido estimado.':'Acúmulo de açúcares normal.'}`,
+      m => `[${m.name.toUpperCase()}] ${m.culture==='tomate'?'Tomate: acompanhamento BRIX ativo.':'Vigor foliar monitorado.'} NDVI ${m.ndvi.toFixed(2)}.`,
+      m => `[${m.name.toUpperCase()}] ${m.ndvi<0.50?'Risco de geada — NDVI abaixo do esperado.':'Ciclo fenológico normal.'} NDVI ${m.ndvi.toFixed(2)}.`,
+      m => `[${m.name.toUpperCase()}] Ciclo fenológico: ~${Math.round(m.ndvi*130)}d. ${m.ndvi>0.60?'PRÉ-COLHEITA detectada.':'DESENVOLVIMENTO ATIVO.'}`,
+      m => `[${m.name.toUpperCase()}] Monitoramento térmico noturno ativo. ${m.culture} · Rm ${calcRm(m)} kt.`,
     ],
   },
   C: {
     ids: ['BR-PE-PET','BR-BA-JUA','BR-RN-MOS','BR-SE-ITA','BR-SE-BOQ','BR-PE-PET2','BR-BA-IBI','BR-CE-TIA'],
-    extraCol: ['ET mm/d', 'Reserv.%', 'Safra'],
+    extraCol: ['NDVI', 'Safra', 'Solo'],
     fmtRow: m => {
-      const et = (Math.random()*2+5).toFixed(1);
-      const res = Math.round(Math.random()*30+50);
       const safra = m.ndvi>0.55?'PLENA':m.ndvi>0.45?'REDUZ.':'STRESS';
-      return [et, res+'%', safra];
+      const solo = m.ndvi>0.50?'OK':'MONIT.';
+      return [m.ndvi.toFixed(3), safra, solo];
     },
-    colColors: m => ['var(--accent)', m.ndvi<0.50?'var(--warn)':'var(--accent2)', m.ndvi>0.55?'var(--accent2)':'var(--warn)'],
+    colColors: m => ['var(--accent2)', m.ndvi>0.55?'var(--accent2)':'var(--warn)', m.ndvi>0.50?'var(--accent2)':'var(--warn)'],
     alerts: [
-      m => `[${m.name.toUpperCase()}] Evapotranspiração ${(Math.random()*2+5).toFixed(1)} mm/dia. ${Math.random()<0.3?'Irrigação adicional necessária.':'Volume hídrico adequado.'}`,
-      m => `[${m.name.toUpperCase()}] Reservatório ${(Math.random()*20+55).toFixed(0)}% — Safra ${m.culture} antecipada em ${Math.round(Math.random()*4+1)}d.`,
-      m => `[${m.name.toUpperCase()}] Salinização do solo: ${Math.random()<0.2?'ALERTA — condutividade acima de 4 dS/m':'NORMAL'}.`,
-      m => `[${m.name.toUpperCase()}] NDVI ${m.ndvi.toFixed(2)} — Vigor foliar ${m.ndvi>0.55?'excelente':'sob monitoramento'}.`,
+      m => `[${m.name.toUpperCase()}] NDVI ${m.ndvi.toFixed(2)} — ${m.ndvi>0.55?'volume hídrico adequado':'irrigação adicional recomendada'}.`,
+      m => `[${m.name.toUpperCase()}] Safra ${m.culture}: ${m.ndvi>0.55?'PLENA':m.ndvi>0.45?'REDUZIDA':'STRESS HÍDRICO'}.`,
+      m => `[${m.name.toUpperCase()}] Monitoramento de salinização ativo. NDVI ${m.ndvi.toFixed(2)} — vigor foliar ${m.ndvi>0.55?'excelente':'sob atenção'}.`,
+      m => `[${m.name.toUpperCase()}] Rm estimado: ${calcRm(m)} kt · NDVI ${m.ndvi.toFixed(2)}.`,
     ],
   },
   D: {
     ids: ['BR-PA-PAR','BR-PA-SFX','BR-RO-VIL','BR-TO-POR'],
-    extraCol: ['NDVI', 'CAR%', 'Desmat.'],
+    extraCol: ['NDVI', 'CAR', 'Desmat.'],
     fmtRow: m => {
-      const car = Math.round(Math.random()*15+72);
-      const desmat = Math.random()<0.15?'ALERT':'OK';
-      return [m.ndvi.toFixed(3), car+'%', desmat];
+      const desmat = m.ndvi < 0.35 ? 'ALERT' : 'OK';
+      return [m.ndvi.toFixed(3), '—', desmat];
     },
-    colColors: m => ['var(--accent2)', 'var(--accent)', Math.random()<0.15?'var(--danger)':'var(--accent2)'],
+    colColors: m => ['var(--accent2)', 'var(--text2)', m.ndvi<0.35?'var(--danger)':'var(--accent2)'],
     alerts: [
-      m => `[${m.name.toUpperCase()}] Conformidade CAR: ${(Math.random()*15+72).toFixed(0)}%. ${Math.random()<0.2?'Sobreposição detectada.':'Dentro dos limites legais.'}`,
-      m => `[${m.name.toUpperCase()}] SAR: Detecção de desmatamento ${Math.random()<0.15?'POSITIVO — área: '+Math.round(Math.random()*500+100)+'ha':'NEGATIVO — sem alertas'}.`,
-      m => `[${m.name.toUpperCase()}] Cobertura de nuvens ${Math.round(Math.random()*40+30)}%. Ativando SAR automático.`,
-      m => `[${m.name.toUpperCase()}] Pegada de carbono estimada: ${(Math.random()*2+1.8).toFixed(2)} t CO₂/ha. ${Math.random()<0.3?'Crédito de carbono elegível.':''}`,
+      m => `[${m.name.toUpperCase()}] Conformidade CAR: aguardando integração INCRA/SICAR.`,
+      m => `[${m.name.toUpperCase()}] SAR: monitoramento de desmatamento ativo. NDVI ${m.ndvi.toFixed(3)} — ${m.ndvi<0.35?'ALERTA de cobertura':'cobertura normal'}.`,
+      m => `[${m.name.toUpperCase()}] SAR automático em operação. NDVI ${m.ndvi.toFixed(3)}.`,
+      m => `[${m.name.toUpperCase()}] Pegada de carbono: integração SEEG/INPE pendente. NDVI referência: ${m.ndvi.toFixed(3)}.`,
     ],
   },
 };
@@ -8031,12 +8456,10 @@ function pushPoleAlert(poleKey) {
 }
 
 function updateMacroVolumes() {
-  const graos = (247.2 + (Math.random()-0.5)*0.8).toFixed(1);
-  const horti = (62.4  + (Math.random()-0.5)*0.3).toFixed(1);
-  const prot  = (14.8  + (Math.random()-0.5)*0.1).toFixed(1);
-  const gEl = document.getElementById('mp-vol-graos');   if (gEl) gEl.textContent = graos + ' Mt';
-  const hEl = document.getElementById('mp-vol-horti');   if (hEl) hEl.textContent = horti + ' Mt';
-  const pEl = document.getElementById('mp-vol-prot');    if (pEl) pEl.textContent = prot  + ' Mt';
+  // Volumes CONAB safra 2024/25 — referência oficial, sem jitter simulado
+  const gEl = document.getElementById('mp-vol-graos');   if (gEl) gEl.textContent = '322.0 Mt';
+  const hEl = document.getElementById('mp-vol-horti');   if (hEl) hEl.textContent = '— Mt';
+  const pEl = document.getElementById('mp-vol-prot');    if (pEl) pEl.textContent = '— Mt';
   // NDVI divergence check
   const pairs = [
     ['BR-MT-SOR','BR-MA-BAL'],['BR-GO-RRV','BR-GO-PIR'],['BR-PE-PET','BR-SE-ITA'],
@@ -8092,15 +8515,7 @@ function setZoomLevel(level) {
   [0,1,2].forEach(i => {
     const btn = document.getElementById('zoom-btn-'+i);
     if (!btn) return;
-    if (i === level) {
-      btn.style.background = 'rgba(0,212,255,.15)';
-      btn.style.borderColor = 'var(--accent)';
-      btn.style.color = 'var(--accent)';
-    } else {
-      btn.style.background = 'none';
-      btn.style.borderColor = 'var(--border)';
-      btn.style.color = 'var(--text2)';
-    }
+    btn.classList.toggle('active', i === level);
   });
   const lbl = document.getElementById('zoom-label');
   if (lbl) lbl.textContent = ZOOM_CONFIG[level].label;
@@ -8114,20 +8529,20 @@ function setZoomLevel(level) {
 let talhaoLayer = null;
 function addTalhaoLayer() {
   if (talhaoLayer) return;
-  const talhoes = [
-    {lat:-12.54, lng:-55.72, status:'ok',    label:'Talhão A1 · Soja · NDVI 0.68 · Normal'},
-    {lat:-12.60, lng:-55.64, status:'warn',  label:'Talhão A2 · Soja · NDVI 0.51 · IA: Estresse Hídrico'},
-    {lat:-12.48, lng:-55.58, status:'ok',    label:'Talhão A3 · Milho · NDVI 0.72 · Pré-colheita'},
-    {lat:-12.44, lng:-55.70, status:'danger',label:'Talhão B1 · Soja · NDVI 0.38 · IA: Praga Detectada'},
-    {lat:-12.56, lng:-55.48, status:'ok',    label:'Talhão B2 · Soja · NDVI 0.65 · Normal'},
-    {lat:-12.52, lng:-55.82, status:'warn',  label:'Talhão C1 · Soja · NDVI 0.46 · IA: Seca Parcial'},
-  ];
-  const markers = talhoes.map(t => {
-    const col = t.status==='ok'?'#00ff88':t.status==='warn'?'#ffc107':'#ff3d3d';
-    const icon = L.divIcon({ className:'', html:`<div style="width:14px;height:14px;background:${col};border:2px solid #050e1a;border-radius:3px;transform:rotate(45deg);box-shadow:0 0 8px ${col};"></div>`, iconAnchor:[7,7] });
-    return L.marker([t.lat, t.lng], {icon}).bindPopup(`<div style="font-family:monospace;font-size:11px;min-width:180px;"><b>SEGMENTAÇÃO Z2</b><br><hr style="border-color:#ccc;margin:3px 0;">${t.label}</div>`);
+  // Z2 requer integração PlanetScope (PLANET_KEY) para dados reais de talhão.
+  // Enquanto não configurada, exibe aviso no mapa em vez de dados fictícios.
+  const noDataIcon = L.divIcon({
+    className: '',
+    html: `<div style="background:rgba(5,14,26,.92);border:1px solid var(--warn,#ffc107);border-radius:6px;padding:10px 14px;font-family:monospace;font-size:11px;color:#ffc107;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.6);">
+      ⚠ Segmentação Z2 indisponível<br>
+      <span style="font-size:9px;color:#8b949e;">Configure PLANET_KEY no backend<br>para ativar imagens de talhão (3m).</span>
+    </div>`,
+    iconAnchor: [120, 40],
   });
-  talhaoLayer = L.layerGroup(markers).addTo(leafletMap);
+  const center = leafletMap ? leafletMap.getCenter() : {lat: -12.54, lng: -55.72};
+  talhaoLayer = L.layerGroup([
+    L.marker([center.lat, center.lng], {icon: noDataIcon, interactive: false})
+  ]).addTo(leafletMap);
 }
 function removeTalhaoLayer() {
   if (talhaoLayer && leafletMap) { leafletMap.removeLayer(talhaoLayer); talhaoLayer = null; }
@@ -8152,17 +8567,17 @@ function updateArbitragem() {
   if (!tbody) return;
   tbody.innerHTML = ARB_ROWS.map((r, i) => {
     const sat = logState[r.corridor] || 65;
-    // Frete cresce com saturação: base + prêmio de congestionamento
+    // Frete determinístico: spread base ajustado por saturação de corredor
     const freteBase = r.basePorto - r.baseOrigin;
     const satPremium = Math.max(0, sat - 65) * 0.08;
-    const freteRand = (Math.random()-0.5)*0.8;
-    const frete = +(freteBase * (1 + satPremium/100) + freteRand).toFixed(2);
+    const frete = +(freteBase * (1 + satPremium / 100)).toFixed(2);
     const prevFrete = arbState[i].prevFrete || frete;
     const freteDelta = frete - prevFrete;
     arbState[i].prevFrete = frete;
 
-    const origin = +(r.baseOrigin + (Math.random()-0.5)*0.6).toFixed(2);
-    const porto  = +(r.basePorto  + (Math.random()-0.5)*0.8).toFixed(2);
+    // Preços de referência fixos (fonte: CEPEA/ESALQ — atualização manual)
+    const origin = r.baseOrigin;
+    const porto  = r.basePorto;
     const spread = +(porto - origin - frete).toFixed(2);
 
     // VaR: lost value per day in undelivered contracts
@@ -8187,8 +8602,8 @@ function updateArbitragem() {
     return `<tr>
       <td style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:10px;">${r.mun}</td>
       <td style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text2);">${r.culture}</td>
-      <td style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;">R$ ${origin.toFixed(2)}<br><span style="font-size:8px;color:var(--text2);">/${r.unit}</span></td>
-      <td style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;color:var(--accent);">R$ ${porto.toFixed(2)}<br><span style="font-size:8px;color:var(--text2);">/${r.unit}</span></td>
+      <td style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;">R$ ${origin.toFixed(2)}<br><span style="font-size:8px;color:var(--text2);">/${r.unit} · ref.</span></td>
+      <td style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;color:var(--accent);">R$ ${porto.toFixed(2)}<br><span style="font-size:8px;color:var(--text2);">/${r.unit} · ref.</span></td>
       <td style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;color:${freteCol};">${freteArrow} R$ ${frete.toFixed(2)}<br><span style="font-size:8px;color:${satCol};">Sat ${Math.round(sat)}%</span></td>
       <td style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:10px;text-align:right;font-weight:bold;color:${spread>=2?'var(--accent2)':'var(--danger)'};">${niasRole==='admin'?'R$ '+spread.toFixed(2):'<span class="rbac-blur" title="🔒 Premium">R$ ▓▓▓</span>'}</td>
       <td data-reco="${reco.replace(/"/g,'&quot;')}" style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:9px;color:${recoCol};">${niasRole==='admin'?reco:'<span class="rbac-blur" title="🔒 Premium">▓▓▓▓▓▓▓</span>'}</td>
@@ -8203,7 +8618,7 @@ setInterval(() => updateArbitragem(), 4500);
 function updateEcoScore() {
   const sat = logState.br163;
   const idle = Math.round(Math.max(20, Math.min(65, (sat - 60) * 1.2 + 20)));
-  const co2 = +(1.8 + (sat - 65) * 0.028 + (Math.random()-0.5)*0.1).toFixed(2);
+  const co2 = +(1.8 + (sat - 65) * 0.028).toFixed(2);
   const score = Math.round(100 - idle * 0.7 - (co2 - 1.8)*12);
   const col = score >= 65 ? '#00ff88' : score >= 45 ? '#ffc107' : '#ff3d3d';
   const barEl = document.getElementById('eco-bar');
@@ -8235,20 +8650,20 @@ function updateAIS() {
   if (!panel) return;
   const satMap = { 'Porto de Santos': logState.santos, 'Porto de Paranaguá': logState.par };
   panel.innerHTML = AIS_DATA.map(p => {
-    const sat = satMap[p.port] || (40+Math.random()*20);
-    const waiting = Math.round(Math.max(0, sat - 55) * 0.35 + Math.random()*2);
-    const occupied = Math.round(sat/100 * p.berths);
-    const eta = Math.round(waiting * 8 + Math.random()*4);
-    const col = sat >= 80 ? 'var(--danger)' : sat >= 68 ? 'var(--warn)' : 'var(--accent2)';
-    const cargo = p.cargos[Math.floor(Math.random()*p.cargos.length)];
+    const sat = satMap[p.port] || null;
+    const waiting = sat !== null ? Math.round(Math.max(0, sat - 55) * 0.35) : null;
+    const occupied = sat !== null ? Math.round(sat/100 * p.berths) : null;
+    const eta = waiting !== null ? Math.round(waiting * 8) : null;
+    const col = sat === null ? 'var(--text2)' : sat >= 80 ? 'var(--danger)' : sat >= 68 ? 'var(--warn)' : 'var(--accent2)';
+    const cargo = p.cargos[0];
     return `<div style="background:var(--bg3);border-left:2px solid ${col};padding:4px 8px;border-radius:2px;display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-size:9px;font-weight:bold;color:var(--text);">${p.port}</div>
-        <div style="font-size:8px;color:var(--text2);">Berços: ${occupied}/${p.berths} · ${cargo} · Fila: ${waiting} navios</div>
+        <div style="font-size:8px;color:var(--text2);">Berços: ${occupied !== null ? occupied+'/'+p.berths : '—/'+p.berths} · ${cargo} · Fila: ${waiting !== null ? waiting+' navios' : '—'}</div>
       </div>
       <div style="text-align:right;">
-        <div style="font-size:10px;font-weight:bold;color:${col};">${Math.round(sat)}%</div>
-        <div style="font-size:8px;color:var(--text2);">ETA berço: ${eta}h</div>
+        <div style="font-size:10px;font-weight:bold;color:${col};">${sat !== null ? Math.round(sat)+'%' : '—'}</div>
+        <div style="font-size:8px;color:var(--text2);">ETA berço: ${eta !== null ? eta+'h' : '—'}</div>
       </div>
     </div>`;
   }).join('');
@@ -8316,7 +8731,7 @@ async function applySimulation() {
     if (munId !== 'all' && m.id !== munId) return;
     simBackup[m.id] = m.ndvi;
     const origNdvi = m.ndvi;
-    m.ndvi = Math.max(0.18, m.ndvi - ndviPenalty * (0.8 + Math.random()*0.4));
+    m.ndvi = Math.max(0.18, m.ndvi - ndviPenalty);
     const rmOrig = calcRm({...m, ndvi:origNdvi});
     const rmNew  = calcRm(m);
     totalRmLoss += (rmOrig - rmNew);
@@ -9661,10 +10076,10 @@ const NiasNews = {
       // Add a random synthetic breaking news every ~45s
       const breaks = [
         { title:'Sentinel-2 detecta aumento de solo exposto em Sorriso-MT — pós-colheita', src:'NIA$ ARGUS', tag:'neutral' },
-        { title:'Frete Sorriso→Santos sobe 8% — BR-163 saturada a '+Math.round(78+Math.random()*12)+'%', src:'NIA$ Logística', tag:'bearish' },
+        { title:'Frete Sorriso→Santos pressionado — BR-163 saturada acima de 80%', src:'NIA$ Logística', tag:'bearish' },
         { title:'Tomate Mesa: CEAGESP registra entrada acima da média — preço em queda', src:'NIA$ CEASA', tag:'bearish' },
         { title:'NDVI recupera em Cristalina-GO — irrigação ativa detectada via SAR', src:'NIA$ SATVeg', tag:'bullish' },
-        { title:'Boi gordo B3: Indicador CEPEA avança 0.'+Math.round(3+Math.random()*8)+'%', src:'NIA$ Mercado', tag:'bullish' },
+        { title:'Boi gordo B3: Indicador CEPEA registra alta semanal — consulte CEPEA.esalq.usp.br', src:'NIA$ Mercado', tag:'bullish' },
         { title:'Chuva prevista para Serra Gaúcha nos próximos 3 dias — hortaliças sob risco', src:'NIA$ ClimAPI', tag:'bearish' },
         { title:'Porto de Paranaguá: fila de navios reduz — 5 berços disponíveis', src:'NIA$ AIS', tag:'bullish' },
         { title:'⚠️ CRÍTICO (SUL): Massa polar severa. Geada negra em polos de tomate. +22% preço em 72h.', src:'NIA$ Clima', tag:'bearish' },
@@ -9801,7 +10216,7 @@ const NiasClimate = {
   },
 
   _applyToWarRoom() {
-    const el = document.getElementById('war-climate-alerts');
+    const el = document.getElementById('war-climate-alerts') || document.getElementById('wr-climate-live');
     if (!el) return;
     const crits = this._insights.filter(i => i.severity === 'CRITICAL');
     if (crits.length === 0) { el.innerHTML = '<div style="font-size:9px;color:var(--accent2);">✓ Sem alertas climáticos críticos.</div>'; return; }
@@ -10009,16 +10424,7 @@ const NiasAPI = {
       if (!r.ok) throw new Error('OpenMeteo Multi ' + r.status);
       const data = await r.json();
       return Array.isArray(data) ? data : [data];
-    }, () => points.map(() => ({
-      current: { temperature_2m: 27+Math.random()*8, relative_humidity_2m: 45+Math.random()*35, precipitation: Math.random()*5, wind_speed_10m: 5+Math.random()*15, soil_moisture_0_to_7cm: 0.15+Math.random()*0.2 },
-      daily: {
-        time: Array.from({length:7},(_,i) => { const d=new Date(); d.setDate(d.getDate()+i); return d.toISOString().slice(0,10); }),
-        temperature_2m_max: Array.from({length:7},()=>28+Math.random()*6),
-        temperature_2m_min: Array.from({length:7},()=>16+Math.random()*6),
-        precipitation_sum: Array.from({length:7},()=>Math.random()*10),
-        et0_fao_evapotranspiration: Array.from({length:7},()=>3+Math.random()*3)
-      }
-    })));
+    }, () => points.map(() => null)); // no fallback — show "—" when API unavailable
   },
 
   // ── INMET — Estações meteorológicas ativas ───────────────────────
@@ -10115,14 +10521,7 @@ const NiasAPI = {
       });
       if (!r.ok) throw new Error('SAR Stats HTTP ' + r.status);
       return await r.json();
-    }, () => {
-      const pts = [];
-      for (let i = 0; i < days; i++) {
-        const d = new Date(Date.now() - (days - i) * 86400000);
-        pts.push({ date: d.toISOString().slice(0,10), vv: -12 + Math.random() * 6, vh: -18 + Math.random() * 5 });
-      }
-      return { source: 'SAR-fallback', data: pts };
-    });
+    }, () => ({ source: 'SAR-indisponível', data: [] }));
   },
 
   async getFires() {
@@ -10150,16 +10549,7 @@ const NiasAPI = {
           satellite: c[li('satellite')] || 'VIIRS'
         };
       }).filter(f => f.lat && f.lon);
-    }, () => {
-      const fires = [];
-      const hotspots = [[-12.5,-55.0],[-10.2,-49.8],[-8.5,-50.2],[-14.8,-52.3],[-7.1,-48.5],[-3.5,-52.0],[-9.8,-56.1],[-11.0,-54.5]];
-      hotspots.forEach(([lat,lon]) => {
-        for (let i=0; i<3+Math.floor(Math.random()*5); i++) {
-          fires.push({ lat:lat+(Math.random()-.5)*.8, lon:lon+(Math.random()-.5)*.8, conf:'nominal', bright:320+Math.random()*30, frp:15+Math.random()*40, satellite:'VIIRS-fallback' });
-        }
-      });
-      return fires;
-    });
+    }, () => []); // sem fallback sintético — dados VIIRS indisponíveis
   },
 
   // ── AgroAPI OAuth2 (EMBRAPA) — Gera Bearer token automaticamente ─
@@ -10227,13 +10617,7 @@ const NiasAPI = {
       });
       if (!r.ok) throw new Error('ClimAPI forecast HTTP ' + r.status);
       return { source:'ClimAPI-GFS', variable, date:lastDate, lat, lon, data: await r.json() };
-    }, () => ({
-      source: 'ClimAPI-fallback', variable, lat, lon,
-      data: variable.startsWith('TMP') ? { value: 28.5 + (Math.random()-0.5)*4, unit: 'K' }
-           : variable.startsWith('RH')  ? { value: 55 + Math.random()*25, unit: '%' }
-           : variable.startsWith('APCP') ? { value: Math.random()*12, unit: 'kg/m²' }
-           : { value: 5 + Math.random()*10, unit: 'm/s' }
-    }));
+    }, () => null); // sem fallback sintético — ClimAPI GFS indisponível
   },
 
   // ── SATVeg v2 (EMBRAPA AgroAPI) — Série temporal NDVI/EVI ───────
@@ -10258,7 +10642,7 @@ const NiasAPI = {
       return { source:'SATVeg-MODIS', index, satellite, dates:json.listaDatas||[], values:json.listaSerie||json.listaValores||[], lat, lon };
     }, () => {
       const n=24, dates=[], values=[], base=new Date();
-      for (let i=n-1;i>=0;i--) { const d=new Date(base); d.setDate(d.getDate()-i*16); dates.push(d.toISOString().slice(0,10)); const s=Math.sin((d.getMonth()/12)*Math.PI*2)*0.15; values.push(Math.max(0.15,Math.min(0.95,0.55+s+(Math.random()-.5)*0.08))); }
+      for (let i=n-1;i>=0;i--) { const d=new Date(base); d.setDate(d.getDate()-i*16); dates.push(d.toISOString().slice(0,10)); const s=Math.sin((d.getMonth()/12)*Math.PI*2)*0.15; values.push(+(0.55+s).toFixed(3)); }
       return { source:'SATVeg-fallback', index, satellite:'comb', dates, values, lat, lon };
     });
   },
@@ -11014,7 +11398,7 @@ window.Predictix = {
     const h = this._horizon;
     // Portos maritimos
     this.PORTS.forEach(p => {
-      const volume = Math.round(p.cap * (0.6 + Math.random()*0.4) * (1 + h*0.02));
+      const volume = Math.round(p.cap * 0.78 * (1 + h*0.02)); // 78% utilização base
       const utilization = Math.min(100, Math.round(volume / p.cap * 100));
       const waitHours = Math.round(12 + utilization * 0.5 + (h > 7 ? 24 : 0));
       const color = utilization > 90 ? '#EF4444' : utilization > 70 ? '#F59E0B' : '#50C878';
@@ -11032,7 +11416,7 @@ window.Predictix = {
     });
     // CEASAs
     this.CEASAS.forEach(c => {
-      const vol = Math.round(c.vol * (0.7 + Math.random()*0.3));
+      const vol = c.vol; // volume base de referência
       const marker = L.circleMarker([c.lat, c.lon], { radius:7, color:'#50C878', fillColor:'#0a1a0a', fillOpacity:0.9, weight:2 });
       marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;"><b>🏪 ${c.name}</b><br>Vol. semanal: ${vol.toLocaleString()} t<br>Região: ${c.region}</div>`, {direction:'top'});
       this._portMarkers.addLayer(marker);
@@ -11302,7 +11686,7 @@ window.Predictix = {
     document.getElementById('px-kpi-arb').textContent = profitableCount + ' / ' + opps.length;
 
     const h = this._horizon;
-    const ivf = (112 + h * 2.3 + (Math.random()*5)).toFixed(1);
+    const ivf = (112 + h * 2.3).toFixed(1);
     document.getElementById('px-kpi-vol').textContent = ivf;
 
     const etaRisk = Math.min(95, Math.round(8 + h * 3.5 + (this.ROUTES.filter(r=>r.risk>0.2).length * 12)));
