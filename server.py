@@ -2562,84 +2562,258 @@ except Exception as e:
 
 import math
 
-# Regiões agrícolas estratégicas do Brasil
+# ── REGIÕES AGRÍCOLAS — AMÉRICA DO SUL COMPLETA ──
+# Fontes: FAO 2023, IBGE, INDEC (ARG), DIAN (COL), MINAGRI (CHI/PER)
+# area_ha = área cultivada (não área total da região)
+# vol_ref_mt = produção anual de referência (Mt) por cultura principal
 AGRI_REGIONS = {
+    # ══════════ BRASIL ══════════
     'matopiba': {
-        'nome': 'MATOPIBA', 'lat': -10.5, 'lon': -45.5,
-        'area_ha': 12_000_000, 'estados': 'MA/TO/PI/BA',
+        'nome': 'MATOPIBA', 'pais': 'BR', 'lat': -10.5, 'lon': -45.5,
+        'area_ha': 14_800_000, 'estados': 'MA/TO/PI/BA',
         'culturas_principais': ['soja', 'milho', 'algodao'],
-        'bounds': [[-50,-6],[-43,-6],[-43,-15],[-50,-15]],
-        'cor': '#30d158',
+        'vol_ref': {'soja': 18.2, 'milho': 8.4, 'algodao': 0.9},  # Mt/ano
+        'cor': '#30d158', 'radius_km': 320,
+    },
+    'mt_agricola': {
+        'nome': 'Mato Grosso Agrícola', 'pais': 'BR', 'lat': -13.5, 'lon': -56.0,
+        'area_ha': 17_500_000, 'estados': 'MT',
+        'culturas_principais': ['soja', 'milho', 'algodao', 'cana'],
+        'vol_ref': {'soja': 38.5, 'milho': 22.0, 'algodao': 1.6},
+        'cor': '#0a84ff', 'radius_km': 350,
     },
     'cerrado_go': {
-        'nome': 'Cerrado Goiano', 'lat': -16.5, 'lon': -49.3,
-        'area_ha': 4_500_000, 'estados': 'GO',
+        'nome': 'Cerrado Goiano', 'pais': 'BR', 'lat': -16.5, 'lon': -49.3,
+        'area_ha': 4_800_000, 'estados': 'GO',
         'culturas_principais': ['soja', 'milho', 'tomate', 'sorgo'],
-        'bounds': [[-52,-13],[-46,-13],[-46,-20],[-52,-20]],
-        'cor': '#0a84ff',
+        'vol_ref': {'soja': 5.2, 'milho': 6.1, 'tomate': 1.2},
+        'cor': '#0a84ff', 'radius_km': 210,
     },
     'triangulo_mg': {
-        'nome': 'Triângulo Mineiro', 'lat': -18.9, 'lon': -47.9,
-        'area_ha': 2_500_000, 'estados': 'MG',
+        'nome': 'Triângulo Mineiro', 'pais': 'BR', 'lat': -18.9, 'lon': -47.9,
+        'area_ha': 2_800_000, 'estados': 'MG',
         'culturas_principais': ['soja', 'milho', 'cafe', 'laranja'],
-        'bounds': [[-51,-17],[-46,-17],[-46,-21],[-51,-21]],
-        'cor': '#ff9f0a',
+        'vol_ref': {'soja': 3.1, 'milho': 3.8, 'cafe': 0.35, 'laranja': 1.1},
+        'cor': '#ff9f0a', 'radius_km': 190,
     },
     'sul_mg': {
-        'nome': 'Sul de Minas', 'lat': -21.5, 'lon': -45.5,
-        'area_ha': 1_200_000, 'estados': 'MG',
+        'nome': 'Sul de Minas', 'pais': 'BR', 'lat': -21.5, 'lon': -45.5,
+        'area_ha': 1_350_000, 'estados': 'MG',
         'culturas_principais': ['cafe', 'batata', 'morango', 'cebola'],
-        'bounds': [[-47,-20],[-44,-20],[-44,-23],[-47,-23]],
-        'cor': '#bf5af2',
+        'vol_ref': {'cafe': 0.62, 'batata': 0.28, 'morango': 0.045},
+        'cor': '#bf5af2', 'radius_km': 140,
+    },
+    'zona_mata_mg': {
+        'nome': 'Zona da Mata MG / ES', 'pais': 'BR', 'lat': -20.3, 'lon': -42.0,
+        'area_ha': 850_000, 'estados': 'MG/ES',
+        'culturas_principais': ['cafe', 'banana', 'eucalipto'],
+        'vol_ref': {'cafe': 0.31, 'banana': 0.42},
+        'cor': '#bf5af2', 'radius_km': 130,
     },
     'mogi_sp': {
-        'nome': 'Cinturão Verde SP', 'lat': -23.5, 'lon': -46.2,
-        'area_ha': 250_000, 'estados': 'SP',
+        'nome': 'Cinturão Verde SP', 'pais': 'BR', 'lat': -23.5, 'lon': -46.2,
+        'area_ha': 280_000, 'estados': 'SP',
         'culturas_principais': ['tomate', 'pepino', 'pimentao', 'alface'],
-        'bounds': [[-47.5,-22.5],[-45.5,-22.5],[-45.5,-24.5],[-47.5,-24.5]],
-        'cor': '#ff453a',
+        'vol_ref': {'tomate': 0.55, 'pepino': 0.12, 'pimentao': 0.09},
+        'cor': '#ff453a', 'radius_km': 80,
     },
     'vale_sf': {
-        'nome': 'Vale do São Francisco', 'lat': -9.4, 'lon': -40.5,
-        'area_ha': 380_000, 'estados': 'BA/PE',
+        'nome': 'Vale do São Francisco', 'pais': 'BR', 'lat': -9.4, 'lon': -40.5,
+        'area_ha': 420_000, 'estados': 'BA/PE',
         'culturas_principais': ['manga', 'uva', 'melao', 'banana'],
-        'bounds': [[-43,-7],[-38,-7],[-38,-12],[-43,-12]],
-        'cor': '#ffd60a',
+        'vol_ref': {'manga': 0.52, 'uva': 0.36, 'melao': 0.18, 'banana': 0.48},
+        'cor': '#ffd60a', 'radius_km': 120,
     },
     'rn_ce_melao': {
-        'nome': 'Mossoró / Açu', 'lat': -5.2, 'lon': -37.3,
-        'area_ha': 180_000, 'estados': 'RN/CE',
-        'culturas_principais': ['melao', 'banana', 'castanha'],
-        'bounds': [[-39,-4],[-36,-4],[-36,-7],[-39,-7]],
-        'cor': '#64d2ff',
+        'nome': 'Mossoró / Açu (RN/CE)', 'pais': 'BR', 'lat': -5.2, 'lon': -37.3,
+        'area_ha': 195_000, 'estados': 'RN/CE',
+        'culturas_principais': ['melao', 'banana', 'castanha', 'tomate'],
+        'vol_ref': {'melao': 0.29, 'banana': 0.22, 'castanha': 0.08},
+        'cor': '#64d2ff', 'radius_km': 100,
     },
     'sul_rs': {
-        'nome': 'Sul do RS', 'lat': -29.5, 'lon': -53.5,
-        'area_ha': 4_000_000, 'estados': 'RS',
+        'nome': 'Rio Grande do Sul', 'pais': 'BR', 'lat': -29.5, 'lon': -53.5,
+        'area_ha': 5_800_000, 'estados': 'RS',
         'culturas_principais': ['soja', 'trigo', 'arroz', 'uva', 'maca'],
-        'bounds': [[-57,-27],[-49,-27],[-49,-33],[-57,-33]],
-        'cor': '#30d158',
+        'vol_ref': {'soja': 16.8, 'trigo': 2.4, 'arroz': 5.8, 'uva': 0.52, 'maca': 0.34},
+        'cor': '#30d158', 'radius_km': 260,
     },
     'oeste_ba': {
-        'nome': 'Oeste da Bahia', 'lat': -12.3, 'lon': -45.0,
-        'area_ha': 3_800_000, 'estados': 'BA',
+        'nome': 'Oeste da Bahia', 'pais': 'BR', 'lat': -12.3, 'lon': -45.0,
+        'area_ha': 4_200_000, 'estados': 'BA',
         'culturas_principais': ['soja', 'milho', 'algodao'],
-        'bounds': [[-47,-10],[-43,-10],[-43,-14],[-47,-14]],
-        'cor': '#ff9f0a',
-    },
-    'pantanal_mt': {
-        'nome': 'MT Agrícola', 'lat': -13.5, 'lon': -56.0,
-        'area_ha': 9_000_000, 'estados': 'MT',
-        'culturas_principais': ['soja', 'milho', 'algodao', 'cana'],
-        'bounds': [[-60,-10],[-52,-10],[-52,-18],[-60,-18]],
-        'cor': '#0a84ff',
+        'vol_ref': {'soja': 5.8, 'milho': 3.2, 'algodao': 0.38},
+        'cor': '#ff9f0a', 'radius_km': 220,
     },
     'norte_pr_ms': {
-        'nome': 'PR / MS Norte', 'lat': -23.0, 'lon': -53.0,
-        'area_ha': 5_500_000, 'estados': 'PR/MS',
+        'nome': 'Paraná / MS Norte', 'pais': 'BR', 'lat': -23.5, 'lon': -52.5,
+        'area_ha': 7_200_000, 'estados': 'PR/MS',
         'culturas_principais': ['soja', 'milho', 'cana', 'trigo'],
-        'bounds': [[-56,-22],[-49,-22],[-49,-26],[-56,-26]],
-        'cor': '#30d158',
+        'vol_ref': {'soja': 21.4, 'milho': 14.2, 'trigo': 3.1, 'cana': 38.0},
+        'cor': '#30d158', 'radius_km': 280,
+    },
+    'sao_paulo_cana': {
+        'nome': 'São Paulo / Centro-Oeste (Cana)', 'pais': 'BR', 'lat': -22.0, 'lon': -48.5,
+        'area_ha': 5_600_000, 'estados': 'SP/MG/GO',
+        'culturas_principais': ['cana', 'laranja', 'soja', 'cafe'],
+        'vol_ref': {'cana': 410.0, 'laranja': 11.2, 'soja': 4.1},
+        'cor': '#ff9500', 'radius_km': 240,
+    },
+    'norte_pa_am': {
+        'nome': 'PA / AM Agropecuária', 'pais': 'BR', 'lat': -3.5, 'lon': -52.0,
+        'area_ha': 2_100_000, 'estados': 'PA/AM',
+        'culturas_principais': ['soja', 'milho', 'abacaxi', 'dendê'],
+        'vol_ref': {'soja': 1.8, 'abacaxi': 0.18, 'dende': 0.48},
+        'cor': '#30d158', 'radius_km': 220,
+    },
+    # ══════════ ARGENTINA ══════════
+    'pampa_humeda': {
+        'nome': 'Pampa Húmeda', 'pais': 'AR', 'lat': -33.5, 'lon': -62.0,
+        'area_ha': 31_000_000, 'estados': 'Buenos Aires/Córdoba/Santa Fe',
+        'culturas_principais': ['soja', 'milho', 'trigo', 'girassol'],
+        'vol_ref': {'soja': 35.2, 'milho': 22.4, 'trigo': 14.8, 'girassol': 3.2},
+        'cor': '#30d158', 'radius_km': 480,
+    },
+    'cordoba_san_luis': {
+        'nome': 'Córdoba / San Luis', 'pais': 'AR', 'lat': -31.5, 'lon': -64.5,
+        'area_ha': 8_200_000, 'estados': 'Córdoba/San Luis',
+        'culturas_principais': ['soja', 'milho', 'trigo', 'mani'],
+        'vol_ref': {'soja': 11.8, 'milho': 7.4, 'trigo': 4.1, 'mani': 0.82},
+        'cor': '#ff9f0a', 'radius_km': 220,
+    },
+    'cuyo_arg': {
+        'nome': 'Cuyo (Vinho / Frutas)', 'pais': 'AR', 'lat': -33.0, 'lon': -68.8,
+        'area_ha': 380_000, 'estados': 'Mendoza/San Juan',
+        'culturas_principais': ['uva', 'oliva', 'alho', 'pera'],
+        'vol_ref': {'uva': 2.15, 'oliva': 0.12, 'alho': 0.065, 'pera': 0.38},
+        'cor': '#bf5af2', 'radius_km': 130,
+    },
+    'noa_arg': {
+        'nome': 'NOA Argentina (Cana/Citros)', 'pais': 'AR', 'lat': -24.5, 'lon': -65.0,
+        'area_ha': 1_100_000, 'estados': 'Salta/Jujuy/Tucumán',
+        'culturas_principais': ['cana', 'citros', 'tabaco', 'soja'],
+        'vol_ref': {'cana': 22.0, 'citros': 0.48, 'tabaco': 0.12, 'soja': 3.4},
+        'cor': '#ffd60a', 'radius_km': 170,
+    },
+    'patagonia_arg': {
+        'nome': 'Patagônia (Pera/Maçã)', 'pais': 'AR', 'lat': -39.5, 'lon': -67.5,
+        'area_ha': 220_000, 'estados': 'Río Negro/Neuquén',
+        'culturas_principais': ['maca', 'pera', 'uva', 'cereja'],
+        'vol_ref': {'maca': 0.58, 'pera': 0.42, 'uva': 0.08, 'cereja': 0.015},
+        'cor': '#64d2ff', 'radius_km': 120,
+    },
+    'chaco_arg': {
+        'nome': 'Chaco Argentino', 'pais': 'AR', 'lat': -25.8, 'lon': -60.5,
+        'area_ha': 4_800_000, 'estados': 'Chaco/Santiago/Formosa',
+        'culturas_principais': ['soja', 'algodao', 'sorgo', 'milho'],
+        'vol_ref': {'soja': 4.2, 'algodao': 0.028, 'sorgo': 1.8},
+        'cor': '#ff9f0a', 'radius_km': 200,
+    },
+    # ══════════ PARAGUAI ══════════
+    'oriental_py': {
+        'nome': 'Região Oriental (PY)', 'pais': 'PY', 'lat': -23.5, 'lon': -56.5,
+        'area_ha': 3_600_000, 'estados': 'Alto Paraná/Itapúa/Caaguazú',
+        'culturas_principais': ['soja', 'milho', 'trigo', 'cana'],
+        'vol_ref': {'soja': 10.8, 'milho': 3.2, 'trigo': 0.85, 'cana': 8.5},
+        'cor': '#30d158', 'radius_km': 180,
+    },
+    # ══════════ URUGUAI ══════════
+    'uruguay_ag': {
+        'nome': 'Uruguai Agrícola', 'pais': 'UY', 'lat': -32.5, 'lon': -56.5,
+        'area_ha': 2_100_000, 'estados': 'Paysandú/Soriano/Río Negro',
+        'culturas_principais': ['soja', 'trigo', 'arroz', 'cevada'],
+        'vol_ref': {'soja': 2.8, 'trigo': 1.05, 'arroz': 1.38, 'cevada': 0.22},
+        'cor': '#ffd60a', 'radius_km': 160,
+    },
+    # ══════════ BOLÍVIA ══════════
+    'santa_cruz_bo': {
+        'nome': 'Santa Cruz de la Sierra', 'pais': 'BO', 'lat': -17.5, 'lon': -62.5,
+        'area_ha': 3_200_000, 'estados': 'Santa Cruz/Beni',
+        'culturas_principais': ['soja', 'milho', 'girassol', 'cana'],
+        'vol_ref': {'soja': 3.8, 'milho': 1.1, 'girassol': 0.18, 'cana': 7.2},
+        'cor': '#30d158', 'radius_km': 210,
+    },
+    'cochabamba_bo': {
+        'nome': 'Cochabamba (BO)', 'pais': 'BO', 'lat': -17.2, 'lon': -66.0,
+        'area_ha': 380_000, 'estados': 'Cochabamba',
+        'culturas_principais': ['batata', 'milho', 'trigo', 'quinoa'],
+        'vol_ref': {'batata': 0.38, 'milho': 0.22, 'quinoa': 0.025},
+        'cor': '#ff9f0a', 'radius_km': 90,
+    },
+    # ══════════ CHILE ══════════
+    'valle_central_cl': {
+        'nome': 'Vale Central (Chile)', 'pais': 'CL', 'lat': -34.5, 'lon': -71.0,
+        'area_ha': 1_200_000, 'estados': 'O\'Higgins/Maule/Ñuble',
+        'culturas_principais': ['uva', 'maca', 'pera', 'cerejas', 'ameixas'],
+        'vol_ref': {'uva': 1.1, 'maca': 0.48, 'pera': 0.22, 'cerejas': 0.14},
+        'cor': '#bf5af2', 'radius_km': 160,
+    },
+    'norte_cl': {
+        'nome': 'Norte Chile (Irrigado)', 'pais': 'CL', 'lat': -27.5, 'lon': -70.0,
+        'area_ha': 85_000, 'estados': 'Atacama/Coquimbo',
+        'culturas_principais': ['uva', 'tomate', 'azeitona', 'pimentao'],
+        'vol_ref': {'uva': 0.28, 'tomate': 0.12, 'azeitona': 0.085},
+        'cor': '#64d2ff', 'radius_km': 80,
+    },
+    'bio_bio_cl': {
+        'nome': 'Biobío / Araucanía (CL)', 'pais': 'CL', 'lat': -38.0, 'lon': -72.5,
+        'area_ha': 950_000, 'estados': 'Biobío/Araucanía/Los Ríos',
+        'culturas_principais': ['trigo', 'aveia', 'batata', 'mirtilo'],
+        'vol_ref': {'trigo': 0.52, 'batata': 0.32, 'mirtilo': 0.065},
+        'cor': '#30d158', 'radius_km': 140,
+    },
+    # ══════════ PERU ══════════
+    'costa_peru': {
+        'nome': 'Costa Peruana (Irrigada)', 'pais': 'PE', 'lat': -12.5, 'lon': -75.5,
+        'area_ha': 1_100_000, 'estados': 'La Libertad/Ica/Piura/Lambayeque',
+        'culturas_principais': ['espargo', 'uva', 'mirtilo', 'manga', 'abacate'],
+        'vol_ref': {'espargo': 0.18, 'uva': 0.38, 'mirtilo': 0.22, 'manga': 0.15},
+        'cor': '#ffd60a', 'radius_km': 180,
+    },
+    'sierra_peru': {
+        'nome': 'Sierra Peruana', 'pais': 'PE', 'lat': -13.5, 'lon': -73.0,
+        'area_ha': 850_000, 'estados': 'Cusco/Puno/Junín/Ayacucho',
+        'culturas_principais': ['batata', 'quinoa', 'milho', 'cafe'],
+        'vol_ref': {'batata': 1.8, 'quinoa': 0.098, 'cafe': 0.31, 'milho': 0.48},
+        'cor': '#ff9f0a', 'radius_km': 160,
+    },
+    # ══════════ COLÔMBIA ══════════
+    'eje_cafetero_co': {
+        'nome': 'Eje Cafetero (COL)', 'pais': 'CO', 'lat': 4.8, 'lon': -75.8,
+        'area_ha': 840_000, 'estados': 'Caldas/Risaralda/Quindío/Antioquia',
+        'culturas_principais': ['cafe', 'platano', 'cana', 'tomate'],
+        'vol_ref': {'cafe': 0.82, 'platano': 0.95, 'cana': 12.5},
+        'cor': '#bf5af2', 'radius_km': 120,
+    },
+    'llanos_co': {
+        'nome': 'Llanos Orientais (COL)', 'pais': 'CO', 'lat': 3.5, 'lon': -72.5,
+        'area_ha': 1_800_000, 'estados': 'Meta/Casanare/Vichada',
+        'culturas_principais': ['soja', 'arroz', 'milho', 'palma'],
+        'vol_ref': {'soja': 0.38, 'arroz': 0.88, 'palma': 1.42},
+        'cor': '#30d158', 'radius_km': 180,
+    },
+    'costa_col': {
+        'nome': 'Costa Caribe (COL)', 'pais': 'CO', 'lat': 9.5, 'lon': -74.8,
+        'area_ha': 750_000, 'estados': 'Magdalena/Cesar/Atlántico',
+        'culturas_principais': ['banana', 'palma', 'algodao', 'arroz'],
+        'vol_ref': {'banana': 1.85, 'palma': 0.68, 'arroz': 0.52},
+        'cor': '#ffd60a', 'radius_km': 130,
+    },
+    # ══════════ EQUADOR ══════════
+    'costa_ecuador': {
+        'nome': 'Costa Equatoriana', 'pais': 'EC', 'lat': -1.5, 'lon': -79.5,
+        'area_ha': 1_600_000, 'estados': 'Guayas/Los Ríos/Manabí/El Oro',
+        'culturas_principais': ['banana', 'cacao', 'palma', 'arroz'],
+        'vol_ref': {'banana': 6.28, 'cacao': 0.38, 'palma': 0.52, 'arroz': 0.85},
+        'cor': '#ffd60a', 'radius_km': 160,
+    },
+    # ══════════ VENEZUELA ══════════
+    'llanos_ve': {
+        'nome': 'Llanos Venezolanos', 'pais': 'VE', 'lat': 8.0, 'lon': -68.5,
+        'area_ha': 2_400_000, 'estados': 'Apure/Barinas/Guárico',
+        'culturas_principais': ['sorgo', 'milho', 'arroz', 'soja'],
+        'vol_ref': {'sorgo': 0.32, 'milho': 0.85, 'arroz': 0.22, 'soja': 0.08},
+        'cor': '#ff9f0a', 'radius_km': 220,
     },
 }
 
@@ -2793,39 +2967,50 @@ def _detect_stage(cultura, month, ndvi, ndvi_trend, ndvi_delta):
 
 
 def _estimate_volume_mt(cultura, region, ndvi, ndvi_30d, stage):
-    """Estima volume de produção (Mt) com base em NDVI vs histórico."""
-    base = IBGE_PROD_BASE.get(cultura)
-    if not base:
-        return 0, 0
-    area_region = region.get('area_ha', 100_000)
-    area_total  = base['area_mha'] * 1_000_000
-    frac        = min(0.6, area_region / area_total)
+    """Estima volume de produção (Mt) com base em vol_ref da região + NDVI."""
+    # Prioridade 1: vol_ref explícito da região
+    vol_ref_map = region.get('vol_ref', {})
+    base_vol = vol_ref_map.get(cultura)
 
-    # Desvio do NDVI em relação ao esperado (0.55 médio Brasil)
+    if base_vol is None:
+        # Fallback: usar IBGE base nacional com fração de área
+        base = IBGE_PROD_BASE.get(cultura)
+        if not base:
+            return 0, 0
+        area_region = region.get('area_ha', 100_000)
+        area_total  = base['area_mha'] * 1_000_000
+        frac        = min(0.55, area_region / area_total)
+        base_vol    = base['total_mt'] * frac
+
+    # Modificador NDVI (desvio vs histórico esperado 0.52)
     ndvi_hist = 0.52
     ndvi_dev  = (ndvi_30d - ndvi_hist) / max(0.1, ndvi_hist)
     modifier  = max(0.4, min(1.6, 1 + ndvi_dev * 0.75))
 
     stage_mods = {
         'pico_biomassa': 1.0, 'pre_colheita': 0.95, 'colheita': 0.85,
-        'crescimento': 0.6, 'emergencia': 0.3, 'plantio': 0.15,
-        'vegetacao_ativa': 0.7, 'descanso': 0.1, 'pousio': 0,
+        'crescimento': 0.65, 'emergencia': 0.35, 'plantio': 0.18,
+        'vegetacao_ativa': 0.75, 'descanso': 0.12, 'pousio': 0,
         'pos_colheita': 0.05,
     }
     sm = stage_mods.get(stage, 0.5)
-    prod_mt = base['total_mt'] * frac * modifier * sm
-    # Valor unitário de referência (varia por cultura)
-    preco_ref = base.get('preco_ref', 5.0)
-    # Converter para valor em R$ Mi
-    if cultura in ('soja', 'milho', 'algodao', 'cana', 'trigo', 'arroz', 'sorgo'):
-        valor_mi = prod_mt * 1_000_000 / (60 if cultura in ('soja','milho','cafe') else 1) * (preco_ref / (60 if cultura in ('soja','milho','cafe') else 1)) / 1_000_000
-        if cultura == 'soja':
-            valor_mi = prod_mt * preco_ref * 1_000_000 / 60 / 1_000_000  # sc
-    else:
-        # HVF: preco_ref = R$/kg
-        valor_mi = prod_mt * 1_000_000 * 1_000 * preco_ref / 1_000_000
+    prod_mt = base_vol * modifier * sm
 
-    return round(prod_mt, 4), round(max(0, valor_mi), 2)
+    # Valor estimado em R$ Mi
+    preco_ref = IBGE_PROD_BASE.get(cultura, {}).get('preco_ref', 4.0)
+    graos = ('soja', 'milho', 'algodao', 'cana', 'trigo', 'arroz', 'sorgo',
+             'girassol', 'mani', 'cevada', 'aveia', 'tabaco', 'quinoa', 'dende')
+    if cultura in graos:
+        # grãos: preco_ref em R$/sc60kg ou R$/t
+        if cultura in ('soja', 'milho', 'cafe', 'cevada', 'aveia'):
+            valor_mi = prod_mt * 1e6 / 60 * preco_ref / 1e6  # sc→Mt
+        else:
+            valor_mi = prod_mt * preco_ref * 1000 / 1e6  # R$/t→Mi
+    else:
+        # HVF: preco_ref = R$/kg → prod_mt em mil toneladas
+        valor_mi = prod_mt * 1e6 * preco_ref / 1e6  # prod_mt(Mt) * 1e6(kg/Mt) * R$/kg / 1e6
+
+    return round(max(0, prod_mt), 4), round(max(0, valor_mi), 2)
 
 
 def _fetch_satellite_analysis():

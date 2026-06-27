@@ -5686,12 +5686,28 @@ function _satPopupHTML(rk, reg) {
       </div>
       <!-- NDVI sparkline -->
       ${ndviSparkHTML ? `<div style="display:flex;gap:1px;margin-top:8px;align-items:flex-end;height:24px;padding:0 2px;">${ndviSparkHTML}</div>` : ''}
-      <!-- Area + precip -->
-      <div style="display:flex;gap:12px;margin-top:8px;font-size:9px;color:#8e8e93;">
-        <div>Área: <b style="color:#fff;">${(reg.area_ha/1e6).toFixed(1)} Mha</b></div>
-        <div>Chuva 30d: <b style="color:#64d2ff;">${reg.precip_30d || 0}mm</b></div>
-        <div>Solo: <b style="color:#ff9f0a;">${((reg.solo_umidade||0)*100).toFixed(0)}%</b></div>
-        <div style="margin-left:auto;">Vol total: <b style="color:#ffd60a;">${reg.volume_total_mt?.toFixed(2) || '—'} Mt</b></div>
+      <!-- KPIs -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:10px;">
+        <div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:6px 8px;text-align:center;">
+          <div style="font-size:7px;color:#636366;letter-spacing:.5px;margin-bottom:2px;">ÁREA PLANTADA</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;">${(reg.area_ha/1e6).toFixed(1)}</div>
+          <div style="font-size:7px;color:#636366;">Mha</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:6px 8px;text-align:center;">
+          <div style="font-size:7px;color:#636366;letter-spacing:.5px;margin-bottom:2px;">VOLUME REF.</div>
+          <div style="font-size:13px;font-weight:700;color:#ffd60a;">${reg.volume_total_mt?.toFixed(1) || '—'}</div>
+          <div style="font-size:7px;color:#636366;">Mt/ano</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:6px 8px;text-align:center;">
+          <div style="font-size:7px;color:#636366;letter-spacing:.5px;margin-bottom:2px;">CHUVA 30d</div>
+          <div style="font-size:13px;font-weight:700;color:#64d2ff;">${reg.precip_30d || 0}</div>
+          <div style="font-size:7px;color:#636366;">mm</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:6px 8px;text-align:center;">
+          <div style="font-size:7px;color:#636366;letter-spacing:.5px;margin-bottom:2px;">UMID. SOLO</div>
+          <div style="font-size:13px;font-weight:700;color:#ff9f0a;">${((reg.solo_umidade||0)*100).toFixed(0)}%</div>
+          <div style="font-size:7px;color:#636366;">Vol/vol</div>
+        </div>
       </div>
     </div>
     <!-- Culturas -->
