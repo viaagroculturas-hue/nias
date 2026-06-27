@@ -609,20 +609,59 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .sat-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 2s linear;}
 
 /* LOGISTICA */
-.log-left{flex:1;display:flex;flex-direction:column;padding:10px;border-right:1px solid var(--border);}
-.log-right{width:280px;display:flex;flex-direction:column;overflow-y:auto;}
+.log-left{flex:1;display:flex;flex-direction:column;padding:0;border-right:1px solid rgba(84,84,88,0.3);}
+.log-right{width:320px;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
 .sankey-wrap{flex:1;position:relative;}
-.route-card{background:var(--bg3);border-left:3px solid var(--border);padding:8px 12px;transition:all .3s;}
-.route-card:hover{border-left-color:var(--accent);}
-.route-card.danger{border-left-color:var(--danger);}
-.route-card.warn{border-left-color:var(--warn);}
-.route-card.ok{border-left-color:var(--accent2);}
-.route-name{font-size:11px;color:var(--text);font-weight:bold;}
-.route-detail{font-size:10px;color:var(--text2);margin:1px 0;}
-.progress-bar{height:4px;background:var(--border);border-radius:2px;margin-top:5px;overflow:hidden;}
-.progress-fill{height:100%;border-radius:2px;transition:width 1s ease;}
-.counter-row{display:flex;justify-content:space-between;margin-top:3px;}
-.counter-val{font-size:11px;font-weight:bold;}
+
+/* Route cards — Apple elevated */
+.route-card{
+  background:#1c1c1e;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.07);
+  padding:12px 14px;margin:0 8px 8px;
+  transition:background .15s;
+}
+.route-card:hover{background:#2c2c2e;}
+.route-card.danger{border-color:rgba(255,69,58,0.3);}
+.route-card.warn{border-color:rgba(255,214,10,0.25);}
+.route-card.ok{border-color:rgba(48,209,88,0.25);}
+.route-name{font-size:12px;color:var(--text);font-weight:600;margin-bottom:6px;}
+.route-detail{font-size:10px;color:var(--text2);margin:2px 0;display:flex;justify-content:space-between;}
+.progress-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:8px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:2px;transition:width 1.2s ease;}
+.counter-row{display:flex;justify-content:space-between;margin-top:6px;align-items:center;}
+.counter-val{font-size:13px;font-weight:600;font-family:var(--font-mono);}
+
+/* Segmented control — camadas logística */
+.log-lyr-btn{
+  font-size:10px;font-weight:500;font-family:var(--font);
+  padding:3px 10px;border:none;border-radius:6px;cursor:pointer;
+  background:transparent;color:rgba(235,235,245,0.5);
+  transition:background .15s,color .15s;
+}
+.log-lyr-btn.active{background:rgba(255,255,255,0.12);color:var(--lc,var(--text));}
+.log-lyr-btn:hover:not(.active){background:rgba(255,255,255,0.06);color:rgba(235,235,245,0.75);}
+
+/* ACTION ROOM — redesign tabela */
+#arb-strip table thead th{
+  background:#1c1c1e;color:rgba(235,235,245,0.45);
+  font-size:9px;font-weight:500;letter-spacing:.5px;
+  padding:8px 10px;text-transform:uppercase;
+  border-bottom:1px solid rgba(84,84,88,0.3);
+}
+#arb-strip table tbody td{
+  padding:8px 10px;border-bottom:1px solid rgba(84,84,88,0.15);
+  font-size:11px;
+}
+#arb-strip table tbody tr:hover td{background:rgba(255,255,255,0.03);}
+
+/* Log right section headers */
+.log-section-hdr{
+  padding:10px 14px 8px;
+  font-size:11px;font-weight:600;color:var(--text);
+  border-bottom:1px solid rgba(84,84,88,0.25);
+  flex-shrink:0;display:flex;align-items:center;gap:7px;
+}
+.log-live-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
 
 /* OFERTA */
 .oferta-chart{flex:1;padding:10px;border-right:1px solid var(--border);display:flex;flex-direction:column;}
@@ -1940,66 +1979,84 @@ tr:hover td{background:rgba(10,132,255,.04);}
     <div class="panel" id="panel-logistica">
       <div class="panel-header">
         <span class="panel-title">Logística</span>
-        <span class="panel-badge" id="ph-br163">BR-163: —</span>
-        <span class="panel-badge" id="ph-santos">SANTOS: —</span>
-        <span class="panel-badge ok" id="ph-ferro">FERROV.: 61%</span>
-        <span class="panel-badge" id="ph-iel" style="color:var(--text2);">IEL: —</span>
+        <span class="panel-badge" id="ph-iel" style="background:rgba(255,214,10,0.12);color:var(--warn);">IEL: —</span>
         <span class="badge-live">● LIVE</span>
+        <!-- badges migrados para KPI strip; IDs mantidos para JS de compatibilidade -->
+        <span id="ph-br163" style="display:none;"></span>
+        <span id="ph-santos" style="display:none;"></span>
+        <span id="ph-ferro" style="display:none;"></span>
       </div>
-      <!-- KPI STRIP -->
-      <div style="display:flex;align-items:center;gap:20px;padding:5px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:9px;color:var(--text2);letter-spacing:1px;">CUSTO BRASIL / HORA</span>
-          <span id="log-custo-val" style="font-size:16px;font-weight:bold;color:var(--text2);font-family:var(--font);">—</span>
-          <span style="font-size:9px;color:var(--text2);">em perdas logísticas detectadas</span>
-        </div>
-        <div style="width:1px;height:30px;background:var(--border);"></div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:9px;color:var(--text2);letter-spacing:1px;">ÍNDICE EFICIÊNCIA LOGÍSTICA</span>
-          <div style="width:120px;height:8px;background:#3a3a3c;border-radius:4px;overflow:hidden;">
-            <div id="iel-bar" style="height:100%;width:68%;background:linear-gradient(90deg,#ffd60a,#30d158);border-radius:4px;transition:width 2s;"></div>
+      <!-- KPI STRIP — Apple cards row -->
+      <div style="display:flex;gap:8px;padding:10px 12px;background:var(--bg);border-bottom:1px solid rgba(84,84,88,0.3);flex-shrink:0;">
+        <div style="flex:1;background:#1c1c1e;border-radius:12px;border:1px solid rgba(255,255,255,0.07);padding:10px 14px;">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px;">Custo/hora Brasil</div>
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <span id="log-custo-val" style="font-size:20px;font-weight:600;color:var(--danger);font-family:var(--font-mono);letter-spacing:-0.5px;">—</span>
+            <span style="font-size:10px;color:var(--text2);">em perdas</span>
           </div>
-          <span id="iel-val" style="font-size:14px;font-weight:bold;color:var(--text2);font-family:var(--font);">—</span>
         </div>
-        <div style="margin-left:auto;font-size:9px;color:var(--text2);">ANTT · AIS Marítimo · GPS Frotas · Satélite</div>
+        <div style="flex:1;background:#1c1c1e;border-radius:12px;border:1px solid rgba(255,255,255,0.07);padding:10px 14px;">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:6px;">Eficiência Logística</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+              <div id="iel-bar" style="height:100%;width:68%;background:linear-gradient(90deg,#ffd60a,#30d158);border-radius:2px;transition:width 2s;"></div>
+            </div>
+            <span id="iel-val" style="font-size:18px;font-weight:600;color:var(--warn);font-family:var(--font-mono);">—</span>
+          </div>
+        </div>
+        <div style="flex:1;background:#1c1c1e;border-radius:12px;border:1px solid rgba(255,255,255,0.07);padding:10px 14px;">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px;">Corredores ativos</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px;">
+            <span id="ph-br163" style="font-size:10px;font-weight:600;color:var(--danger);font-family:var(--font-mono);">BR-163 —</span>
+            <span id="ph-santos" style="font-size:10px;font-weight:600;color:var(--warn);font-family:var(--font-mono);">Santos —</span>
+            <span id="ph-ferro" style="font-size:10px;font-weight:600;color:var(--accent2);font-family:var(--font-mono);">Ferro —</span>
+          </div>
+        </div>
+        <div style="background:#1c1c1e;border-radius:12px;border:1px solid rgba(255,255,255,0.07);padding:10px 14px;display:flex;flex-direction:column;justify-content:center;">
+          <div style="font-size:9px;color:rgba(235,235,245,0.3);letter-spacing:.3px;">Fontes</div>
+          <div style="font-size:9px;color:rgba(235,235,245,0.45);margin-top:3px;line-height:1.6;">ANTT · AIS · GPS · SAT</div>
+        </div>
       </div>
       <div style="flex:1;display:flex;overflow:hidden;">
         <!-- LEFT: ATLAS MULTIMODAL -->
         <div class="log-left" style="flex:1;display:flex;flex-direction:column;padding:0;border-right:1px solid var(--border);">
-          <div style="padding:5px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:1px solid var(--border);">
-            <span style="color:var(--accent);font-size:10px;letter-spacing:1px;">ATLAS MULTIMODAL — RODOVIAS · FERROVIAS · HIDROVIAS</span>
+          <div style="padding:8px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:1px solid rgba(84,84,88,0.3);background:rgba(28,28,30,0.6);">
+            <span style="color:var(--text);font-size:13px;font-weight:600;">Atlas Multimodal</span>
             <div style="display:flex;gap:6px;align-items:center;">
-              <span id="log-subtitle" style="font-size:9px;color:var(--text2);">Vermelho = gargalo · Verde = livre · Amarelo = atenção</span>
-              <button onclick="logMapToggleLayer('rodovias')" style="font-size:8px;padding:1px 6px;background:rgba(255,69,58,.15);border:1px solid #ff453a;color:#ff453a;border-radius:3px;cursor:pointer;font-family:var(--font);">RODOVIAS</button>
-              <button onclick="logMapToggleLayer('ferrovias')" style="font-size:8px;padding:1px 6px;background:rgba(10,132,255,.15);border:1px solid var(--accent);color:var(--accent);border-radius:3px;cursor:pointer;font-family:var(--font);">FERROVIAS</button>
-              <button onclick="logMapToggleLayer('hidrovias')" style="font-size:8px;padding:1px 6px;background:rgba(48,209,88,.15);border:1px solid #30d158;color:#30d158;border-radius:3px;cursor:pointer;font-family:var(--font);">HIDROVIAS</button>
-              <button onclick="logMapToggleLayer('sa-corridors')" style="font-size:8px;padding:1px 6px;background:rgba(168,85,247,.15);border:1px solid #a855f7;color:#a855f7;border-radius:3px;cursor:pointer;font-family:var(--font);">🌎 CORREDORES SA</button>
-              <button onclick="logMapToggleLayer('sa-portos')" style="font-size:8px;padding:1px 6px;background:rgba(16,185,129,.15);border:1px solid #10b981;color:#10b981;border-radius:3px;cursor:pointer;font-family:var(--font);">⚓ PORTOS SA</button>
-              <button onclick="logMapToggleWaze()" id="btn-waze" style="font-size:8px;padding:1px 6px;background:rgba(51,171,255,.15);border:1px solid #33ABFF;color:#33ABFF;border-radius:3px;cursor:pointer;font-family:var(--font);">🗺 WAZE LIVE</button>
+              <!-- Segmented control Apple-style -->
+              <div style="display:flex;background:rgba(118,118,128,0.18);border-radius:8px;padding:2px;gap:1px;">
+                <button onclick="_logLyrToggle('rodovias',this)" class="log-lyr-btn active" data-color="#ff453a" style="--lc:#ff453a;">Rodovias</button>
+                <button onclick="_logLyrToggle('ferrovias',this)" class="log-lyr-btn active" data-color="#0a84ff" style="--lc:#0a84ff;">Ferrovias</button>
+                <button onclick="_logLyrToggle('hidrovias',this)" class="log-lyr-btn active" data-color="#30d158" style="--lc:#30d158;">Hidrovias</button>
+                <button onclick="_logLyrToggle('sa-corridors',this)" class="log-lyr-btn active" data-color="#bf5af2" style="--lc:#bf5af2;">Corredores</button>
+                <button onclick="_logLyrToggle('sa-portos',this)" class="log-lyr-btn active" data-color="#ff9f0a" style="--lc:#ff9f0a;">Portos</button>
+              </div>
+              <button onclick="logMapToggleWaze()" id="btn-waze" style="font-size:10px;font-weight:500;padding:4px 10px;background:rgba(51,171,255,0.12);border:1px solid rgba(51,171,255,0.3);color:#33ABFF;border-radius:8px;cursor:pointer;font-family:var(--font);transition:background .15s;" onmouseover="this.style.background='rgba(51,171,255,0.22)'" onmouseout="this.style.background='rgba(51,171,255,0.12)'">Waze Live</button>
+              <span id="log-subtitle" style="display:none;"></span>
             </div>
           </div>
           <div style="flex:1;min-height:0;position:relative;">
             <div id="logMap" style="position:absolute;inset:0;"></div>
-            <!-- ECO-SCORE overlay -->
-            <div style="position:absolute;top:10px;left:6px;z-index:1100;background:rgba(0,0,0,.88);border:1px solid var(--border);border-radius:5px;padding:6px 10px;width:170px;">
-              <div style="font-size:9px;color:var(--accent);letter-spacing:1px;margin-bottom:4px;">ECO-SCORE MALHA</div>
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                <div style="flex:1;height:6px;background:#3a3a3c;border-radius:3px;overflow:hidden;"><div id="eco-bar" style="height:100%;width:55%;background:linear-gradient(90deg,#ff453a,#ffd60a);border-radius:3px;transition:width 2s;"></div></div>
-                <span id="eco-val" style="font-size:11px;font-weight:bold;color:var(--warn);font-family:var(--font);">55</span>
+            <!-- ECO-SCORE — pill compacto no canto inferior esquerdo -->
+            <div style="position:absolute;bottom:10px;left:10px;z-index:1100;display:flex;gap:6px;pointer-events:none;">
+              <div style="background:rgba(28,28,30,0.88);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:5px 12px;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:9px;color:rgba(235,235,245,0.45);letter-spacing:.3px;">ECO</span>
+                <div style="width:40px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;"><div id="eco-bar" style="height:100%;width:55%;background:linear-gradient(90deg,#ff453a,#ffd60a);border-radius:2px;transition:width 2s;"></div></div>
+                <span id="eco-val" style="font-size:11px;font-weight:600;color:var(--warn);font-family:var(--font-mono);">55</span>
+                <span style="color:rgba(255,255,255,0.12);font-size:10px;">·</span>
+                <span style="font-size:9px;color:rgba(235,235,245,0.45);">CO₂ <span id="eco-co2" style="color:var(--warn);">2.4</span> kg/t</span>
+                <span style="color:rgba(255,255,255,0.12);font-size:10px;">·</span>
+                <span style="font-size:9px;color:rgba(235,235,245,0.45);">Ocioso <span id="eco-idle" style="color:var(--danger);">38%</span></span>
               </div>
-              <div style="font-size:9px;color:var(--text2);display:flex;justify-content:space-between;">
-                <span>CO₂: <span id="eco-co2" style="color:var(--warn);">2.4 kg/t</span></span>
-                <span>Ocioso: <span id="eco-idle" style="color:var(--danger);">38%</span></span>
-              </div>
-              <div id="eco-tip" style="font-size:8px;color:var(--text2);margin-top:3px;line-height:1.4;">Frota parada na BR-163 emit. 18% acima da base</div>
             </div>
+            <div id="eco-tip" style="display:none;"></div>
           </div>
           <!-- MATRIZ DE ARBITRAGEM -->
-          <div id="arb-strip" style="height:192px;flex-shrink:0;border-top:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;">
-            <div style="padding:4px 12px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;">
-              <span style="color:var(--accent);font-size:10px;letter-spacing:2px;">ACTION ROOM — ARBITRAGEM PRESCRITIVA</span>
-              <span style="font-size:9px;color:var(--text2);">Origem vs Porto · Frete IA detectado via partículas</span>
-              <span class="pulse" style="width:5px;height:5px;background:var(--accent2);display:inline-block;border-radius:50%;margin-left:auto;"></span>
+          <div id="arb-strip" style="height:200px;flex-shrink:0;border-top:1px solid rgba(84,84,88,0.3);display:flex;flex-direction:column;overflow:hidden;background:var(--bg);">
+            <div style="padding:10px 14px;background:var(--bg);border-bottom:1px solid rgba(84,84,88,0.25);display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <span style="color:var(--text);font-size:13px;font-weight:600;">Arbitragem Prescritiva</span>
+              <span style="font-size:10px;color:var(--text2);">Origem vs Porto · Frete via IA</span>
+              <span style="width:5px;height:5px;background:var(--accent2);display:inline-block;border-radius:50%;margin-left:auto;box-shadow:0 0 5px rgba(48,209,88,.5);animation:mapLivePulse 2s infinite;"></span>
             </div>
             <div style="flex:1;overflow-x:auto;">
               <table style="width:100%;border-collapse:collapse;min-width:620px;">
@@ -2018,33 +2075,40 @@ tr:hover td{background:rgba(10,132,255,.04);}
           </div>
         </div>
         <!-- RIGHT: AI CONTROL PANEL -->
-        <div class="log-right" style="width:340px;display:flex;flex-direction:column;overflow:hidden;">
+        <div class="log-right" style="width:320px;display:flex;flex-direction:column;overflow:hidden;">
           <!-- ETA PREDITIVO -->
-          <div style="padding:6px 12px;color:var(--accent);font-size:10px;letter-spacing:2px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:6px;">
-            <span class="pulse" style="width:5px;height:5px;background:var(--accent);display:inline-block;border-radius:50%;"></span>
-            ETA PREDITIVO — IA DE ROTAS
+          <div class="log-section-hdr">
+            <span class="log-live-dot" style="background:var(--accent);box-shadow:0 0 5px rgba(10,132,255,.5);animation:mapLivePulse 2s infinite;"></span>
+            ETA · IA de Rotas
           </div>
-          <div id="eta-cards" style="padding:6px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;border-bottom:1px solid var(--border);"></div>
+          <div id="eta-cards" style="padding:8px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;border-bottom:1px solid rgba(84,84,88,0.25);"></div>
           <!-- REROUTING SUGGESTION -->
-          <div style="padding:7px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
-            <div style="background:rgba(10,132,255,.07);border:1px solid rgba(10,132,255,.2);border-radius:5px;padding:8px 10px;">
-              <div style="font-size:9px;color:var(--accent);letter-spacing:1px;margin-bottom:5px;">SUGESTÃO DE RE-ROTEAMENTO — IA</div>
-              <div id="reroute-msg" style="font-size:10px;color:var(--text2);line-height:1.5;margin-bottom:7px;">Aguardando dados de saturação para gerar sugestão de re-roteamento.</div>
-              <button id="reroute-btn" onclick="applyReroute()" style="background:var(--accent);color:#000000;border:none;padding:5px 12px;font-family:var(--font);font-size:10px;font-weight:bold;border-radius:3px;cursor:pointer;letter-spacing:1px;">⚡ RE-ROTEAR VIA IA</button>
-              <span id="reroute-status" style="margin-left:8px;font-size:9px;color:var(--text2);"></span>
+          <div style="padding:8px;border-bottom:1px solid rgba(84,84,88,0.25);flex-shrink:0;">
+            <div style="background:rgba(10,132,255,0.06);border:1px solid rgba(10,132,255,0.18);border-radius:12px;padding:12px 14px;">
+              <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:5px;">Re-roteamento IA</div>
+              <div id="reroute-msg" style="font-size:10px;color:var(--text2);line-height:1.55;margin-bottom:10px;">Aguardando dados de saturação.</div>
+              <button id="reroute-btn" onclick="applyReroute()" style="background:var(--accent);color:#fff;border:none;padding:7px 16px;font-family:var(--font);font-size:11px;font-weight:600;border-radius:10px;cursor:pointer;width:100%;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">⚡ Re-rotear via IA</button>
+              <span id="reroute-status" style="display:block;margin-top:6px;font-size:9px;color:var(--text2);text-align:center;"></span>
             </div>
           </div>
           <!-- AIS RADAR NAVIOS -->
-          <div style="padding:5px 12px;color:var(--accent);font-size:10px;letter-spacing:2px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:6px;">
-            <span class="pulse" style="width:5px;height:5px;background:var(--warn);display:inline-block;border-radius:50%;"></span>
-            RADAR AIS — NAVIOS NOS PORTOS
+          <div class="log-section-hdr">
+            <span class="log-live-dot" style="background:var(--warn);box-shadow:0 0 5px rgba(255,214,10,.5);animation:mapLivePulse 2.5s infinite;"></span>
+            AIS · Navios nos Portos
           </div>
-          <div id="ais-panel" style="padding:6px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;border-bottom:1px solid var(--border);"></div>
-          <!-- SATURATION CORRIDORS -->
-          <div style="padding:6px 12px;color:var(--accent);font-size:10px;letter-spacing:2px;border-bottom:1px solid var(--border);flex-shrink:0;">ALERTAS CLIMÁTICOS — ROTAS</div>
-          <div id="log-climate-routes" style="max-height:120px;overflow-y:auto;padding:4px 8px;font-size:9px;color:var(--text2);">Sem alertas climáticos ativos.</div>
-          <div style="padding:6px 12px;color:var(--accent);font-size:10px;letter-spacing:2px;border-bottom:1px solid var(--border);border-top:1px solid var(--border);flex-shrink:0;margin-top:6px;">SATURAÇÃO POR CORREDOR</div>
-          <div style="flex:1;overflow-y:auto;">
+          <div id="ais-panel" style="padding:8px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;border-bottom:1px solid rgba(84,84,88,0.25);"></div>
+          <!-- ALERTAS CLIMÁTICOS -->
+          <div class="log-section-hdr">
+            <span class="log-live-dot" style="background:var(--accent3);"></span>
+            Alertas Climáticos · Rotas
+          </div>
+          <div id="log-climate-routes" style="padding:6px 8px 8px;font-size:10px;color:var(--text2);flex-shrink:0;border-bottom:1px solid rgba(84,84,88,0.25);">Sem alertas climáticos ativos.</div>
+          <!-- SATURAÇÃO POR CORREDOR -->
+          <div class="log-section-hdr">
+            <span class="log-live-dot" style="background:var(--danger);box-shadow:0 0 5px rgba(255,69,58,.4);animation:mapLivePulse 1.8s infinite;"></span>
+            Saturação por Corredor
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;">
             <div class="route-card danger" id="rc-br163">
               <div class="route-name">BR-163 (Sorriso → Miritituba)</div>
               <div class="route-detail" id="rd-br163-flow">Fluxo: 3.240 veíc/dia (+34%)</div>
@@ -5265,8 +5329,9 @@ function initSankey() {
   const el = document.getElementById('logMap');
   if (!el || logMap) { if (logMap) setTimeout(() => logMap.invalidateSize(), 80); return; }
 
-  logMap = L.map('logMap', { center:[-10,-60], zoom:3, zoomControl:true, attributionControl:false });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, subdomains:'abc', attribution:'© OpenStreetMap' }).addTo(logMap);
+  logMap = L.map('logMap', { center:[-14,-52], zoom:4, zoomControl:false, attributionControl:false });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:19, subdomains:'abcd' }).addTo(logMap);
+  L.control.zoom({ position:'bottomright' }).addTo(logMap);
 
   // ── RODOVIAS (principais corredores de escoamento) ────────────
   const rodovias = L.layerGroup();
@@ -5416,6 +5481,12 @@ function logMapToggleLayer(name) {
   if (!logMap || !logMapLayers[name]) return;
   if (logMap.hasLayer(logMapLayers[name])) logMap.removeLayer(logMapLayers[name]);
   else logMapLayers[name].addTo(logMap);
+}
+
+// Segmented control toggle — novo design
+function _logLyrToggle(name, btn) {
+  logMapToggleLayer(name);
+  if (btn) btn.classList.toggle('active');
 }
 
 let _wazeMode = 'off';
