@@ -10204,11 +10204,10 @@ const NiasNews = {
       const sumEl = document.getElementById('news-summary');
       const list = document.getElementById('news-feed-list');
       if (sumEl && list) {
-          const tags = list.querySelectorAll('.news-tag');
-          let bu=0, be=0;
-          tags.forEach(t => { if(t.classList.contains('bullish')) bu++; if(t.classList.contains('bearish')) be++; });
-          sumEl.innerHTML = `<span style="color:#00ff88">${bu} BULLISH</span> · <span style="color:#ff3d3d">${be} BEARISH</span> · ${list.children.length} itens`;
-        }
+        const tags = list.querySelectorAll('.news-tag');
+        let bu = 0, be = 0;
+        tags.forEach(t => { if (t.classList.contains('bullish')) bu++; if (t.classList.contains('bearish')) be++; });
+        sumEl.innerHTML = `<span style="color:#00ff88">${bu} BULLISH</span> · <span style="color:#ff3d3d">${be} BEARISH</span> · ${list.children.length} itens`;
       }
     }, 5 * 60 * 1000); // a cada 5 min — respeita rate limits das APIs de notícias
   }

@@ -113,8 +113,8 @@ def _fetch_cepea():
                     'source': 'CEPEA/ESALQ',
                     'date': date_str,
                 }
-        except Exception:
-            pass
+        except Exception as e:
+            print(f'[CEPEA] Erro scraping {key}: {e}')
     if result:
         _cepea_cache['data'] = result
         _cepea_cache['ts'] = time.time()
@@ -1014,11 +1014,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             err = str(e)
             if 'no such table' in err.lower():
-                self.send_response(200)
+                self.send_response(503)
                 self._cors()
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+                self.wfile.write(json.dumps({'status':'degraded','records':[], 'data':[], 'message':'Banco de dados não inicializado', 'error':err}, ensure_ascii=False).encode())
             else:
                 self.send_response(500)
                 self._cors()
@@ -1091,11 +1091,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             err = str(e)
             if 'no such table' in err.lower():
-                self.send_response(200)
+                self.send_response(503)
                 self._cors()
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+                self.wfile.write(json.dumps({'status':'degraded','records':[], 'data':[], 'message':'Banco de dados não inicializado', 'error':err}, ensure_ascii=False).encode())
             else:
                 self.send_response(500)
                 self._cors()
@@ -1153,11 +1153,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             err = str(e)
             if 'no such table' in err.lower():
-                self.send_response(200)
+                self.send_response(503)
                 self._cors()
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+                self.wfile.write(json.dumps({'status':'degraded','records':[], 'data':[], 'message':'Banco de dados não inicializado', 'error':err}, ensure_ascii=False).encode())
             else:
                 self.send_response(500)
                 self._cors()
@@ -1242,11 +1242,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             err = str(e)
             if 'no such table' in err.lower():
-                self.send_response(200)
+                self.send_response(503)
                 self._cors()
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+                self.wfile.write(json.dumps({'status':'degraded','records':[], 'data':[], 'message':'Banco de dados não inicializado', 'error':err}, ensure_ascii=False).encode())
             else:
                 self.send_response(500)
                 self._cors()
@@ -1330,11 +1330,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             err = str(e)
             if 'no such table' in err.lower():
-                self.send_response(200)
+                self.send_response(503)
                 self._cors()
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+                self.wfile.write(json.dumps({'status':'degraded','records':[], 'data':[], 'message':'Banco de dados não inicializado', 'error':err}, ensure_ascii=False).encode())
             else:
                 self.send_response(500)
                 self._cors()
@@ -1409,11 +1409,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             err = str(e)
             if 'no such table' in err.lower():
-                self.send_response(200)
+                self.send_response(503)
                 self._cors()
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+                self.wfile.write(json.dumps({'status':'degraded','records':[], 'data':[], 'message':'Banco de dados não inicializado', 'error':err}, ensure_ascii=False).encode())
             else:
                 self.send_response(500)
                 self._cors()
@@ -1575,11 +1575,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             err = str(e)
             if 'no such table' in err.lower():
-                self.send_response(200)
+                self.send_response(503)
                 self._cors()
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+                self.wfile.write(json.dumps({'status':'degraded','records':[], 'data':[], 'message':'Banco de dados não inicializado', 'error':err}, ensure_ascii=False).encode())
             else:
                 self.send_response(500)
                 self._cors()
@@ -1927,11 +1927,11 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             err = str(e)
             if 'no such table' in err.lower():
-                self.send_response(200)
+                self.send_response(503)
                 self._cors()
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'status':'empty','records':[], 'data':[], 'message':'Tabela ainda não inicializada no banco local', 'warning':err}, ensure_ascii=False).encode())
+                self.wfile.write(json.dumps({'status':'degraded','records':[], 'data':[], 'message':'Banco de dados não inicializado', 'error':err}, ensure_ascii=False).encode())
             else:
                 self.send_response(500)
                 self._cors()
