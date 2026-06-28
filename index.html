@@ -1573,182 +1573,6 @@ tr:hover td{background:rgba(10,132,255,.04);}
 
 /* ── Intel ribbon (top ticker, hidden by default) ───────────────── */
 #os-ribbon { display:none; }
-
-/* ══════════════════════════════════════════════════════════════
-   NIAS REFORMA VISUAL APPLE — patch layer
-   ══════════════════════════════════════════════════════════════ */
-
-/* ── Skeleton loader ── */
-@keyframes skeleton-shift {
-  0%   { background-position: 200% center; }
-  100% { background-position: -200% center; }
-}
-.skeleton-line {
-  background: linear-gradient(90deg, #F0EFE9 25%, #E4E2DA 50%, #F0EFE9 75%);
-  background-size: 200% 100%;
-  animation: skeleton-shift 1.4s infinite linear;
-  border-radius: 6px;
-  display: block;
-}
-.skeleton-card {
-  background: #FFFFFF;
-  border: 0.5px solid #E0DED7;
-  border-radius: 12px;
-  padding: 14px 16px;
-  overflow: hidden;
-}
-
-/* ── Login screen — light ── */
-#nias-login-overlay {
-  background: #F4F3EF !important;
-}
-#nias-login-overlay .login-card {
-  background: #FFFFFF !important;
-  border: 0.5px solid #E0DED7 !important;
-  box-shadow: 0 2px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-#nias-login-overlay .login-logo {
-  color: #1A1A18 !important;
-  font-weight: 600 !important;
-  letter-spacing: 4px !important;
-}
-#nias-login-overlay .login-logo span { color: #1D9E75 !important; }
-#nias-login-overlay .login-sub {
-  color: #888886 !important;
-  letter-spacing: 1.2px !important;
-}
-#nias-login-overlay .login-label {
-  color: #666664 !important;
-}
-#nias-login-overlay .login-input {
-  background: #F4F3EF !important;
-  border: 0.5px solid #CCC !important;
-  color: #1A1A18 !important;
-}
-#nias-login-overlay .login-input:focus {
-  border-color: #1D9E75 !important;
-  background: #F0FAF6 !important;
-}
-#nias-login-overlay .login-btn-primary {
-  background: #1D9E75 !important;
-}
-#nias-login-overlay .login-btn-guest {
-  background: transparent !important;
-  border: 0.5px solid #CCC !important;
-  color: #444442 !important;
-}
-#nias-login-overlay .login-btn-guest:hover {
-  background: #F4F3EF !important;
-}
-#nias-login-overlay .login-badge {
-  background: #F0EFE9 !important;
-  border: 0.5px solid #DDD !important;
-  color: #666664 !important;
-}
-
-/* ── Radar — filter pills light ── */
-.advisor-filter {
-  background: #F0EFE9 !important;
-  border: 0.5px solid #E0DED7 !important;
-  color: #444442 !important;
-  border-radius: 20px !important;
-  padding: 5px 14px !important;
-  font-size: 11px !important;
-  letter-spacing: 0.5px !important;
-  cursor: pointer !important;
-  transition: all .15s !important;
-}
-.advisor-filter.active {
-  background: #1D9E75 !important;
-  border-color: #1D9E75 !important;
-  color: #FFFFFF !important;
-}
-.advisor-filter:hover:not(.active) {
-  background: #E8E6DE !important;
-}
-
-/* ── Radar — resumo executivo card light ── */
-#advisor-summary {
-  background: #FFFFFF !important;
-  border: 0.5px solid #E0DED7 !important;
-  border-radius: 12px !important;
-}
-#advisor-summary-text { color: var(--text) !important; }
-#advisor-cards [style*="background:#1"] { background: #FFFFFF !important; }
-
-/* botão atualizar radar */
-#panel-radar button[onclick*="loadAdvisor"] {
-  background: #F0EFE9 !important;
-  border: 0.5px solid #E0DED7 !important;
-  color: #444442 !important;
-  border-radius: 8px !important;
-}
-
-/* ── Radar — estado vazio ── */
-#advisor-empty { color: var(--text2) !important; }
-#advisor-empty div { color: var(--text2) !important; }
-
-/* ── Cérebro — brain radar view light ── */
-#brain-radar-view {
-  background: #F4F3EF !important;
-  border: 0.5px solid #E0DED7 !important;
-  border-radius: 8px !important;
-}
-
-/* ── Cérebro — comando estratégico textarea ── */
-#brain-cmd-input {
-  background: #F4F3EF !important;
-  border: 0.5px solid #CCC !important;
-  color: var(--text) !important;
-  border-radius: 8px !important;
-}
-#brain-cmd-input:focus {
-  border-color: #1D9E75 !important;
-  background: #F0FAF6 !important;
-  outline: none !important;
-}
-
-/* ── War Room — alert cards: borda esquerda, fundo branco ── */
-#wr-alerts-list .wr-card,
-.wr-alert-card {
-  background: #FFFFFF !important;
-  border: 0.5px solid #E0DED7 !important;
-  border-radius: 10px !important;
-  border-left-width: 3px !important;
-  margin-bottom: 8px !important;
-}
-
-/* ── Mapa — tabs de camada light ── */
-.map-tab-btn, .sat-tab {
-  background: #FFFFFF !important;
-  border: 0.5px solid #E0DED7 !important;
-  border-radius: 6px !important;
-  color: var(--text2) !important;
-}
-.map-tab-btn.active, .sat-tab.active {
-  background: #E1F5EE !important;
-  color: #0F6E56 !important;
-  border-color: #1D9E75 !important;
-}
-
-/* ── Rodapé do mapa — legenda light ── */
-#map-legend, .map-legend, .leaflet-bottom .map-footer-bar {
-  background: rgba(255,255,255,0.92) !important;
-  border-radius: 8px !important;
-  font-size: 11px !important;
-  color: var(--text2) !important;
-  border: 0.5px solid #E0DED7 !important;
-}
-
-/* ── Audit / IA cards light ── */
-.audit-card {
-  background: #F4F3EF !important;
-  border: 0.5px solid #E0DED7 !important;
-  color: var(--text2) !important;
-}
-.audit-card strong { color: var(--text) !important; }
 </style>
 </head>
 <body>
@@ -3805,37 +3629,39 @@ tr:hover td{background:rgba(10,132,255,.04);}
 
       <!-- Resumo Executivo -->
       <div style="padding:16px 20px 0;flex-shrink:0;">
-        <div id="advisor-summary" style="background:#FFFFFF;border:0.5px solid #E0DED7;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
-          <div style="font-size:10px;color:#1D9E75;letter-spacing:1.2px;font-weight:500;margin-bottom:8px;text-transform:uppercase;">Resumo Executivo do Radar</div>
-          <div id="advisor-summary-text" style="font-size:13px;line-height:1.6;">
-            <span class="skeleton-line" style="height:13px;width:80%;margin-bottom:8px;"></span>
-            <span class="skeleton-line" style="height:13px;width:60%;"></span>
-          </div>
+        <div id="advisor-summary" style="background:#111;border:1px solid #1e3a2e;border-radius:8px;padding:16px 20px;margin-bottom:16px;">
+          <div style="font-size:10px;color:#22c55e;letter-spacing:1.5px;margin-bottom:8px;">RESUMO EXECUTIVO DO RADAR</div>
+          <div id="advisor-summary-text" style="color:#ccc;font-size:13px;line-height:1.6;">Carregando análise do Radar NIAS…</div>
           <div id="advisor-summary-stats" style="display:flex;gap:24px;margin-top:12px;flex-wrap:wrap;"></div>
         </div>
       </div>
 
       <!-- Filtros rápidos -->
       <div style="padding:0 20px 12px;display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;">
-        <button class="advisor-filter active" onclick="advisorFilter('todos')" data-filter="todos">TODOS</button>
-        <button class="advisor-filter" onclick="advisorFilter('alerta')" data-filter="alerta">⚠ ALERTAS</button>
-        <button class="advisor-filter" onclick="advisorFilter('monitorar')" data-filter="monitorar">👁 MONITORAR</button>
-        <button class="advisor-filter" onclick="advisorFilter('BR')" data-filter="BR">🇧🇷 BRASIL</button>
-        <button class="advisor-filter" onclick="advisorFilter('AR')" data-filter="AR">🇦🇷 ARG</button>
-        <button class="advisor-filter" onclick="advisorFilter('CL')" data-filter="CL">🇨🇱 CHI</button>
+        <button class="advisor-filter active" onclick="advisorFilter('todos')" data-filter="todos"
+          style="background:#1a1a1a;border:1px solid #22c55e;color:#22c55e;padding:4px 14px;border-radius:4px;cursor:pointer;font-size:10px;letter-spacing:1px;">TODOS</button>
+        <button class="advisor-filter" onclick="advisorFilter('alerta')" data-filter="alerta"
+          style="background:#1a1a1a;border:1px solid #333;color:#888;padding:4px 14px;border-radius:4px;cursor:pointer;font-size:10px;letter-spacing:1px;">⚠ ALERTAS</button>
+        <button class="advisor-filter" onclick="advisorFilter('monitorar')" data-filter="monitorar"
+          style="background:#1a1a1a;border:1px solid #333;color:#888;padding:4px 14px;border-radius:4px;cursor:pointer;font-size:10px;letter-spacing:1px;">👁 MONITORAR</button>
+        <button class="advisor-filter" onclick="advisorFilter('BR')" data-filter="BR"
+          style="background:#1a1a1a;border:1px solid #333;color:#888;padding:4px 14px;border-radius:4px;cursor:pointer;font-size:10px;">🇧🇷 BRASIL</button>
+        <button class="advisor-filter" onclick="advisorFilter('AR')" data-filter="AR"
+          style="background:#1a1a1a;border:1px solid #333;color:#888;padding:4px 14px;border-radius:4px;cursor:pointer;font-size:10px;">🇦🇷 ARG</button>
+        <button class="advisor-filter" onclick="advisorFilter('CL')" data-filter="CL"
+          style="background:#1a1a1a;border:1px solid #333;color:#888;padding:4px 14px;border-radius:4px;cursor:pointer;font-size:10px;">🇨🇱 CHI</button>
         <div style="flex:1"></div>
-        <button class="advisor-filter" onclick="showAdvisorSimulator()">⚗ Simulador</button>
+        <button onclick="showAdvisorSimulator()" style="background:#1a1a1a;border:1px solid #555;color:#aaa;padding:4px 14px;border-radius:4px;cursor:pointer;font-size:10px;">⚗ SIMULADOR</button>
       </div>
 
       <!-- Cards de recomendações -->
       <div id="advisor-cards" style="padding:0 20px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px;"></div>
 
       <!-- Estado vazio -->
-      <div id="advisor-empty" style="display:none;padding:48px;text-align:center;">
-        <div style="font-size:36px;margin-bottom:12px;">🌎</div>
-        <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;">Nenhum sinal identificado</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Ajuste os filtros ou execute o pipeline para atualizar dados.</div>
-        <button onclick="loadAdvisor(true)" style="background:#1D9E75;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;">↺ Tentar novamente</button>
+      <div id="advisor-empty" style="display:none;padding:40px;text-align:center;color:#555;">
+        <div style="font-size:32px;margin-bottom:12px;">🌎</div>
+        <div style="font-size:14px;color:#666;margin-bottom:8px;">Nenhum sinal identificado com os filtros atuais.</div>
+        <div style="font-size:11px;color:#444;">Execute o pipeline para atualizar dados de clima e preços.</div>
       </div>
 
       <!-- Modal: Tese Detalhada -->
@@ -3936,17 +3762,17 @@ tr:hover td{background:rgba(10,132,255,.04);}
           <button class="quick-btn" id="radar-15d"   onclick="showRadarHorizon('15d')"  style="font-size:9px;padding:2px 8px;">15D</button>
           <button class="quick-btn" id="radar-30d"   onclick="showRadarHorizon('30d')"  style="font-size:9px;padding:2px 8px;">30D</button>
         </div>
-        <div id="brain-radar-view" style="background:#F4F3EF;border:0.5px solid #E0DED7;border-radius:8px;padding:10px;min-height:80px;">
-          <div style="color:var(--text2);font-size:11px;">Selecione um horizonte acima.</div>
+        <div id="brain-radar-view" style="background:#0d0d1a;border:1px solid #2d1f6e;border-radius:6px;padding:10px;min-height:80px;">
+          <div style="color:var(--text2);font-size:10px;">Selecione um horizonte.</div>
         </div>
       </div>
 
       <!-- ── Comando Estratégico ── -->
       <div style="padding:8px 12px 12px;flex-shrink:0;margin-top:4px;">
-        <div style="font-size:10px;letter-spacing:0.8px;color:var(--text3);font-weight:500;text-transform:uppercase;margin-bottom:5px;">Consulta NIAS</div>
-        <div style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.5;">
-          Retorna análise estruturada com dados reais.<br>
-          Ex: <code style="color:#1D9E75;background:#E1F5EE;padding:1px 5px;border-radius:4px;">alerta AR</code> · <code style="color:#1D9E75;background:#E1F5EE;padding:1px 5px;border-radius:4px;">tese tomate CL</code> · <code style="color:#1D9E75;background:#E1F5EE;padding:1px 5px;border-radius:4px;">clima PE</code>
+        <div style="font-size:9px;letter-spacing:2px;color:#7c3aed;margin-bottom:5px;">COMANDO ESTRATÉGICO</div>
+        <div style="font-size:9px;color:var(--text2);margin-bottom:6px;line-height:1.4;">
+          Não é chat. Retorna análise estruturada com dados reais.<br>
+          Exemplos: <code style="color:#a78bfa;">alerta AR</code> · <code style="color:#a78bfa;">tese tomate CL</code> · <code style="color:#a78bfa;">clima PE</code> · <code style="color:#a78bfa;">pulse</code> · <code style="color:#a78bfa;">comprar</code>
         </div>
         <div style="display:flex;gap:6px;align-items:flex-start;">
           <textarea id="brain-cmd-input" rows="2" placeholder="Digite o comando..." style="flex:1;background:#0d0d1a;border:1px solid #4c1d95;border-radius:5px;padding:7px 10px;color:var(--text);font-family:var(--font);font-size:11px;outline:none;resize:none;" onkeydown="if(event.ctrlKey&&event.key==='Enter'){sendBrainCommand();}"></textarea>
@@ -3958,7 +3784,7 @@ tr:hover td{background:rgba(10,132,255,.04);}
       <!-- ── Auditoria detalhada (colapsada) ── -->
       <div style="padding:0 12px 12px;flex-shrink:0;">
         <button onclick="showPanel('chat')" style="background:transparent;border:1px solid #2d1f6e;color:var(--text2);font-size:9px;padding:4px 10px;border-radius:4px;cursor:pointer;letter-spacing:1px;">
-          ▶ Ver histórico de raciocínio
+          ▶ VER AUDITORIA DETALHADA / IA CHAT
         </button>
       </div>
     </div>
