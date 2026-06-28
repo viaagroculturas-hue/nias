@@ -603,6 +603,14 @@ var WarRoomProtocol = {
   },
 
   _renderAlerts(alerts) {
+    // Deduplicar por chave composta (culture + event + region)
+    const seen = new Set();
+    alerts = alerts.filter(a => {
+      const key = `${a.level}|${a.culture}|${a.event}|${a.region}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
     alerts.sort((a,b) => {
       const lo = {N1:0,N2:1,N3:2};
       if (lo[a.level] !== lo[b.level]) return lo[a.level] - lo[b.level];
@@ -634,18 +642,18 @@ var WarRoomProtocol = {
       ? `<div style="padding:40px;text-align:center;color:var(--accent2);">✅ Nenhum alerta crítico ativo agora.<br><span style="color:var(--text2);font-size:10px;">Sistema monitorando ${checkpoints ? checkpoints.length : 5} polos SA.</span></div>`
       : alerts.map(a => {
         const L = this.LEVELS[a.level];
-        return `<div class="alert-card ${L.css}" style="padding:10px 12px;border-bottom:1px solid var(--border);">
+        return `<div style="background:#FFFFFF;border:0.5px solid #E0DED7;border-left:3px solid ${L.color};border-radius:10px;padding:10px 14px;margin-bottom:8px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-            <span style="font-size:11px;font-weight:bold;color:${L.color};">${L.icon} N${a.level.replace('N','')} — ${L.name}</span>
-            <span style="font-size:10px;color:${L.color};font-weight:bold;">VFR R$ ${(a.vfr/1e6).toFixed(1)}M</span>
+            <span style="font-size:11px;font-weight:600;color:${L.color};">${L.icon} ${L.name}</span>
+            ${a.vfr ? `<span style="font-size:10px;color:var(--text2);">VFR R$ ${(a.vfr/1e6).toFixed(1)}M</span>` : ''}
           </div>
-          <div style="font-size:11px;color:var(--text);font-weight:bold;">${a.culture} · ${a.event}</div>
-          <div style="font-size:10px;color:var(--text2);margin-top:2px;">${a.region}</div>
-          ${a.message ? `<div style="font-size:10px;color:var(--text2);margin-top:3px;line-height:1.4;">${a.message}</div>` : ''}
+          <div style="font-size:12px;color:var(--text);font-weight:600;">${a.culture} · ${a.event}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px;">${a.region}</div>
+          ${a.message ? `<div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.4;">${a.message}</div>` : ''}
           <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap;">
-            <span style="font-size:9px;padding:2px 8px;border:1px solid ${L.color};color:${L.color};border-radius:3px;">${a.action}</span>
-            <span style="font-size:9px;color:var(--text);font-weight:bold;">${a.recommendation}</span>
-            <span style="font-size:9px;color:var(--text2);margin-left:auto;">${a.source||''}</span>
+            <span style="font-size:10px;padding:2px 8px;background:#F0EFE9;border:0.5px solid #DDD;color:var(--text2);border-radius:20px;">${a.action}</span>
+            <span style="font-size:10px;color:var(--text);font-weight:500;">${a.recommendation}</span>
+            <span style="font-size:10px;color:var(--text3);margin-left:auto;">${a.source||''}</span>
           </div>
         </div>`;
       }).join('')
@@ -692,9 +700,9 @@ var WarRoomProtocol = {
       const txt = r && (r.response || r.answer || r.text || r.result);
       el.innerHTML = txt
         ? txt.replace(/\n/g,'<br>')
-        : '<span style="color:var(--text2);">IA indisponível no momento.</span>';
+        : '<span style="color:var(--text2);">Análise automática indisponível. Configure a chave de API em Configurações.</span>';
     } catch(e) {
-      el.innerHTML = '<span style="color:var(--text2);">IA indisponível · verifique /api/nias/brain</span>';
+      el.innerHTML = '<span style="color:var(--text2);">Análise automática indisponível. Configure a chave de API em Configurações.</span>';
     }
   },
 
