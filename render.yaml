@@ -1,23 +1,13 @@
 services:
   - type: web
     name: nias
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python server.py
+    env: python
+    buildCommand: pip install --upgrade pip
+    startCommand: python server_v2.py
     envVars:
       - key: PORT
-        value: 8080
+        value: 8000
+      - key: NIAS_API_KEY
+        sync: false   # definir manualmente no dashboard Render
       - key: PYTHON_VERSION
-        value: 3.11.9
-      - key: NIAS_DATA_DIR
-        value: /opt/render/project/src/data
-      - key: NIAS_DB_PATH
-        value: /opt/render/project/src/data/nia_flv.db
-      - key: NIAS_PIPELINE_STATUS_PATH
-        value: /opt/render/project/src/data/pipeline_status.json
-      - key: NIAS_SCHEDULER_LOG_PATH
-        value: /opt/render/project/src/data/scheduler.log
-    disk:
-      name: nias-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
+        value: 3.11.0
