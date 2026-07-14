@@ -1,0 +1,112 @@
+services:
+  # ── Backend (FastAPI) ──────────────────────────────────────────
+  - type: web
+    name: vigia-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/ping
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vigia-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: vigia-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false   # você preenche manualmente no painel
+      - key: RELATORIO_HORA
+        value: "05:30"
+      - key: RELATORIO_TIMEZONE
+        value: America/Sao_Paulo
+      - key: APP_URL
+        value: https://nias.onrender.com
+      - key: API_URL
+        value: https://nias.onrender.com
+      # Notificações — preencher manualmente se quiser WhatsApp
+      - key: TWILIO_ACCOUNT_SID
+        value: ""
+      - key: TWILIO_AUTH_TOKEN
+        value: ""
+      - key: NOTIFICACAO_DESTINOS_WHATSAPP
+        value: ""
+      # Sentry — preencher manualmente se quiser monitoramento
+      - key: SENTRY_DSN
+        value: ""
+
+  # ── Celery Worker ──────────────────────────────────────────────
+  - type: worker
+    name: vigia-celery-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    startCommand: celery -A celery_app worker --loglevel=warning --concurrency=2 --max-tasks-per-child=100
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vigia-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: vigia-redis
+          property: connectionString
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: vigia-backend
+          envVarKey: JWT_SECRET
+      - key: ANTHROPIC_API_KEY
+        fromService:
+          type: web
+          name: vigia-backend
+          envVarKey: ANTHROPIC_API_KEY
+
+  # ── Celery Beat ────────────────────────────────────────────────
+  - type: worker
+    name: vigia-celery-beat
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    startCommand: celery -A celery_app beat --loglevel=warning --schedule /tmp/celerybeat-schedule
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vigia-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: vigia-redis
+          property: connectionString
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: vigia-backend
+          envVarKey: JWT_SECRET
+      - key: ANTHROPIC_API_KEY
+        fromService:
+          type: web
+          name: vigia-backend
+          envVarKey: ANTHROPIC_API_KEY
+
+databases:
+  - name: vigia-postgres
+    databaseName: vigia_db
+    user: vigia
+    plan: free
+
+  - name: vigia-redis
+    plan: free
+    ipAllowList: []

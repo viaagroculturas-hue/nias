@@ -1,0 +1,18 @@
+# railway.toml — configuração do serviço BACKEND (padrão)
+# Cada serviço (worker, beat, frontend) é configurado no painel Railway
+# apontando para o mesmo repositório com startCommand diferente.
+# Ver DEPLOY.md §3 para instruções completas.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "vigia/backend/Dockerfile"
+
+[deploy]
+startCommand = "/app/entrypoint.sh"
+healthcheckPath = "/api/ping"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+# Variável padrão — Railway injeta PORT automaticamente
+# DATABASE_URL e REDIS_URL são injetados pelos plugins Railway

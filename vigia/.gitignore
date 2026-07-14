@@ -1,0 +1,15 @@
+.env
+gee_key.json
+*.secret
+*.pem
+*.key
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+.next/
+dist/
+*.log
+celerybeat-schedule
+celerybeat.pid
+.alembic_version_cache
