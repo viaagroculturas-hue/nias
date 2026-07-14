@@ -1,23 +1,51 @@
 services:
   - type: web
-    name: nias
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python server.py
+    name: vigia-backend
+    runtime: docker
+    dockerfilePath: ./vigia/backend/Dockerfile
+    dockerContext: ./vigia/backend
+    plan: free
+    healthCheckPath: /api/ping
+
     envVars:
-      - key: PORT
-        value: 8080
-      - key: PYTHON_VERSION
-        value: 3.11.9
-      - key: NIAS_DATA_DIR
-        value: /opt/render/project/src/data
-      - key: NIAS_DB_PATH
-        value: /opt/render/project/src/data/nia_flv.db
-      - key: NIAS_PIPELINE_STATUS_PATH
-        value: /opt/render/project/src/data/pipeline_status.json
-      - key: NIAS_SCHEDULER_LOG_PATH
-        value: /opt/render/project/src/data/scheduler.log
-    disk:
-      name: nias-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
+      - key: APP_ENV
+        value: production
+
+      # ── OBRIGATÓRIAS — preencher no painel Render ────────────────────────
+      # DATABASE_URL: use a "Internal Database URL" do seu PostgreSQL Render
+      - key: DATABASE_URL
+        sync: false
+
+      # JWT_SECRET: python -c "import secrets; print(secrets.token_hex(32))"
+      - key: JWT_SECRET
+        sync: false
+
+      # ANTHROPIC_API_KEY: sua chave sk-ant-...
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+      # ── OPCIONAIS — valores padrão seguros ───────────────────────────────
+      - key: REDIS_URL
+        value: redis://localhost:6379
+      - key: WORKERS
+        value: "1"
+      - key: APP_URL
+        value: https://nias.onrender.com
+      - key: API_URL
+        value: https://nias.onrender.com
+      - key: RELATORIO_HORA
+        value: "05:30"
+      - key: RELATORIO_TIMEZONE
+        value: America/Sao_Paulo
+      - key: SENTRY_DSN
+        value: ""
+      - key: TWILIO_ACCOUNT_SID
+        value: ""
+      - key: TWILIO_AUTH_TOKEN
+        value: ""
+      - key: TWILIO_WHATSAPP_FROM
+        value: "whatsapp:+14155238886"
+      - key: NOTIFICACAO_DESTINOS_WHATSAPP
+        value: ""
+      - key: NOTIFICACAO_DESTINOS_SMS
+        value: ""
